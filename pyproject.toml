@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "cogshell"
+version = "0.1.0"
+description = "CogShell: Shell-based content generation wrapper for `cogapp`"
+authors = ["Tim Vergenz <vergenzt@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+cogapp = "^3.3.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
