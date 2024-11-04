@@ -1,18 +1,18 @@
-from base64 import b64encode
-from contextlib import ExitStack, contextmanager
-from hashlib import md5, sha1, _Hash
 import os
 import re
-from collections.abc import Iterator
-from dataclasses import asdict, dataclass, field
-from enum import StrEnum, auto
-from functools import cache, cached_property
-from pathlib import Path
 import stat
 import subprocess as sp
 import sys
+from base64 import b64encode
+from collections.abc import Iterator
+from contextlib import ExitStack, contextmanager
+from dataclasses import asdict, dataclass, field
+from enum import StrEnum, auto
+from functools import cache, cached_property
+from hashlib import md5, sha1
+from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Callable, Optional, Self
+from typing import Optional, Self
 
 
 class CogShellError(Exception):
@@ -27,7 +27,7 @@ class CogShellError(Exception):
 
 DEFAULT_ENVVAR_PREFIX: str = "COGSH_"
 
-CHECKSUM_FN: Callable[..., _Hash] = md5
+CHECKSUM_FN = md5
 
 LINE_SEPS = [b"\r\n", b"\n"]
 
@@ -75,8 +75,7 @@ MARKER_DEFAULTS: dict[MarkerType, bytes] = {
 @dataclass
 class Config:
     output_checksum: bool = True
-    "Whether to protect output lines in CogShell'd files from accidental modification by " \
-    "including a hash after the `output_end` marker."
+    "Whether to protect output lines in CogShell'd files from accidental modification by including a hash after the `output_end` marker."
 
     output_line_suffix: bytes = b""
     "Optional suffix to append to each output line."
@@ -269,7 +268,7 @@ class EmbeddedProgram:
                         prev_marker = matches[-1].group()
                         prev_marker_type = marker_types[prev_marker]
                         raise CogShellError(
-                            f"Missing {next_marker_type} marker `{next_marker}` following {prev_marker_type} marker `{prev_marker}`",
+                            f"Missing {next_marker_type.name} marker `{next_marker!r}` following {prev_marker_type} marker `{prev_marker!r}`",
                             file=str(file),
                             line=line_for(content, matches[-1].start()),
                         )
@@ -277,7 +276,7 @@ class EmbeddedProgram:
                 elif (marker := next_match.group()) != marker:
                     marker_type = marker_types[marker]
                     raise CogShellError(
-                        f"Unexpected {marker_type} marker `{marker}`, expected {next_marker_type} marker `{next_marker}`",
+                        f"Unexpected {marker_type} marker `{marker!r}`, expected {next_marker_type} marker `{next_marker!r}`",
                         file=str(file),
                         line=line_for(content, next_match.start()),
                     )
@@ -328,7 +327,10 @@ class EmbeddedProgram:
             output_checksum = self.config.output_checksum
             if self.config.output_checksum:
                 if not (hash_match := self._output_prev_hash_match):
-                    print(f"Warning: {self.file}({line_for(self.output_end_marker.end())}): {output_checksum=} but no output checksum detected", file=sys.stderr)
+                    print(
+                        f"Warning: {self.file}({line_for(self.output_end_marker.end())}): {output_checksum=} but no output checksum detected",
+                        file=sys.stderr,
+                    )
                 elif hash_match.group("hash") != self._output_prev_hash:
                     raise CogShellError(
                         "Output checksum does not match!",
@@ -366,11 +368,11 @@ class EmbeddedProgram:
             )
 
             with open(self.file, "wb") as f:
-                f.write(self.file_content[:self.prog_end_marker.end()])
+                f.write(self.file_content[: self.prog_end_marker.end()])
 
                 for line_sep in LINE_SEPS:
                     if self._output_prev_raw.startswith(line_sep):
-                        f.write(b"\n" )
+                        f.write(b"\n")
                         break
 
                 hasher = CHECKSUM_FN()
@@ -378,15 +380,26 @@ class EmbeddedProgram:
                 last_output_line: bytes = b""
                 with open(exec_env.OUTPUT_NEXT, "rb") as output:
                     while output_line_raw_with_sep := output.readline():
-                        line_sep = next(filter(output_line_raw_with_sep.endswith, LINE_SEPS), b"")
-                        output_line_raw = output_line_raw_with_sep[:-len(line_sep)]
-                        output_line = b"".join([self._output_whitespace_pfx, output_line_raw, self.config.output_line_suffix, line_sep])
+                        line_sep = next(
+                            filter(output_line_raw_with_sep.endswith, LINE_SEPS), b""
+                        )
+                        output_line_raw = output_line_raw_with_sep[: -len(line_sep)]
+                        output_line = b"".join(
+                            [
+                                self._output_whitespace_pfx,
+                                output_line_raw,
+                                self.config.output_line_suffix,
+                                line_sep,
+                            ]
+                        )
                         f.write(output_line)
                         hasher.update(output_line)
                         last_output_line = output_line
 
                 for line_sep in LINE_SEPS:
-                    if self._output_prev_raw.endswith(line_sep) and not last_output_line.endswith(line_sep):
+                    if self._output_prev_raw.endswith(
+                        line_sep
+                    ) and not last_output_line.endswith(line_sep):
                         f.write(line_sep)
                         f.write(self._output_whitespace_pfx)
 
@@ -396,4 +409,4 @@ class EmbeddedProgram:
                     f.write(hasher.hexdigest().encode())
                     f.write(b")")
 
-                f.write(self.file_content[self._output_prev_hash_match.end() + 1:])
+                f.write(self.file_content[self._output_prev_hash_match.end() + 1 :])
