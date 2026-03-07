@@ -2,5 +2,10 @@
 
 Embed generated content inside other files using shell scripts.
 
-Ever used [`cog`](https://github.com/nedbat/cog), but wished you could write the
-generation code in shell?  This package is for you! (Heavily inspired by `cog`.)
+Directly inspired by @nedbat's [`cog`](https://github.com/nedbat/cog), but rewritten from the ground up, and focused on executing shell script snippets instead of Python.
+
+## Usage
+
+<!--[[[cogs: cogsh --help]]]-->
+
+<!--[[[end]]]-->

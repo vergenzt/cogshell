@@ -1,0 +1,18 @@
+[package]
+name = "cogshell"
+version = "0.1.0"
+edition = "2024"
+description = "CogShell: Generate parts of files with shell scripts"
+authors = ["Tim Vergenz <vergenzt@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4.5.60", features = ["derive"] }
+md-5 = "0.10"
+miette = "7.6.0"
+regex = "1"
+strum = { version = "0.28.0", features = ["derive"] }
+tempfile = "3"
+thiserror = "2.0.18"
