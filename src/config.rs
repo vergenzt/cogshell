@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 pub const LINE_SEPS: &[&[u8]] = &[b"\r\n", b"\n"];
 
 /// Names for the environment variables CogShell will provide to embedded programs
@@ -20,6 +22,31 @@ impl Default for EnvConfig<'_> {
     }
 }
 
+pub struct MarkerConfig<'a>([&'a str; 3]);
+
+impl MarkerConfig<'_> {
+    pub const LABELS: [&'static str; 3] = ["program start", "program end", "output end"];
+}
+
+impl<'a> Deref for MarkerConfig<'a> {
+    type Target = [&'a str; 3];
+    fn deref(self: &MarkerConfig<'a>) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<'a> From<[&'a str; 3]> for MarkerConfig<'a> {
+    fn from(value: [&'a str; 3]) -> Self {
+        MarkerConfig(value)
+    }
+}
+
+impl Default for MarkerConfig<'_> {
+    fn default() -> Self {
+        Self(["[[[cogsh ", "]]]", "[[[end]]]"])
+    }
+}
+
 /// Configurable attributes for CogShell execution
 pub struct Config<'a> {
     /// Whether to protect output lines in CogShell'd files from accidental modification by including a hash after the `output_end` marker
@@ -29,7 +56,7 @@ pub struct Config<'a> {
     /// Shell lines which will be prepended to each embedded program before running
     pub prologue: Vec<&'a str>,
     /// Array of marker strings indicating start of program, end of program, and end of output
-    pub markers: [&'a str; 3],
+    pub markers: MarkerConfig<'a>,
     /// Overrides for names of CogShell environment variables
     pub env_names: EnvConfig<'a>,
 }
@@ -40,7 +67,7 @@ impl Default for Config<'_> {
             output_checksum: true,
             output_line_suffix: "",
             prologue: Vec::new(),
-            markers: ["[[[cogsh ", "]]]", "[[[end]]]"],
+            markers: MarkerConfig::default(),
             env_names: EnvConfig::default(),
         }
     }

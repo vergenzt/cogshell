@@ -8,10 +8,10 @@ license = "MIT"
 readme = "README.md"
 
 [dependencies]
+annotate-snippets = "0.12.13"
 anyhow = "1"
 clap = { version = "4.5.60", features = ["derive"] }
 md-5 = "0.10"
-miette = "7.6.0"
 regex = "1"
 strum = { version = "0.28.0", features = ["derive"] }
 tempfile = "3"
