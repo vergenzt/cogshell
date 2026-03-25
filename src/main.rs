@@ -10,8 +10,8 @@ use md5::{Digest, Md5};
 
 mod utils;
 mod config;
-// mod parse;
-// mod source;
+mod source;
+mod parse;
 // mod execute;
 
 // use config::{Config, LINE_SEPS};

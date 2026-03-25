@@ -1,13 +1,13 @@
 use std::iter::zip;
 
 #[cfg(test)]
-mod utils_test;
+mod mod_test;
 
 /// Length of the longest common (fully UTF-8) prefix of characters satisfying `char_filter` from
 /// the given lines, in bytes. If there is not more than one line, result is empty string.
 pub fn common_prefix_of_chars<'a, Iter, F>(lines: Iter, char_filter: F) -> &'a str
 where
-    Iter: IntoIterator<Item = &'a str>,
+    Iter: IntoIterator<Item: Into<&'a str>>,
     F: Fn(char) -> bool,
 {
     let valid_pfxs = lines

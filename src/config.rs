@@ -1,12 +1,14 @@
 use std::ops::Deref;
 
-use enum_primitive_derive::Primitive;
-
 /// Names for the environment variables CogShell will provide to embedded programs
 #[derive(Debug)]
 pub struct EnvConfig<'a> {
-    /// Absolute path to the file containing current embedded CogShell program
+    /// Absolute path to the source file containing current embedded CogShell program
     source_file: &'a str,
+    /// Line number within the source file where current program source starts
+    prog_start_line: &'a str,
+    /// Column number on the first line the source file where current program source starts
+    prog_start_col: &'a str,
     /// Path to tempfile containing the previous output of current CogShell block
     prev_output: &'a str,
     /// Path to tempfile to which the *next* output of current CogShell block should be written (if not using stdout)
@@ -16,27 +18,11 @@ pub struct EnvConfig<'a> {
 impl Default for EnvConfig<'_> {
     fn default() -> Self {
         Self {
-            source_file: "THIS",
+            source_file: "SOURCE",
+            prog_start_line: "SOURCE_PROG_START_LINE",
+            prog_start_col: "SOURCE_PROG_START_COL",
             prev_output: "OUTPUT_PREV",
             next_output: "OUTPUT",
-        }
-    }
-}
-
-#[derive(Copy, Clone, Debug, Primitive)]
-pub enum MarkerKind {
-    // (note: order matters; discriminant used as index into parser state vec.)
-    ProgramStart = 0,
-    ProgramEnd = 1,
-    OutputEnd = 2,
-}
-
-impl From<MarkerKind> for &'static str {
-    fn from(value: MarkerKind) -> Self {
-        match value {
-            MarkerKind::ProgramStart => "program start",
-            MarkerKind::ProgramEnd => "program end",
-            MarkerKind::OutputEnd => "output end",
         }
     }
 }
