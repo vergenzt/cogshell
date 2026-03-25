@@ -8,11 +8,11 @@ use std::fs;
 use anyhow::{bail, Context, Result};
 use md5::{Digest, Md5};
 
-// mod config;
-// mod source;
-// mod parse;
-// mod execute;
 mod utils;
+mod config;
+// mod parse;
+// mod source;
+// mod execute;
 
 // use config::{Config, LINE_SEPS};
 // use parse::ParsedBlock;
