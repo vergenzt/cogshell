@@ -1,8 +1,9 @@
 use std::ops::Deref;
 
-pub const LINE_SEPS: &[&[u8]] = &[b"\r\n", b"\n"];
+use enum_primitive_derive::Primitive;
 
 /// Names for the environment variables CogShell will provide to embedded programs
+#[derive(Debug)]
 pub struct EnvConfig<'a> {
     /// Absolute path to the file containing current embedded CogShell program
     source_file: &'a str,
@@ -22,11 +23,26 @@ impl Default for EnvConfig<'_> {
     }
 }
 
-pub struct MarkerConfig<'a>([&'a str; 3]);
-
-impl MarkerConfig<'_> {
-    pub const LABELS: [&'static str; 3] = ["program start", "program end", "output end"];
+#[derive(Copy, Clone, Debug, Primitive)]
+pub enum MarkerKind {
+    // (note: order matters; discriminant used as index into parser state vec.)
+    ProgramStart = 0,
+    ProgramEnd = 1,
+    OutputEnd = 2,
 }
+
+impl From<MarkerKind> for &'static str {
+    fn from(value: MarkerKind) -> Self {
+        match value {
+            MarkerKind::ProgramStart => "program start",
+            MarkerKind::ProgramEnd => "program end",
+            MarkerKind::OutputEnd => "output end",
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct MarkerConfig<'a>(pub [&'a str; 3]);
 
 impl<'a> Deref for MarkerConfig<'a> {
     type Target = [&'a str; 3];
@@ -48,6 +64,7 @@ impl Default for MarkerConfig<'_> {
 }
 
 /// Configurable attributes for CogShell execution
+#[derive(Debug)]
 pub struct Config<'a> {
     /// Whether to protect output lines in CogShell'd files from accidental modification by including a hash after the `output_end` marker
     pub output_checksum: bool,

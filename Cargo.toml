@@ -9,10 +9,16 @@ readme = "README.md"
 
 [dependencies]
 annotate-snippets = "0.12.13"
+anstream = { version = "1.0.0", features = ["auto"] }
 anyhow = "1"
 clap = { version = "4.5.60", features = ["derive"] }
+enum-primitive-derive = "0.3.0"
 md-5 = "0.10"
+num-traits = "0.2.19"
 regex = "1"
 strum = { version = "0.28.0", features = ["derive"] }
 tempfile = "3"
 thiserror = "2.0.18"
+
+[dev-dependencies]
+yare = "3.0.0"

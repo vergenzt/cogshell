@@ -1,108 +1,12 @@
-use std::error::Error;
-use std::fmt::Display;
-use std::ops::Range;
+use annotate_snippets::{AnnotationKind, Level, Renderer, Snippet};
+use anyhow::Result;
 
-use annotate_snippets::Report;
-use annotate_snippets::{AnnotationKind, Level, Renderer, Snippet, renderer::DecorStyle};
+use num_traits::FromPrimitive;
+use regex::{Regex, escape};
 
-use regex::{Match, Regex, escape};
-
-use crate::config::{Config, MarkerConfig};
+use crate::config::{Config, MarkerKind};
+use crate::source::{SourceLocation, SourceMarker, SourceSpan};
 use crate::utils::common_prefix_len;
-
-#[derive(Debug, Default, PartialEq)]
-struct SourceLocation {
-    line: usize,
-    col: usize,
-    offset: usize,
-}
-
-impl SourceLocation {
-    fn from(offset: usize, line_start: SourceLocation) -> Self {
-        SourceLocation {
-            line: line_start.line,
-            col: offset - line_start.offset,
-            offset,
-        }
-    }
-}
-
-#[derive(Debug)]
-struct SourceSpan<'a> {
-    content: &'a str,
-    start: SourceLocation,
-    end: SourceLocation,
-}
-
-impl PartialEq for SourceSpan<'_> {
-    /// Can be equal
-    fn eq(&self, other: &Self) -> bool {
-        let [self_addrs, other_addrs] = [self, other].map(|span| {
-            let addr = span.content.as_ptr().addr();
-            (addr + self.start.offset, addr + self.end.offset)
-        });
-        self_addrs == other_addrs
-    }
-}
-
-impl<'a> SourceSpan<'a> {
-    fn from_range(content: &'a str, found: Range<usize>, line_start: &mut SourceLocation) -> Self {
-        let start = SourceLocation::from(found.start, SourceLocation { ..*line_start });
-
-        // increment line to end of the match
-        let lines: Vec<_> = content[found.clone()].split_inclusive('\n').collect();
-        line_start.line += lines.len() - 1;
-        line_start.offset = found.end - lines.last().unwrap().len();
-
-        let end = SourceLocation::from(found.end, SourceLocation { ..*line_start });
-
-        SourceSpan {
-            content,
-            start,
-            end,
-        }
-    }
-}
-
-impl Display for SourceSpan<'_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.pad(&self.content[self.start.offset..self.end.offset])
-    }
-}
-
-impl From<&SourceSpan<'_>> for Range<usize> {
-    fn from(value: &SourceSpan) -> Self {
-        value.start.offset..value.end.offset
-    }
-}
-
-#[cfg(test)]
-mod source_span_tests {
-    use super::*;
-
-    #[test]
-    fn test_source_span_init() {
-        let content = "abcd\nefgh\nijkl\n";
-        let mut line_start = SourceLocation::default();
-        let span = SourceSpan::from_range(content, 1..4, &mut line_start);
-        assert_eq!(
-            span,
-            SourceSpan {
-                content,
-                start: SourceLocation {
-                    line: 0,
-                    col: 1,
-                    offset: 1,
-                },
-                end: SourceLocation {
-                    line: 0,
-                    col: 5,
-                    offset: 5,
-                }
-            },
-        )
-    }
-}
 
 pub struct ParsedFile<'a> {
     /// The name of the file
@@ -115,79 +19,85 @@ pub struct ParsedFile<'a> {
     pub blocks: Vec<ParsedBlock<'a>>,
 }
 
-impl<'a> ParsedFile<'_> {
-    fn from_content(content: &str, cfg: &Config, filename: &str) -> Result<Self, Report<'a>> {
+impl<'a> ParsedFile<'a> {
+    fn from_content(
+        content: &'a str,
+        config: &'a Config,
+        filename: &'a str,
+    ) -> Result<Self, ParseError<'a>> {
         // get a regex with matching groups 1-3 being markers, matching group 4 being newline
-        let marker_re = cfg.markers.map(|m| escape(&format!("({})", m))).join("\n");
-        let marker_or_eol_re =
-            Regex::new(&format!("{}|(\n)", marker_re)).expect("shouldn't ever fail");
+        let marker_or_eol_re = {
+            let marker_re = config
+                .markers
+                .map(|m| escape(&format!("({})", m)))
+                .join("|");
+            Regex::new(&format!("{}|(\n)", marker_re)).expect("shouldn't ever fail")
+        };
 
-        let mut parsed_blocks = Vec::new();
-        let mut marker_state = Vec::with_capacity(3);
+        let mut parsed_blocks: Vec<ParsedBlock<'_>> = Vec::new();
+        let mut parse_state: Vec<SourceMarker<'_>> = Vec::with_capacity(3);
         let mut line_start = SourceLocation::default();
 
         for found in marker_or_eol_re.captures_iter(content) {
-            let found_marker_idx = found
+            let found_idx_opt = found
                 .iter()
                 .skip(1) //
                 .enumerate()
-                .flat_map(|(i, grp)| grp.and_then(|_| Some(i).filter(|&i| i < cfg.markers.len())))
+                .flat_map(|(i, grp)| {
+                    grp.and_then(|_| Some(i).filter(|&i| i < config.markers.len()))
+                })
                 .next();
-            let found = found.get_match().range();
+            let found_range = found.get_match().range();
 
-            match found_marker_idx {
-                // just a newline
+            match found_idx_opt {
+                // just a newline -> increment counters
                 None => {
                     line_start.line += 1;
-                    line_start.offset = found.end;
+                    line_start.offset = found_range.end;
                 }
-                Some(found_marker_idx) => {
-                    let marker = SourceSpan::from_range(content, found, &mut line_start);
-
-                    if found_marker_idx == marker_state.len() {
-                        marker_state.push(marker)
+                // a marker
+                Some(found_idx) => {
+                    let kind = MarkerKind::from_usize(found_idx).unwrap();
+                    let span = SourceSpan::from_range(content, found_range, &mut line_start);
+                    let marker = SourceMarker { kind, span };
+                    if found_idx == parse_state.len() {
+                        parse_state.push(marker)
                     } else {
-                        let marker_sought = cfg.markers[marker_state.len()];
-                        let source = Snippet::source(content).path(filename);
-                        let report = Box::new([Level::ERROR
-                            .primary_title(format!(
-                                "unexpected marker {marker}, expected {marker_sought}"
-                            ))
-                            .element(source.clone().annotation(
-                                AnnotationKind::Primary.span((&marker).into()).label({
-                                    let found_desc = MarkerConfig::LABELS[found_marker_idx];
-                                    format!("unexpected {found_desc} marker")
-                                }),
-                            ))
-                            .elements(marker_state.iter().enumerate().map(
-                                |(prev_marker_idx, prev_marker)| {
-                                    source.clone().annotation(
-                                        AnnotationKind::Context.span(prev_marker.into()).label(
-                                            {
-                                                let prev_desc =
-                                                    MarkerConfig::LABELS[prev_marker_idx];
-                                                format!("{prev_desc} marker")
-                                            },
-                                        ),
-                                    )
-                                },
-                            ))]);
-                        return Err(report);
+                        return Err(ParseError {
+                            config,
+                            filename,
+                            content,
+                            marker_found: Some(marker),
+                            parse_state,
+                        });
                     }
                 }
             }
 
-            if marker_state.len() == cfg.markers.len() {
-                let marker_locs = marker_state.split_off(0).as_array().unwrap();
-                let block = ParsedBlock::from(content, marker_locs);
+            if parse_state.len() == config.markers.len() {
+                let marker_locs: [SourceMarker; 3] = parse_state
+                    .split_off(0)
+                    .try_into()
+                    .expect("parse_state should have length 3");
+                let block = ParsedBlock::from(content, marker_locs, &mut line_start);
                 parsed_blocks.push(block);
             }
+        }
+
+        if !parse_state.is_empty() {
+            return Err(ParseError {
+                config,
+                filename,
+                content,
+                marker_found: None,
+                parse_state,
+            });
         }
 
         Ok(Self {
             filename,
             content,
-            config: cfg,
+            config,
             blocks: parsed_blocks,
         })
     }
@@ -196,35 +106,101 @@ impl<'a> ParsedFile<'_> {
 /// Everything needed to execute an embedded code block
 struct ParsedBlock<'a> {
     /// The (pre-trimmed) lines of the program to run
-    program: &'a [&'a str],
-    /// The common whitespace to be prepended to the program's output
-    program_common_whitespace: &'a str,
+    program_lines: &'a [&'a str],
+    /// The text to prepend to lines of output
+    prefix_by: &'a str,
+    /// The text to append to lines of output
+    suffix_by: &'a str,
 }
 
 impl ParsedBlock<'_> {
     /// Parse a CogShell block from Matches to its markers
-    fn from<'a>(content: &'a str, markers: &'a [SourceSpan; 3]) -> ParsedBlock<'a> {
-        let [prog_start, prog_end, output_end] = markers;
+    fn from<'a>(
+        content: &'a str,
+        markers: [SourceMarker; 3],
+        line_start: &SourceLocation,
+    ) -> ParsedBlock<'a> {
+        let [prog_start, prog_end, outp_end] = markers;
 
-        let overall_start = content[..prog_start.start]
-            .rfind('\n')
-            .map(|i| i + 1)
-            .unwrap_or(0);
-        let overall_raw = &content[overall_start..output_end.start];
+        let prefix_in = {
+            let lines: Vec<_> = content[(*prog_start.line_start + 1)..*prog_end.start].lines().collect();
+            lines[0][..common_prefix_len(&lines, false)]
+        };
 
-        let program_raw = &content[(prog_start.end + 1)..prog_end.start];
-        let program = if program_raw.contains('\n') {
-            // determine prefix to strip from *all* lines (program & output)
-            let overall_lines = &overall_raw.lines().collect::<Vec<_>>();
-            let pfx_len_for_program_and_output = common_prefix_len(overall_lines, false);
-            &[program_raw.trim()]
-        } else {
+        let [prog_line1, prog_tail @ ..] = 
+            .collect::<Vec<_>>()[..];
+
+        // leading chars in common to program lines are prefixed to program output
+        let arbitrary_pfx = {
+            let prog_lines_raw: Vec<_> = content[*prog_start.line_start..*prog_end.end]
+                .lines()
+                .collect();
+            let pfx_len = common_prefix_len(&prog_lines_raw, false);
+            &prog_lines_raw[0][..pfx_len]
+        };
+
+        let whitespace_prefix = common_prefix_len(&prog_lines_raw, true);
+
+        let program_lines = {
             program_raw
                 .lines()
-                .map(|line| line.split_at(pfx_len_for_program).1)
+                .map(|line| line.split_at(whitespace_prefix).1)
                 .collect::<Vec<_>>()
                 .as_slice()
         };
+    }
+}
+
+#[derive(Debug)]
+pub struct ParseError<'a> {
+    pub config: &'a Config<'a>,
+    pub filename: &'a str,
+    pub content: &'a str,
+    pub marker_found: Option<SourceMarker<'a>>,
+    pub parse_state: Vec<SourceMarker<'a>>,
+}
+
+impl ParseError<'_> {
+    fn print(&self) {
+        let marker_sought: &str = &self.config.markers[self.parse_state.len()];
+        let marker_sought_desc: &str = MarkerKind::from_usize(self.parse_state.len())
+            .unwrap()
+            .into();
+
+        let source = Snippet::source(self.content).path(self.filename);
+        let state_elements =
+            self.parse_state
+                .iter()
+                .enumerate()
+                .map(|(prev_marker_idx, prev_marker)| {
+                    source.annotation(
+                        AnnotationKind::Context
+                            .span(prev_marker.into())
+                            .label(prev_marker.kind.into()),
+                    )
+                });
+        let level = Level::ERROR;
+
+        let error = if let Some(marker_found) = &self.marker_found {
+            let marker_found_kind = marker_found.kind;
+            level.primary_title(format!(
+                "unexpected {marker_found_kind} marker {marker_found}, expected {marker_sought_desc} marker {marker_sought}"
+            ))
+            .element(
+                source.clone().annotation(
+                    AnnotationKind::Primary
+                        .span(marker_found.into())
+                        .label(format!("unexpected {marker_found_kind} marker")),
+                )
+            )
+        } else {
+            level.primary_title(format!(
+                "unexpected end of file, expected {marker_sought_desc} marker {marker_sought}"
+            ))
+        };
+
+        let report = Renderer::styled().render(&[error]);
+        anstream::eprintln!("{}", report);
     }
 }
 
