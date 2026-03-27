@@ -16,22 +16,15 @@ impl<'a> SourceSpan<'a> {
         line_start: &mut SourceLocation,
     ) -> Self {
         assert_eq!(line_start.col, 0);
-
-        let start = SourceLocation::from(found.start, SourceLocation { ..*line_start });
-
-        // increment line_start through any newlines in the match
-        let lines = content[found.clone()].split_inclusive('\n').enumerate();
-        let (last_line_index, last_line) = lines.last().unwrap();
-        line_start.line += last_line_index;
-        line_start.offset = found.end - last_line.len();
-
-        let end = SourceLocation::from(found.end, SourceLocation { ..*line_start });
-
         SourceSpan {
             content,
-            start,
-            end,
+            start: SourceLocation::from(found.start, *line_start),
+            end: SourceLocation::from(found.end, *line_start),
         }
+    }
+
+    pub fn to_str(&self) -> &str {
+        self.content[self.start..self.end]
     }
 }
 

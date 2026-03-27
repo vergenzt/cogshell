@@ -3,11 +3,9 @@ use std::{
     ops::{Deref, Range},
 };
 
-use enum_primitive_derive::Primitive;
-
 use crate::source::{location::SourceLocation, span::SourceSpan};
 
-#[derive(Copy, Clone, Debug, Primitive)]
+#[derive(Copy, Clone, Debug)]
 pub enum MarkerKind {
     // (note: order matters; discriminant used as index into parser state vec.)
     ProgramStart = 0,
@@ -15,15 +13,24 @@ pub enum MarkerKind {
     OutputEnd = 2,
 }
 
-impl From<MarkerKind> for &'static str {
-    fn from(value: MarkerKind) -> Self {
-        match value {
+impl MarkerKind {
+    pub const ALL: [Self; 3] = [Self::ProgramStart, Self::ProgramEnd, Self::OutputEnd];
+
+    pub fn description(self: MarkerKind) -> &'static str {
+        match self {
             MarkerKind::ProgramStart => "program start",
             MarkerKind::ProgramEnd => "program end",
             MarkerKind::OutputEnd => "output end",
         }
     }
 }
+
+impl Display for MarkerKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.description())
+    }
+}
+
 
 #[derive(Clone, Debug)]
 pub struct SourceMarker<'a> {
@@ -42,7 +49,7 @@ impl<'a> Deref for SourceMarker<'a> {
 
 impl Display for SourceMarker<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.pad(&self.span.content[self.span.start.offset..self.span.end.offset])
+        f.write_str(&self.span.content[self.span.start.offset..self.span.end.offset])
     }
 }
 

@@ -1,14 +1,14 @@
-use annotate_snippets::{AnnotationKind, Level, Renderer, Snippet};
+use std::iter::chain;
+use std::ops::Range;
+
 use anyhow::Result;
 
-use num_traits::FromPrimitive;
-use regex::{Regex, escape};
+use regex::Regex;
 
-use crate::config::{Config, MarkerKind};
+use crate::config::Config;
 use crate::parse::block::ParsedBlock;
-use crate::parse::error::ParseError;
-use crate::source::{SourceLocation, SourceMarker, SourceSpan};
-use crate::utils::common_prefix_of_chars;
+use crate::parse::error::{ParseError, ParseErrorContext, ParseErrorKind};
+use crate::source::{MarkerKind, SourceLocation, SourceMarker, SourceSpan};
 
 pub struct ParsedFile<'a> {
     /// The name of the file
@@ -27,34 +27,51 @@ impl<'a> ParsedFile<'a> {
         config: &'a Config,
         filename: &'a str,
     ) -> Result<Self, ParseError<'a>> {
-        // get a regex with matching groups 1-3 being markers, matching group 4 being newline
-        let marker_or_eol_re = {
-            let marker_re = config
-                .markers
-                .map(|m| escape(&format!("({})", m)))
-                .join("|");
-            Regex::new(&format!("{}|(\n)", marker_re)).expect("shouldn't ever fail")
+        // regex with groups 1-3 being the configured markers, 4 being newline, and 5 being EOF
+        let marker_or_eol = {
+            let groups = chain(
+                config.markers.map(regex::escape),
+                [r"\n", r"\z"].map(String::from),
+            );
+            let groups_vec: Vec<_> = groups.map(|pat| format!("({})", pat)).collect();
+            let groups_str = groups_vec.join("|");
+            Regex::new(&groups_str).unwrap()
         };
 
         let mut parsed_blocks: Vec<ParsedBlock<'_>> = Vec::new();
         let mut parse_state: Vec<SourceMarker<'_>> = Vec::with_capacity(3);
         let mut parse_state_line_starts: Vec<SourceLocation> = Vec::new();
         let mut line_start = SourceLocation::default();
+        let mut eof: Option<usize> = None;
 
-        for found in marker_or_eol_re.captures_iter(content) {
-            let found_idx_opt = found
-                .iter()
-                .skip(1) //
-                .enumerate()
-                .flat_map(|(i, grp)| {
-                    grp.and_then(|_| Some(i).filter(|&i| i < config.markers.len()))
+        for found_caps in marker_or_eol.captures_iter(content) {
+            let found = found_caps.get_match();
+            let found_range = found.range();
+            let found_text = found.as_str();
+            let found_grps = found_caps.iter().enumerate();
+
+            let found_marker = found_grps
+                .flat_map(|(i, _)| MarkerKind::ALL.get(i - 1))
+                .map(|&kind| {
+                    let span =
+                        SourceSpan::from_range(content, found_range.clone(), &mut line_start);
+                    let preceding_line_starts = if parse_state.len() == 0 {
+                        assert!(parse_state_line_starts.len() == 0);
+                        vec![line_start]
+                    } else {
+                        parse_state_line_starts.split_off(0)
+                    };
+                    SourceMarker {
+                        kind,
+                        span,
+                        preceding_line_starts,
+                    }
                 })
                 .next();
-            let found_range = found.get_match().range();
 
-            match found_idx_opt {
+            match found_marker {
                 // just a newline
-                None => {
+                None if found_text == "\n" => {
                     // increment counters
                     line_start.line += 1;
                     line_start.offset = found_range.end;
@@ -63,58 +80,57 @@ impl<'a> ParsedFile<'a> {
                         parse_state_line_starts.push(line_start)
                     }
                 }
-                // a marker
-                Some(found_idx) => {
-                    let kind = MarkerKind::from_usize(found_idx).unwrap();
-                    let span = SourceSpan::from_range(content, found_range, &mut line_start);
-                    let preceding_line_starts = if parse_state.len() == 0 {
-                        assert!(parse_state_line_starts.len() == 0);
-                        vec![line_start]
-                    } else {
-                        parse_state_line_starts.split_off(0)
-                    };
+                // correct next expected marker
+                Some(marker) if marker.kind as usize == parse_state.len() => {
+                    parse_state.push(marker);
 
-                    let marker = SourceMarker {
-                        kind,
-                        span,
-                        preceding_line_starts,
-                    };
-                    if found_idx == parse_state.len() {
-                        parse_state.push(marker)
-                    } else {
-                        return Err(ParseError {
+                    // check for complete marker set
+                    if parse_state.len() == config.markers.len() {
+                        let markers: [SourceMarker; 3] =
+                            parse_state.split_off(0).try_into().unwrap();
+                        let block = ParsedBlock::new(content, markers);
+                        parsed_blocks.push(block);
+                    }
+                }
+                // unexpected marker!
+                Some(marker) => {
+                    return Err(ParseError {
+                        kind: ParseErrorKind::UnexpectedMarker(marker),
+                        ctx: ParseErrorContext {
                             config,
                             filename,
                             content,
-                            marker_found: Some(marker),
                             parse_state,
-                        });
-                    }
+                        },
+                    });
+                }
+                // EOF
+                _ => {
+                    assert_eq!(found_range.start, found_range.end);
+                    eof = Some(found_range.start);
                 }
             }
-
-            if parse_state.len() == config.markers.len() {
-                let markers: [SourceMarker; 3] = parse_state.split_off(0).try_into().unwrap();
-                let block = ParsedBlock::new(content, markers);
-                parsed_blocks.push(block);
-            }
         }
 
-        if !parse_state.is_empty() {
-            return Err(ParseError {
-                config,
+        match parse_state[..] {
+            // all markers matched
+            [] => Ok(Self {
                 filename,
                 content,
-                marker_found: None,
-                parse_state,
-            });
-        }
+                config,
+                blocks: parsed_blocks,
+            }),
 
-        Ok(Self {
-            filename,
-            content,
-            config,
-            blocks: parsed_blocks,
-        })
+            // leftover unmatched markers
+            [..] => Err(ParseError {
+                kind: ParseErrorKind::UnexpectedEOF(eof.unwrap()),
+                ctx: ParseErrorContext {
+                    config,
+                    filename,
+                    content,
+                    parse_state,
+                },
+            }),
+        }
     }
 }

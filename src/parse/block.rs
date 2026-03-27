@@ -14,18 +14,31 @@ pub struct ParsedBlock<'a> {
 }
 
 impl ParsedBlock<'_> {
-    /// Parse a CogShell block from Matches to its markers
+    /// Parse a CogShell block from matched markers
     pub fn new<'a>(content: &'a str, markers: [SourceMarker; 3]) -> ParsedBlock<'a> {
         let [prog_beg, prog_end, outp_end] = markers;
 
-        if prog_end.preceding_line_starts.is_empty() {
-          let program_line = &content[(*prog_beg.end + 1)..*prog_end.start];
+        // save whitespace prefix of the marker lines for prepending to output
+        // https://github.com/nedbat/cog/blob/05842d65800458b1a18eba89770d8cb705cb503a/cogapp/cogapp.py#L57-L58
+        let prog_marker_ws_pfx = common_prefix_of_chars(
 
+        match (prog_start.preceding_line_starts[..], prog_end.preceding_line_starts[..]) {
+            ([line_start], []) => {
+                let ws_pfx = common_prefix_of_chars(lines, char_filter)
+                let program_line = &content[(*prog_beg.end + 1)..*prog_end.start];
+                let (ws_pfx, program_ltrimmed) = program_line_raw.split_at(program_line_raw.find(|c| !c.is_whitespace()).unwrap_or(0));
+                let program_line = program_ltrimmed.trim_end();
+                let program_start = SourceLocation {
+                    line: prog_beg.end.line,
+                    col: prog_beg.end.col + ws_pfx.len(),
+                    offset: prog_beg.end.offset + ws_pfx.len(),
+                };
 
-          Self {
-            program_lines: 
-          }
-
+                Self {
+                    program_lines: &[program_line],
+                    program_start,
+                    prefix_by: 
+                }
         }
 
         // save whitespace prefix of the marker lines for prepending to output

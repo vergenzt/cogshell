@@ -10,12 +10,13 @@ where
     Iter: IntoIterator<Item: Into<&'a str>>,
     F: Fn(char) -> bool,
 {
-    let valid_pfxs = lines
-        .into_iter()
-        .map(|line| match line.split_once(|c| !char_filter(c)) {
+    let valid_pfxs = lines.into_iter().map(|line| {
+        let line = line.into();
+        match line.split_once(|c| !char_filter(c)) {
             Some((pfx, _)) => pfx,
             None => line,
-        });
+        }
+    });
 
     valid_pfxs
         .reduce(|comm_pfx, curr_pfx| {
