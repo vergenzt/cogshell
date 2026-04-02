@@ -1,73 +1,68 @@
 use annotate_snippets::{AnnotationKind, Level, Renderer, Snippet};
 
-use crate::config::Config;
-use crate::source::{MarkerKind, SourceMarker};
+use crate::parse::file::ParseContext;
 
-#[derive(Debug)]
-pub struct ParseErrorContext<'a> {
-    pub config: &'a Config<'a>,
-    pub filename: &'a str,
-    pub content: &'a str,
-    pub parse_state: Vec<SourceMarker<'a>>,
-}
+use super::marker::{Marker, MarkerKind};
 
 #[derive(Debug)]
 pub enum ParseErrorKind<'a> {
-    UnexpectedMarker(SourceMarker<'a>),
+    UnexpectedMarker(Marker<'a>),
     UnexpectedEOF,
 }
 
 pub struct ParseError<'a> {
     pub kind: ParseErrorKind<'a>,
-    pub ctx: ParseErrorContext<'a>,
+    pub state: Vec<Marker<'a>>,
+    pub ctx: ParseContext<'a>,
 }
 
 impl ParseError<'_> {
     fn print(&self) {
-        let ParseError { kind, ctx } = self;
-        let sought_idx = ctx.parse_state.len();
+        let ParseError { kind, ctx, state } = self;
+        let sought_idx = state.len();
         let sought_str: &str = &ctx.config.markers[sought_idx];
-        let sought_kind: MarkerKind = MarkerKind::ALL[sought_idx];
+        let sought_kind: MarkerKind = sought_idx.into();
 
         let source = Snippet::source(ctx.content).path(ctx.filename);
         let error = Level::ERROR;
 
         let error = match kind {
-            ParseErrorKind::UnexpectedMarker(SourceMarker { kind, span, .. }) => {
-                let found_str = &span.content[*span.start..*span.end];
-                error.primary_title(format!(
-                    "unexpected {kind} marker {found_str}, expected {sought_kind} marker {sought_str}"
-                ))
-                .element(
-                    source.clone().annotation(
-                        AnnotationKind::Primary
-                            .span(*span.start..*span.end)
-                            .label(format!("unexpected {kind} marker")),
+            ParseErrorKind::UnexpectedMarker(Marker { kind, span }) => {
+                let str = span.as_str();
+                error
+                    .primary_title(format!(
+                        "unexpected {kind} {str}, expected {sought_kind} {sought_str}"
+                    ))
+                    .element(
+                        source.clone().annotation(
+                            AnnotationKind::Primary
+                                .span(span.range())
+                                .label(format!("unexpected {kind}")),
+                        ),
                     )
-                )
             }
             ParseErrorKind::UnexpectedEOF => {
                 let eof = ctx.content.len();
                 error
                     .primary_title(format!(
-                        "unexpected end of file, expected {sought_kind} marker {sought_str}"
+                        "unexpected end of file, expected {sought_kind} {sought_str}"
                     ))
                     .element({
                         source
                             .clone()
-                            .annotation(AnnotationKind::Primary.span(*eof..*eof).label("EOF"))
+                            .annotation(AnnotationKind::Primary.span(eof..eof).label("EOF"))
                     })
             }
         };
 
-        let prev_marker_ctx = ctx.parse_state.iter().map(|prev_marker| {
+        let prev_markers = state.iter().map(|prev_marker| {
             source.clone().annotation(
                 AnnotationKind::Context
-                    .span(prev_marker.into())
+                    .span(prev_marker.span.range())
                     .label(prev_marker.kind.description()),
             )
         });
-        let error = error.elements(prev_marker_ctx);
+        let error = error.elements(prev_markers);
 
         let report = Renderer::styled().render(&[error]);
         anstream::eprintln!("{}", report);

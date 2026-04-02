@@ -6,73 +6,73 @@ use yare::parameterized;
   // general prefixes
 
   no_lines = {
-    (vec![], |_| true),
-    "",
+    vec![],
+    None,
   },
 
   single_line_any_char = {
-    (vec!["hello world"], |_| true),
-    "hello world",
+    vec!["hello world"],
+    None,
   },
 
   no_common = {
-    (vec!["abc", "xyz"], |_| true),
-    "",
+    vec!["abc", "xyz"],
+    Some(""),
   },
 
   one_is_prefix_of_other = {
-    (vec!["foo", "foobar"], |_| true),
-    "foo",
+    vec!["foo", "foobar"],
+    Some("foo"),
   },
 
   other_is_prefix_of_one = {
-    (vec!["foobar", "foo"], |_| true),
-    "foo",
+    vec!["foobar", "foo"],
+    Some("foo"),
   },
 
   all_identical = {
-    (vec!["hello", "hello", "hello"], |_| true),
-    "hello",
+    vec!["hello", "hello", "hello"],
+    Some("hello"),
   },
 
   with_empty_string = {
-    (vec!["foo", "", "bar"], |_| true),
-    "",
+    vec!["foo", "", "bar"],
+    Some(""),
   },
 
   utf8_multibyte = {
-    (vec!["café latte", "cafå mocha"], |_| true),
-    "caf",
+    vec!["café latte", "cafå mocha"],
+    Some("caf"),
   },
 
   // with character filters
 
   whitespace_single_line = {
-    (vec!["    hello world"], |c: char| c.is_ascii_whitespace()),
-    "    ",
+    vec!["    hello world"],
+    Some("    "),
   },
 
   whitespace_all_indented = {
-    (vec!["    asdf", "    jkl", "    foo"], |c: char| c.is_ascii_whitespace()),
-    "    ",
+    vec!["    asdf", "    jkl", "    foo"],
+    Some("    "),
   },
 
   whitespace_increasing = {
-    (vec!["  asdf", "    jkl", "      foo"], |c: char| c.is_ascii_whitespace()),
-    "  ",
+    vec!["  asdf", "    jkl", "      foo"],
+    Some("  "),
   },
 
   whitespace_with_empty_line = {
-    (vec!["  asdf", "    jkl", "", "      foo"], |c: char| c.is_ascii_whitespace()),
-    "",
+    vec!["  asdf", "    jkl", "", "      foo"],
+    Some(""),
   },
 
   whitespace_mixed = {
-    (vec!["   \tasdf", "\t jkl", "", "      foo"], |c: char| c.is_ascii_whitespace()),
-    "",
+    vec!["   \tasdf", "\t jkl", "", "      foo"],
+    Some(""),
   },
 
 )]
-fn test_common_prefix_general(inputs: _, expected: &str) {
-    assert_eq!(common_prefix_of_chars(inputs.0, inputs.1), expected);
+fn test_common_prefix_general(inputs: Vec<&str>, expected: Option<&str>) {
+    assert_eq!(common_prefix_of_chars(inputs), expected);
 }

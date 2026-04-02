@@ -1,89 +1,91 @@
-use crate::{source::{SourceLocation, SourceMarker}, utils::common_prefix_of_chars};
+extern crate proc_macro;
 
+use std::borrow::Borrow;
+
+use crate::{parse::marker::Marker, utils::common_prefix_of_chars};
 
 /// Everything needed to execute an embedded code block
 pub struct ParsedBlock<'a> {
     /// The (pre-trimmed) lines of the program to run
-    program_lines: &'a [&'a str],
-    /// The location from the source file where this block begins
-    program_start: SourceLocation,
+    prog_lines: Vec<&'a str>,
     /// The text to prepend to lines of output
-    prefix_by: &'a str,
-    /// The text to append to lines of output
-    suffix_by: &'a str,
+    prog_whitespace_pfx: &'a str,
+    /// The unmodified previous output bytes found between the program end and output end markers
+    prev_prefixed_output: &'a str,
 }
 
-impl ParsedBlock<'_> {
+macro_rules! strspan {
+    // a -> b = the bytes offset from start of a to start of b
+    ($a:ident -> $b:ident) => {{
+        assert!($b > $a);
+        $b.as_ptr() as usize - $a.as_ptr() as usize
+    }};
+    // $s[$a..$b] = the &str from the start of $a to start of $b, where $a and $b are substrings of $s
+    ( $s:ident [ $($a:ident )? .. $($b:ident)? ]) => {
+        & $s [
+            $( strspan!($s -> $a) )?  ..
+            $( strspan!($s -> $b) )?
+        ]
+    };
+}
+
+fn leading_whitespace<'a>(s: impl Borrow<&'a str>) -> &'a str {
+    let s = s.borrow();
+    let trimmed = s.trim_start();
+    strspan!(s[..trimmed])
+}
+
+impl<'a> ParsedBlock<'a> {
     /// Parse a CogShell block from matched markers
-    pub fn new<'a>(content: &'a str, markers: [SourceMarker; 3]) -> ParsedBlock<'a> {
-        let [prog_beg, prog_end, outp_end] = markers;
+    pub fn new(content: &'a str, markers: [Marker; 3]) -> Self {
+        let [prog_beg, prog_end, outp_end] = markers.map(|m| m.span.as_str());
+
+        // find beginning of line containing start marker
+        let prog_pfx = strspan!(content[..prog_beg]);
+        let prog_start_line_pfx = prog_pfx.rsplit('\n').next().unwrap_or(prog_pfx);
+        let mut prog_lines: Vec<_> = strspan!(content[prog_start_line_pfx..prog_end])
+            .split('\n')
+            .collect();
 
         // save whitespace prefix of the marker lines for prepending to output
         // https://github.com/nedbat/cog/blob/05842d65800458b1a18eba89770d8cb705cb503a/cogapp/cogapp.py#L57-L58
-        let prog_marker_ws_pfx = common_prefix_of_chars(
+        let prog_whitespace_pfx = {
+            let start_ws = leading_whitespace(&prog_start_line_pfx);
+            if let Some(&prog_end_line_pfx) = prog_lines[1..].last() {
+                let end_ws = leading_whitespace(&prog_end_line_pfx);
+                common_prefix_of_chars(&vec![start_ws, end_ws]).unwrap()
+            } else {
+                start_ws
+            }
+        };
 
-        match (prog_start.preceding_line_starts[..], prog_end.preceding_line_starts[..]) {
-            ([line_start], []) => {
-                let ws_pfx = common_prefix_of_chars(lines, char_filter)
-                let program_line = &content[(*prog_beg.end + 1)..*prog_end.start];
-                let (ws_pfx, program_ltrimmed) = program_line_raw.split_at(program_line_raw.find(|c| !c.is_whitespace()).unwrap_or(0));
-                let program_line = program_ltrimmed.trim_end();
-                let program_start = SourceLocation {
-                    line: prog_beg.end.line,
-                    col: prog_beg.end.col + ws_pfx.len(),
-                    offset: prog_beg.end.offset + ws_pfx.len(),
-                };
-
-                Self {
-                    program_lines: &[program_line],
-                    program_start,
-                    prefix_by: 
-                }
+        // from cog implementation: "If the markers and lines all have the same prefix (end-of-line comment chars, for
+        // example), then remove it from all the lines."
+        // https://github.com/nedbat/cog/blob/05842d65800458b1a18eba89770d8cb705cb503a/cogapp/cogapp.py#L46-L48
+        if let Some(prog_pfx_to_strip) = common_prefix_of_chars(&prog_lines) {
+            for line in prog_lines.iter_mut() {
+                *line = line.strip_prefix(prog_pfx_to_strip).unwrap();
+            }
         }
 
-        // save whitespace prefix of the marker lines for prepending to output
-        // https://github.com/nedbat/cog/blob/05842d65800458b1a18eba89770d8cb705cb503a/cogapp/cogapp.py#L57-L58
-        let prog_marker_ws_pfx = common_prefix_of_chars(
-            if prog_end.preceding_line_starts.is_empty() {
-                [][..]
-            } else {
-                [
-                    &content[*prog_beg.line_start..*prog_beg.start],
-                    &content[*prog_end.line_start..*prog_end.start],
-                ][..]
-            },
-            |c| c.is_ascii_whitespace(),
-        );
+        // remove start marker from first line
+        prog_lines[0] = prog_lines[0][prog_beg.len()..].trim_start();
 
-        if prog_beg.line_start == prog_end.line_start {
-            let prog_start_line = prog_beg.line_start.line;
-        } else {
-            let prog_lines: Vec<_> = {
-                // "full" = with prog_beg expanded to the beginning of its line
-                let prog_raw_full = content[*prog_beg.line_start..*prog_end.start];
-                let prog_raw_full_lines = prog_raw_full.split_inclusive('\n');
+        // dedent program lines after the first
+        let lines_to_dedent = prog_lines[1..].iter().filter(|l| !l.is_empty());
+        let line_indents = lines_to_dedent.map(|l| leading_whitespace(l));
+        if let Some(indent) = common_prefix_of_chars(line_indents) {
+            for line in prog_lines[1..].iter_mut() {
+                *line = line.strip_prefix(indent).unwrap_or(line);
+            }
+        }
 
-                // from cog implementation: "If the markers and lines all have the same prefix (end-of-line
-                // comment chars, for example), then remove it from all the lines."
-                let prog_raw_full_common_pfx =
-                    common_prefix_of_chars(prog_raw_full_lines, |_| true);
-                let prog_clean_lines = prog_raw_full_lines.map(|raw_line| {
-                    raw_line
-                        .get(prog_raw_full_common_pfx.len()..)
-                        .unwrap_or_else(|| {
-                            assert!(raw_line.is_empty());
-                            &raw_line
-                        })
-                });
+        let prev_prefixed_output = &strspan!(content[prog_end..outp_end])[prog_end.len()..];
 
-                // dedent program lines
-
-                prog_clean_lines.collect()
-            };
-
-            prog_dedented_lines
-                .map(|ded_line| &ded_line[..prog_dedented_common_pfx.len()])
-                .collect()
-        };
+        Self {
+            prog_lines: prog_lines,
+            prog_whitespace_pfx,
+            prev_prefixed_output,
+        }
     }
 }
