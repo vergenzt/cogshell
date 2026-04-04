@@ -1,6 +1,9 @@
+#![feature(trim_prefix_suffix)]
+
 mod config;
+mod errors;
+mod execute;
 mod parse;
 mod utils;
-// mod execute;
 
 pub fn main() {}

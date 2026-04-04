@@ -4,7 +4,7 @@ use std::ops::Deref;
 #[derive(Debug)]
 pub struct EnvConfig<'a> {
     /// Absolute path to the source file containing current embedded CogShell program
-    source_file: &'a str,
+    source_file_path: &'a str,
     /// Line number within the source file where current program source starts
     prog_start_line: &'a str,
     /// Column number on the first line the source file where current program source starts
@@ -18,7 +18,7 @@ pub struct EnvConfig<'a> {
 impl Default for EnvConfig<'_> {
     fn default() -> Self {
         Self {
-            source_file: "SOURCE",
+            source_file_path: "SOURCE",
             prog_start_line: "SOURCE_PROG_START_LINE",
             prog_start_col: "SOURCE_PROG_START_COL",
             prev_output: "OUTPUT_PREV",
@@ -53,25 +53,28 @@ impl Default for MarkerConfig<'_> {
 #[derive(Debug)]
 pub struct Config<'a> {
     /// Whether to protect output lines in CogShell'd files from accidental modification by including a hash after the `output_end` marker
-    pub output_checksum: bool,
+    pub output_checksums: bool,
     /// Optional suffix to append to each output line
     pub output_line_suffix: &'a str,
+    /// Whether to validate existing checksums following CogShell blocks
+    pub verify_input_checksums: bool,
     /// Shell lines which will be prepended to each embedded program before running
     pub prologue: Vec<&'a str>,
     /// Array of marker strings indicating start of program, end of program, and end of output
-    pub markers: MarkerConfig<'a>,
+    pub marker_strings: MarkerConfig<'a>,
     /// Overrides for names of CogShell environment variables
-    pub env_names: EnvConfig<'a>,
+    pub env_var_names: EnvConfig<'a>,
 }
 
 impl Default for Config<'_> {
     fn default() -> Self {
         Self {
-            output_checksum: true,
+            output_checksums: true,
             output_line_suffix: "",
+            verify_input_checksums: true,
             prologue: Vec::new(),
-            markers: MarkerConfig::default(),
-            env_names: EnvConfig::default(),
+            marker_strings: MarkerConfig::default(),
+            env_var_names: EnvConfig::default(),
         }
     }
 }

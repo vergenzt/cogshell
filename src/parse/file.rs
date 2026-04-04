@@ -1,9 +1,9 @@
-use regex::Regex;
+use regex::{Match, Regex};
 
+use super::block::ParsedBlock;
+use super::marker::MarkerKind;
 use crate::config::Config;
-use crate::parse::block::ParsedBlock;
-use crate::parse::error::{ParseError, ParseErrorKind};
-use crate::parse::marker::Marker;
+use crate::errors::{ParseError, ParseErrorKind};
 
 pub struct ParseContext<'a> {
     pub config: &'a Config<'a>,
@@ -29,36 +29,33 @@ impl<'a> ParsedFile<'a> {
         filename: &'a str,
     ) -> Result<Self, ParseError<'a>> {
         let markers_re = {
-            let pats = config.markers.map(regex::escape);
+            let pats = config.marker_strings.map(regex::escape);
             let grps = pats.map(|pat| format!("({})", pat));
             Regex::new(&grps.join("|")).unwrap()
         };
 
-        let mut blocks: Vec<ParsedBlock<'_>> = Vec::new();
-        let mut state: Vec<Marker<'_>> = Vec::with_capacity(3);
+        let mut blocks: Vec<ParsedBlock> = Vec::new();
+        let mut state: Vec<Match> = Vec::with_capacity(3);
 
         for caps in markers_re.captures_iter(content) {
-            let marker = (0..3)
-                .find_map(|i| {
-                    caps.get(i).map(|span| {
-                        let kind = i.into();
-                        Marker { kind, span }
-                    })
-                })
-                .unwrap();
+            let marker = caps.get_match();
+            let marker_kind: MarkerKind = {
+                let grp_idx = (1..=3).find_map(|i| caps.get(i).and(Some(i))).unwrap();
+                (grp_idx - 1).into()
+            };
 
-            if marker.kind as usize == state.len() {
+            if marker_kind as usize == state.len() {
                 state.push(marker);
 
                 // check for complete marker set
                 if state.len() == 3 {
-                    let markers: [Marker; 3] = state.split_off(0).try_into().unwrap();
+                    let markers: [Match; 3] = state.split_off(0).try_into().unwrap();
                     let block = ParsedBlock::new(content, markers);
                     blocks.push(block);
                 }
             } else {
                 return Err(ParseError {
-                    kind: ParseErrorKind::UnexpectedMarker(marker),
+                    kind: ParseErrorKind::UnexpectedMarker(marker_kind, marker),
                     state,
                     ctx: ParseContext {
                         config,

@@ -1,4 +1,4 @@
-use std::{borrow::Borrow, iter::zip, ops::Deref};
+use std::{borrow::Borrow, iter::zip};
 
 #[cfg(test)]
 mod mod_test;

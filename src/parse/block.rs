@@ -2,7 +2,9 @@ extern crate proc_macro;
 
 use std::borrow::Borrow;
 
-use crate::{parse::marker::Marker, utils::common_prefix_of_chars};
+use regex::Match;
+
+use crate::{parse::OutputHash, utils::common_prefix_of_chars};
 
 /// Everything needed to execute an embedded code block
 pub struct ParsedBlock<'a> {
@@ -11,7 +13,9 @@ pub struct ParsedBlock<'a> {
     /// The text to prepend to lines of output
     prog_whitespace_pfx: &'a str,
     /// The unmodified previous output bytes found between the program end and output end markers
-    prev_prefixed_output: &'a str,
+    output_prev: &'a str,
+    /// The previous output checksum which followed this block's output end marker, if present
+    output_prev_hash: Option<OutputHash<'a>>,
 }
 
 macro_rules! strspan {
@@ -37,8 +41,8 @@ fn leading_whitespace<'a>(s: impl Borrow<&'a str>) -> &'a str {
 
 impl<'a> ParsedBlock<'a> {
     /// Parse a CogShell block from matched markers
-    pub fn new(content: &'a str, markers: [Marker; 3]) -> Self {
-        let [prog_beg, prog_end, outp_end] = markers.map(|m| m.span.as_str());
+    pub fn new(content: &'a str, markers: [Match<'a>; 3]) -> Self {
+        let [prog_beg, prog_end, outp_end] = markers.map(|m| m.as_str());
 
         // find beginning of line containing start marker
         let prog_pfx = strspan!(content[..prog_beg]);
@@ -80,12 +84,17 @@ impl<'a> ParsedBlock<'a> {
             }
         }
 
-        let prev_prefixed_output = &strspan!(content[prog_end..outp_end])[prog_end.len()..];
+        let output_prev = &strspan!(content[prog_end..outp_end])[prog_end.len()..]
+            .trim_prefix('\n')
+            .trim_suffix('\n');
+        let block_sfx = strspan!(content[outp_end..]);
+        let output_prev_hash = OutputHash::from_block_suffix(block_sfx);
 
         Self {
-            prog_lines: prog_lines,
+            prog_lines,
             prog_whitespace_pfx,
-            prev_prefixed_output,
+            output_prev,
+            output_prev_hash,
         }
     }
 }

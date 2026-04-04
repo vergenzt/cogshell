@@ -1,12 +1,14 @@
 use std::fmt::Display;
 
-use regex::Match;
-
+/// A kind of marker
 #[derive(Copy, Clone, Debug)]
 pub enum MarkerKind {
     // (note: order matters; discriminant used as index into parser state vec.)
+    /// Indicates the start of an embedded CogShell program
     ProgramStart = 0,
+    /// Indicates the end of an embedded CogShell program, and the start of its output
     ProgramEnd,
+    /// Indicates the end of an embedded CogShell program's output
     OutputEnd,
 }
 
@@ -20,13 +22,13 @@ impl MarkerKind {
     }
 }
 
-impl Into<MarkerKind> for usize {
-    fn into(self) -> MarkerKind {
+impl From<usize> for MarkerKind {
+    fn from(i: usize) -> MarkerKind {
         [
             MarkerKind::ProgramStart,
             MarkerKind::ProgramEnd,
             MarkerKind::OutputEnd,
-        ][self]
+        ][i]
     }
 }
 
@@ -34,10 +36,4 @@ impl Display for MarkerKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(self.description())
     }
-}
-
-#[derive(Clone, Debug)]
-pub struct Marker<'a> {
-    pub kind: MarkerKind,
-    pub span: Match<'a>,
 }
