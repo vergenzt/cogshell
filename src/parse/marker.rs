@@ -1,7 +1,7 @@
 use std::fmt::Display;
 
 /// A kind of marker
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum MarkerKind {
     // (note: order matters; discriminant used as index into parser state vec.)
     /// Indicates the start of an embedded CogShell program

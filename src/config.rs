@@ -9,6 +9,8 @@ pub struct EnvConfig<'a> {
     pub prog_start_line: &'a str,
     /// Column number on the first line the source file where current program source starts
     pub prog_start_col: &'a str,
+    /// Byte offset from start of file to where current program source starts
+    pub prog_start_offset: &'a str,
     /// Path to tempfile containing the previous output of current CogShell block
     pub output_prev: &'a str,
     /// Path to tempfile to which the *next* output of current CogShell block should be written (if not using stdout)
@@ -21,6 +23,7 @@ impl Default for EnvConfig<'_> {
             source_file_path: "SOURCE",
             prog_start_line: "SOURCE_PROG_START_LINE",
             prog_start_col: "SOURCE_PROG_START_COL",
+            prog_start_offset: "SOURCE_PROG_START_OFFSET",
             output_prev: "OUTPUT_PREV",
             output_next: "OUTPUT",
         }

@@ -1,8 +1,10 @@
+use std::collections::VecDeque;
+
 use annotate_snippets::{AnnotationKind, Level, Renderer, Snippet};
 use regex::Match;
 
+use crate::parse::FileParser;
 use crate::parse::MarkerKind;
-use crate::parse::ParseContext;
 
 #[derive(Debug)]
 pub enum ParseErrorKind<'a> {
@@ -12,8 +14,8 @@ pub enum ParseErrorKind<'a> {
 
 pub struct ParseError<'a> {
     pub kind: ParseErrorKind<'a>,
-    pub state: Vec<Match<'a>>,
-    pub ctx: ParseContext<'a>,
+    pub state: VecDeque<Match<'a>>,
+    pub ctx: &'a FileParser<'a>,
 }
 
 impl ParseError<'_> {
@@ -23,7 +25,7 @@ impl ParseError<'_> {
         let sought_str: &str = &ctx.config.marker_strings[sought_idx];
         let sought_kind: MarkerKind = sought_idx.into();
 
-        let source = Snippet::source(ctx.content).path(ctx.filename);
+        let source = Snippet::source(&ctx.content).path(ctx.filename);
         let error = Level::ERROR;
 
         let error = match kind {

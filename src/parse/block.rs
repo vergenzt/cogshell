@@ -4,12 +4,17 @@ use std::borrow::Borrow;
 
 use regex::Match;
 
-use crate::{parse::OutputHash, utils::common_prefix_of_chars};
+use crate::{
+    parse::{FileParser, OutputHash},
+    utils::common_prefix_of_chars,
+};
 
 /// Everything needed to execute an embedded code block
 pub struct ParsedBlock<'a> {
     /// The (pre-trimmed) lines of the program to run
     pub prog_lines: Vec<&'a str>,
+    /// The line, column, and byte offset where the program text starts
+    pub prog_start_loc: (usize, usize, usize),
     /// The text to prepend to lines of output
     pub prog_whitespace_pfx: &'a str,
     /// The unmodified previous output bytes found between the program end and output end markers
@@ -41,8 +46,13 @@ fn leading_whitespace<'a>(s: impl Borrow<&'a str>) -> &'a str {
 
 impl<'a> ParsedBlock<'a> {
     /// Parse a CogShell block from matched markers
-    pub fn new(content: &'a str, markers: [Match<'a>; 3]) -> Self {
-        let [prog_beg, prog_end, outp_end] = markers.map(|m| m.as_str());
+    pub fn new(
+        ctx: &'a FileParser<'a>,
+        markers: [&'a str; 3],
+        prog_start_loc: (usize, usize, usize),
+    ) -> Self {
+        let FileParser { content, .. } = ctx;
+        let [prog_beg, prog_end, outp_end] = markers;
 
         // find beginning of line containing start marker
         let prog_pfx = strspan!(content[..prog_beg]);
@@ -93,6 +103,7 @@ impl<'a> ParsedBlock<'a> {
         Self {
             prog_lines,
             prog_whitespace_pfx,
+            prog_start_loc,
             output_prev,
             output_prev_hash,
         }
