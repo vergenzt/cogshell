@@ -1,124 +1,90 @@
-use std::fs;
+use std::ffi::{OsStr, OsString};
+use std::fs::{self, File};
 use std::io::{self, BufRead, Write};
+use std::iter::{self};
 use std::os::unix::fs::PermissionsExt;
+use std::path::{self, PathBuf};
 use std::process::Stdio;
+use std::str::pattern::Pattern;
+use std::{array, process};
 
 use anyhow::{Context, Result};
+use fastrand::alphanumeric as rand_alnum;
+use uuid::Uuid;
 
 use crate::config::Config;
-use crate::parse::ParsedFile;
+use crate::parse::{ParsedBlock, ParsedFile};
 
-pub fn execute(file: &ParsedFile, config: &Config) -> Result<()> {
+const OUTPUT_SEP_NONCE_LEN: usize = 40;
+
+pub fn execute(file: &ParsedFile) -> Result<()> {
+    let file_path = PathBuf::from(file.filename);
+    let file_ext: OsString = match file_path.extension() {
+        Some(ext) => ext.into(),
+        None => "".into(),
+    };
     let exec_dir = tempfile::Builder::new().prefix("cogshell-").tempdir()?;
     let exec_dir_path = exec_dir.path();
 
-    let program_file = exec_dir_path.join("program");
-    let output_prev_path = exec_dir_path.join("output_prev");
-    let output_next_path = exec_dir_path.join("output_next");
+    let content_line_starts: Vec<_> = file.content.match_indices('\n').map(|(i, _)| i).collect();
 
-    fs::write(&program_file, &self.program)?;
-    let mut perms = fs::metadata(&program_file)?.permissions();
-    perms.set_mode(0o500); // S_IEXEC | S_IREAD
-    fs::set_permissions(&program_file, perms)?;
-    fs::write(&output_prev_path, &self.output_prev)?;
-    fs::File::create(&output_next_path)?;
-
-    let names = &self.config.env_names;
-    let prefix = &self.config.envvar_prefix;
-    let env_vars = [
-        (
-            &names.file,
-            fs::canonicalize(&self.filename)?
-                .to_string_lossy()
-                .into_owned(),
-        ),
-        (&names.program, program_file.to_string_lossy().into_owned()),
-        (
-            &names.output_prev,
-            output_prev_path.to_string_lossy().into_owned(),
-        ),
-        (
-            &names.output_next,
-            output_next_path.to_string_lossy().into_owned(),
-        ),
-        (
-            &names.exec_dir,
-            exec_dir_path.to_string_lossy().into_owned(),
-        ),
-    ]
-    .map(|(name, val)| (format!("{prefix}{name}"), val));
-
-    let stdin = if self.config.prev_output_on_stdin {
-        Stdio::from(fs::File::open(&output_prev_path)?)
-    } else {
-        Stdio::null()
-    };
-    let stdout = if self.config.next_output_on_stdout {
-        Stdio::from(fs::File::create(&output_next_path)?)
-    } else {
-        Stdio::inherit()
+    // create nonces to figure out where output of one block ends and another begins
+    let output_sep_nonces: Vec<_> = {
+        // one for each block plus one for the prologue
+        let n = file.blocks.len() + 1;
+        iter::repeat_with(Uuid::new_v4).take(n).collect()
     };
 
-    std::process::Command::new("sh")
-        .arg("-c")
-        .arg(std::str::from_utf8(&self.program).context("program is valid utf8")?)
-        .current_dir(exec_dir_path)
-        .envs(env_vars)
-        .stdin(stdin)
-        .stdout(stdout)
-        .status()?
-        .exit_ok()?;
+    let vars = &file.config.env_var_names;
+    let program_path = exec_dir_path.join("program.sh");
 
-    let mut hasher = Md5::new();
-    let mut last_output_line: Vec<u8> = vec![];
+    let output_sep_nonce_vars = output_sep_nonces
+        .iter()
+        .enumerate()
+        .map(|(i, nonce)| (format!("OUTPUT_NONCE_{}", i), nonce.to_string()));
 
-    let mut out_file = fs::File::create(&self.filename)?;
-    out_file.write_all(&self.file_prefix)?;
-
-    for line_sep in LINE_SEPS {
-        if self.output_prev_raw.starts_with(line_sep) {
-            out_file.write_all(b"\n")?;
-            break;
-        }
-    }
-
-    let mut reader = io::BufReader::new(fs::File::open(&output_next_path)?);
-    let mut raw_line: Vec<u8> = Vec::new();
-    loop {
-        raw_line.clear();
-        if reader.read_until(b'\n', &mut raw_line)? == 0 {
-            break;
-        }
-        let line_sep = LINE_SEPS
-            .iter()
-            .find(|sep| raw_line.ends_with(*sep))
-            .copied()
-            .unwrap_or(b"");
-        let output_line_raw = &raw_line[..raw_line.len() - line_sep.len()];
-        let output_line: Vec<u8> = [
-            self.output_whitespace_pfx.as_slice(),
-            output_line_raw,
-            &self.config.output_line_suffix,
-            line_sep,
+    let output_path_vars = file.blocks.iter().enumerate().flat_map(|(i, block)| {
+        [
+            ("output_prev", vars.output_prev, block.output_prev),
+            ("output_next", vars.output_next, ""),
         ]
-        .concat();
-        out_file.write_all(&output_line)?;
-        hasher.update(&output_line);
-        last_output_line = output_line;
+        .map(|(basename, varname, content)| {
+            let path = exec_dir_path
+                .join(basename)
+                .with_added_extension((i + 1).to_string())
+                .with_added_extension(&file_ext);
+            fs::write(&path, content);
+            (varname, path)
+        })
+    });
+
+    let cmd = process::Command::new("bash")
+        .arg(program_path)
+        .env(vars.source_file_path, path::absolute(file_path)?)
+        .envs(output_sep_nonce_vars)
+        .envs(output_path_vars);
+
+    let mut prg: Vec<&str> = vec![];
+
+    prg.push("#!/usr/bin/env bash");
+    prg.extend(&file.config.prologue);
+
+    let output_sep_nonce0 = format!("echo '{}'", &output_sep_nonces[0]);
+    prg.push(&output_sep_nonce0);
+
+    for (block_idx, block) in file.blocks.iter().enumerate() {
+        let out_prev = exec_dir_path
+            .join("output_prev")
+            .with_added_extension(format!("{}", block_idx + 1))
+            .with_added_extension(&file_ext);
+        fs::write(out_prev, block.output_prev);
+        prg.push(&format!(
+            "export {}={}",
+            vars.output_prev,
+            out_prev.display()
+        ));
+        prg.extend(block.prog_lines);
     }
 
-    for line_sep in LINE_SEPS {
-        if self.output_prev_raw.ends_with(line_sep) && !last_output_line.ends_with(line_sep) {
-            out_file.write_all(line_sep)?;
-            out_file.write_all(&self.output_whitespace_pfx)?;
-        }
-    }
-
-    out_file.write_all(&self.config.markers.output_end)?;
-    if self.config.output_checksum {
-        write!(out_file, " ({:x})", hasher.finalize())?;
-    }
-    out_file.write_all(&self.file_suffix)?;
-
-    Ok(())
+    todo!()
 }

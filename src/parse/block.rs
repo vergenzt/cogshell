@@ -9,13 +9,13 @@ use crate::{parse::OutputHash, utils::common_prefix_of_chars};
 /// Everything needed to execute an embedded code block
 pub struct ParsedBlock<'a> {
     /// The (pre-trimmed) lines of the program to run
-    prog_lines: Vec<&'a str>,
+    pub prog_lines: Vec<&'a str>,
     /// The text to prepend to lines of output
-    prog_whitespace_pfx: &'a str,
+    pub prog_whitespace_pfx: &'a str,
     /// The unmodified previous output bytes found between the program end and output end markers
-    output_prev: &'a str,
+    pub output_prev: &'a str,
     /// The previous output checksum which followed this block's output end marker, if present
-    output_prev_hash: Option<OutputHash<'a>>,
+    pub output_prev_hash: Option<OutputHash<'a>>,
 }
 
 macro_rules! strspan {

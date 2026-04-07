@@ -4,15 +4,15 @@ use std::ops::Deref;
 #[derive(Debug)]
 pub struct EnvConfig<'a> {
     /// Absolute path to the source file containing current embedded CogShell program
-    source_file_path: &'a str,
+    pub source_file_path: &'a str,
     /// Line number within the source file where current program source starts
-    prog_start_line: &'a str,
+    pub prog_start_line: &'a str,
     /// Column number on the first line the source file where current program source starts
-    prog_start_col: &'a str,
+    pub prog_start_col: &'a str,
     /// Path to tempfile containing the previous output of current CogShell block
-    prev_output: &'a str,
+    pub output_prev: &'a str,
     /// Path to tempfile to which the *next* output of current CogShell block should be written (if not using stdout)
-    next_output: &'a str,
+    pub output_next: &'a str,
 }
 
 impl Default for EnvConfig<'_> {
@@ -21,8 +21,8 @@ impl Default for EnvConfig<'_> {
             source_file_path: "SOURCE",
             prog_start_line: "SOURCE_PROG_START_LINE",
             prog_start_col: "SOURCE_PROG_START_COL",
-            prev_output: "OUTPUT_PREV",
-            next_output: "OUTPUT",
+            output_prev: "OUTPUT_PREV",
+            output_next: "OUTPUT",
         }
     }
 }
