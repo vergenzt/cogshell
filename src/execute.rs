@@ -1,13 +1,13 @@
 use std::ffi::OsString;
 use std::fs::{self, File};
-use std::io::{self, Write};
-use std::iter::{self};
+use std::io::{self, BufReader, Write};
+use std::iter::{self, chain, once, zip};
 use std::path::{self, PathBuf};
 use std::process::{self, Stdio};
 
 use uuid::Uuid;
 
-use crate::parse::ParsedFile;
+use crate::parse::{Marker, MarkerKind, ParsedBlock, ParsedFile};
 
 pub fn execute(&ParsedFile { ctx, blocks }: &ParsedFile) -> io::Result<()> {
     let file_path = PathBuf::from(ctx.filename);
@@ -81,15 +81,52 @@ pub fn execute(&ParsedFile { ctx, blocks }: &ParsedFile) -> io::Result<()> {
         .stderr(Stdio::inherit())
         .spawn()?;
 
+    let proc_out_lines = BufReader::new(proc.stdout.unwrap()).lines();
+
     let output_path = exec_dir_path.join("output").with_extension(file_ext);
     let mut output_file = File::create_buffered(output_path)?;
 
-    for i in 0..=blocks.len() {
-        if i < blocks.len() {
-            let block = &blocks[i];
-            let [prog_start, prog_end, outp_end] = &block.markers;
-            write!(output_file, "{}", &ctx.content[..prog_end.span.end()])?;
-        }
+    let mut prev_offset = 0;
+    let blocks_and_nonces = zip(
+        chain(once(None), blocks.iter().map(Some)),
+        output_sep_nonces,
+    );
+
+    for (block_opt, output_end_nonce) in blocks_and_nonces {
+
+      let output = proc_out_lines
+
+      if let Some(block) = block_opt {
+
+        // write portion of file until output block start
+        let pfx_start = match block_prev {
+            Some(block) => block.markers[MarkerKind::OutputEnd as usize].span.end(),
+            None => 0,
+        };
+        let pfx_end = match block_next {
+            Some(block) => block.markers[MarkerKind::ProgramEnd as usize].span.end(),
+            None => ctx.content.len(),
+        };
+        write!(output_file, "{}", &ctx.content[pfx_start..pfx_end]);
+
+        let block_output = if let Some(block) = block_next
+            && let [_, prog_end, outp_end] = &block.markers
+            && prog_end.line != outp_end.line
+        {};
     }
+
+    // for block_pairs in capped_blocks {
+    //     match block_pairs {
+    //         [None, Some(block)] => {}
+    //     }
+    // }
+
+    // for i in 0..=blocks.len() {
+    //     if i < blocks.len() {
+    //         let block = &blocks[i];
+    //         let [prog_start, prog_end, outp_end] = &block.markers;
+    //         write!(output_file, "{}", &ctx.content[..prog_end.span.end()])?;
+    //     }
+    // }
     Ok(())
 }
