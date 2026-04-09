@@ -13,8 +13,6 @@ pub struct EnvConfig<'a> {
     pub prog_start_offset: &'a str,
     /// Path to tempfile containing the previous output of current CogShell block
     pub output_prev: &'a str,
-    /// Path to tempfile to which the *next* output of current CogShell block should be written (if not using stdout)
-    pub output_next: &'a str,
 }
 
 impl Default for EnvConfig<'_> {
