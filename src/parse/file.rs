@@ -8,6 +8,7 @@ use super::block::ParsedBlock;
 use super::marker::MarkerKind;
 use crate::config::Config;
 use crate::errors::{ParseError, ParseErrorKind};
+use crate::parse::Marker;
 
 pub struct FileParser<'a> {
     /// The name of the file
@@ -47,16 +48,15 @@ impl<'a> FileParser<'a> {
             Regex::new(&grps_or_nl).unwrap()
         };
 
-        let mut line_num: usize = 0;
-        let mut line_start_offset: usize = 0;
-        let mut prog_start_loc: (usize, usize, usize) = (0, 0, 0);
+        let mut line: usize = 0;
+        let mut line_start: usize = 0;
         let mut blocks: Vec<ParsedBlock> = Vec::new();
         let mut state: VecDeque<Match> = VecDeque::with_capacity(3);
 
         for caps in markers_re.captures_iter(content) {
             if caps.get_match().as_str() == "\n" {
-                line_num += 1;
-                line_start_offset = caps.get_match().end();
+                line += 1;
+                line_start = caps.get_match().end();
                 continue;
             }
 
@@ -66,22 +66,18 @@ impl<'a> FileParser<'a> {
                 (grp_idx - 1).into()
             };
 
-            if marker_kind == MarkerKind::ProgramStart {
-                prog_start_loc = (
-                    line_num,
-                    line_start_offset,
-                    marker.start() - line_start_offset,
-                );
-            }
-
             if marker_kind as usize == state.len() {
                 state.push_back(marker);
 
                 // check for complete marker set
                 if state.len() == 3 {
-                    let marker_matches = array::from_fn(|_| state.pop_front().unwrap());
-                    let markers = marker_matches.map(|m| m.as_str());
-                    let block = ParsedBlock::new(self, markers, prog_start_loc);
+                    let span = state.pop_front().unwrap();
+                    let markers = array::from_fn(|_| Marker {
+                        span,
+                        line,
+                        col: span.start() - line_start,
+                    });
+                    let block = ParsedBlock::new(self, markers);
                     blocks.push(block);
                 }
             } else {

@@ -1,4 +1,5 @@
 #![feature(trim_prefix_suffix)]
+#![feature(file_buffered)]
 
 mod config;
 mod errors;

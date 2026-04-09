@@ -1,5 +1,16 @@
 use std::fmt::Display;
 
+use regex::Match;
+
+pub struct Marker<'a> {
+    /// The marker itself, including the start & end locations within original content
+    pub span: Match<'a>,
+    /// The line number of the marker start point
+    pub line: usize,
+    /// The column number of the marker start point
+    pub col: usize,
+}
+
 /// A kind of marker
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum MarkerKind {

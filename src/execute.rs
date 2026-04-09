@@ -1,17 +1,15 @@
 use std::ffi::OsString;
 use std::fs::{self, File};
-use std::io::{BufWriter, Read, Write};
+use std::io::{self, Write};
 use std::iter::{self};
 use std::path::{self, PathBuf};
-use std::process::{self, Output, Stdio};
+use std::process::{self, Stdio};
 
-use anyhow::Result;
-use regex::bytes::Regex;
 use uuid::Uuid;
 
 use crate::parse::ParsedFile;
 
-pub fn execute(ParsedFile { ctx, blocks }: &ParsedFile) -> Result<()> {
+pub fn execute(&ParsedFile { ctx, blocks }: &ParsedFile) -> io::Result<()> {
     let file_path = PathBuf::from(ctx.filename);
     let file_ext: OsString = match file_path.extension() {
         Some(ext) => ext.into(),
@@ -31,7 +29,7 @@ pub fn execute(ParsedFile { ctx, blocks }: &ParsedFile) -> Result<()> {
 
     let vars = &ctx.config.env_var_names;
     let program_path = exec_dir_path.join("program.sh");
-    let mut prg = BufWriter::new(File::open(&program_path)?);
+    let mut prg = File::create_buffered(&program_path)?;
 
     writeln!(prg, "#!/usr/bin/env bash")?;
 
@@ -49,14 +47,19 @@ pub fn execute(ParsedFile { ctx, blocks }: &ParsedFile) -> Result<()> {
             fs::write(&path, &ctx.content)?;
             writeln!(prg, "export {}={}", vars.output_prev, path.display())?;
 
-            let (line, col, offset) = block.prog_start_loc;
-            writeln!(prg, "export {}={}", vars.prog_start_line, line)?;
-            writeln!(prg, "export {}={}", vars.prog_start_col, col)?;
-            writeln!(prg, "export {}={}", vars.prog_start_offset, offset)?;
+            let prog_start = block.markers[0];
+            writeln!(prg, "export {}={}", vars.prog_start_line, prog_start.line)?;
+            writeln!(prg, "export {}={}", vars.prog_start_col, prog_start.col)?;
+            writeln!(
+                prg,
+                "export {}={}",
+                vars.prog_start_offset,
+                prog_start.span.start()
+            )?;
             writeln!(
                 prg,
                 "echo 'executing block at {}:{}:{}...' >&2",
-                ctx.filename, line, col
+                ctx.filename, prog_start.line, prog_start.col
             );
 
             &block.prog_lines
@@ -78,7 +81,15 @@ pub fn execute(ParsedFile { ctx, blocks }: &ParsedFile) -> Result<()> {
         .stderr(Stdio::inherit())
         .spawn()?;
 
-    let output_file = exec_dir_path.join("output").with_extension(file_ext);
+    let output_path = exec_dir_path.join("output").with_extension(file_ext);
+    let mut output_file = File::create_buffered(output_path)?;
 
-    for ()
+    for i in 0..=blocks.len() {
+        if i < blocks.len() {
+            let block = &blocks[i];
+            let [prog_start, prog_end, outp_end] = &block.markers;
+            write!(output_file, "{}", &ctx.content[..prog_end.span.end()])?;
+        }
+    }
+    Ok(())
 }

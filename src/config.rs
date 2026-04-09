@@ -23,7 +23,6 @@ impl Default for EnvConfig<'_> {
             prog_start_col: "SOURCE_PROG_START_COL",
             prog_start_offset: "SOURCE_PROG_START_OFFSET",
             output_prev: "OUTPUT_PREV",
-            output_next: "OUTPUT",
         }
     }
 }
