@@ -13,6 +13,11 @@ pub struct EnvConfig<'a> {
     pub prog_start_offset: &'a str,
     /// Path to tempfile containing the previous output of current CogShell block
     pub output_prev: &'a str,
+    /// Internal nonce value used to separate output from multiple blocks in file
+    /// (NB: Var name is suffixed with `_` and an integer index.)
+    pub output_sep_nonce: &'a str,
+    /// Temporary directory used for storing intermediate files during execution
+    pub tmp_dir: &'a str,
 }
 
 impl Default for EnvConfig<'_> {
@@ -23,6 +28,8 @@ impl Default for EnvConfig<'_> {
             prog_start_col: "SOURCE_PROG_START_COL",
             prog_start_offset: "SOURCE_PROG_START_OFFSET",
             output_prev: "OUTPUT_PREV",
+            output_sep_nonce: "OUTPUT_SEP_NONCE",
+            tmp_dir: "TMP",
         }
     }
 }
