@@ -1,17 +1,12 @@
-mod errors;
-
-pub use errors::*;
-
-use std::ffi::OsString;
 use std::fs::{self, File};
-use std::io::{self, BufRead as _, BufReader, Result, Write};
-use std::iter::{self, chain, once, zip};
-use std::path::{self, PathBuf};
+use std::io::{self, BufReader, Write};
+use std::iter::{self};
+use std::path::PathBuf;
 use std::process::{self, Stdio};
 
 use uuid::Uuid;
 
-use crate::parse::{Marker, MarkerKind, Markers, ParsedBlock, ParsedFile};
+use crate::parse::{Marker, Markers, ParsedFile};
 
 pub fn execute(&ParsedFile { ctx, blocks }: &ParsedFile) -> io::Result<()> {
     let file_path = PathBuf::from(ctx.filename);
@@ -34,11 +29,11 @@ pub fn execute(&ParsedFile { ctx, blocks }: &ParsedFile) -> io::Result<()> {
     prg_env.push((vars.temp_dir, temp_dir.to_str().unwrap()));
     prg_env.push((vars.source_path, ctx.filename));
 
-    // create nonces to figure out where output of one block ends and another begins.
-    // nonce 0 terminates the prologue, remainder terminate blocks.
+    // create nonces to separate blocks (incl. prologue)
+    // nonce 0 terminates the prologue, remainder terminate blocks except the last
     // NB: each nonce val begins and ends with a newline.
     let output_sep_nonces: Vec<String> = iter::repeat_with(|| format!("\n{}\n", Uuid::new_v4()))
-        .take(blocks.len() + 1)
+        .take(blocks.len())
         .collect();
 
     // push nonces into environment
@@ -188,6 +183,12 @@ pub fn execute(&ParsedFile { ctx, blocks }: &ParsedFile) -> io::Result<()> {
         }
 
         write!(output_file, "{}", outp_end.span.as_str());
+
+        // copy remainder of file if this is the last block
+        if i1 == blocks.len() {
+            let sfx = &ctx.content[outp_end.span.end()..];
+            write!(output_file, "{sfx}");
+        }
     }
 
     Ok(())
