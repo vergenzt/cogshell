@@ -1,14 +1,13 @@
 use std::collections::VecDeque;
-use std::fmt::Display;
 use std::{array, fs, io};
 
 use regex::{Match, Regex};
 
 use super::block::ParsedBlock;
+use super::errors::{ParseError, ParseErrorKind};
 use super::marker::MarkerKind;
 use crate::config::Config;
-use crate::errors::{ParseError, ParseErrorKind};
-use crate::parse::Marker;
+use crate::parse::{Marker, Markers};
 
 pub struct FileParser<'a> {
     /// The name of the file
@@ -72,11 +71,11 @@ impl<'a> FileParser<'a> {
                 // check for complete marker set
                 if state.len() == 3 {
                     let span = state.pop_front().unwrap();
-                    let markers = array::from_fn(|_| Marker {
+                    let markers = Markers(array::from_fn(|_| Marker {
                         span,
                         line,
                         col: span.start() - line_start,
-                    });
+                    }));
                     let block = ParsedBlock::new(self, markers);
                     blocks.push(block);
                 }

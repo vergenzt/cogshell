@@ -4,7 +4,7 @@ use std::ops::Deref;
 #[derive(Debug)]
 pub struct EnvConfig<'a> {
     /// Absolute path to the source file containing current embedded CogShell program
-    pub source_file_path: &'a str,
+    pub source_path: &'a str,
     /// Line number within the source file where current program source starts
     pub prog_start_line: &'a str,
     /// Column number on the first line the source file where current program source starts
@@ -17,19 +17,19 @@ pub struct EnvConfig<'a> {
     /// (NB: Var name is suffixed with `_` and an integer index.)
     pub output_sep_nonce: &'a str,
     /// Temporary directory used for storing intermediate files during execution
-    pub tmp_dir: &'a str,
+    pub temp_dir: &'a str,
 }
 
 impl Default for EnvConfig<'_> {
     fn default() -> Self {
         Self {
-            source_file_path: "SOURCE",
+            source_path: "SOURCE",
             prog_start_line: "SOURCE_PROG_START_LINE",
             prog_start_col: "SOURCE_PROG_START_COL",
             prog_start_offset: "SOURCE_PROG_START_OFFSET",
             output_prev: "OUTPUT_PREV",
             output_sep_nonce: "OUTPUT_SEP_NONCE",
-            tmp_dir: "TMP",
+            temp_dir: "TMP",
         }
     }
 }

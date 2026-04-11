@@ -1,6 +1,30 @@
-use std::fmt::Display;
+use std::{fmt::Display, ops::Deref};
 
 use regex::Match;
+
+pub struct Markers<'a>(pub [Marker<'a>; 3]);
+
+impl<'a> Markers<'a> {
+    pub fn prog_start(&self) -> &Marker<'a> {
+        &self.0[0]
+    }
+
+    pub fn prog_end(&self) -> &Marker<'a> {
+        &self.0[1]
+    }
+
+    pub fn outp_end(&self) -> &Marker<'a> {
+        &self.0[2]
+    }
+}
+
+impl<'a> Deref for Markers<'a> {
+    type Target = [Marker<'a>; 3];
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 pub struct Marker<'a> {
     /// The marker itself, including the start & end locations within original content

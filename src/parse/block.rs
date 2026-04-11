@@ -3,7 +3,7 @@ extern crate proc_macro;
 use std::borrow::Borrow;
 
 use crate::{
-    parse::{FileParser, Marker, OutputHash},
+    parse::{FileParser, Markers, OutputHash},
     utils::common_prefix_of_chars,
 };
 
@@ -14,7 +14,7 @@ pub struct ParsedBlock<'a> {
     /// The text to prepend to lines of output
     pub prog_whitespace_pfx: &'a str,
     /// The markers which delimit this block
-    pub markers: [Marker<'a>; 3],
+    pub markers: Markers<'a>,
     /// The unmodified previous output bytes found between the program end and output end markers
     pub output_prev: &'a str,
     /// The previous output checksum which followed this block's output end marker, if present
@@ -35,9 +35,9 @@ fn leading_whitespace<'a>(s: impl Borrow<&'a str>) -> &'a str {
 
 impl<'a> ParsedBlock<'a> {
     /// Parse a CogShell block from matched markers
-    pub fn new(ctx: &'a FileParser<'a>, markers: [Marker<'a>; 3]) -> Self {
+    pub fn new(ctx: &'a FileParser<'a>, markers: Markers<'a>) -> Self {
         let FileParser { content, .. } = ctx;
-        let [prog_beg, prog_end, outp_end] = &markers;
+        let Markers([prog_beg, prog_end, outp_end]) = &markers;
 
         // find beginning of line containing start marker
         let prog_pfx = &content[..prog_beg.span.start()];
