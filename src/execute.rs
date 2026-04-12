@@ -1,5 +1,5 @@
 use std::fs::{self, File};
-use std::io::{self, BufReader, Write};
+use std::io::{self, BufRead as _, BufReader, Write};
 use std::iter::{self};
 use std::path::PathBuf;
 use std::process::{self, Stdio};
@@ -13,7 +13,7 @@ pub fn execute(&ParsedFile { ctx, blocks }: &ParsedFile) -> io::Result<()> {
     let file_ext = ctx
         .filename
         .rfind('.')
-        .filter(|i| i > 0)
+        .filter(|&i| i > 0)
         .map(|i| &ctx.filename[i..])
         .unwrap_or("");
     let temp_dir_obj = tempfile::Builder::new().prefix("cogshell-").tempdir()?;

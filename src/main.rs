@@ -2,6 +2,7 @@
 #![feature(file_buffered)]
 #![feature(iter_map_windows)]
 
+mod args;
 mod config;
 mod execute;
 mod parse;
