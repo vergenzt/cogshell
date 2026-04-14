@@ -11,7 +11,7 @@ readme = "README.md"
 annotate-snippets = "0.12.13"
 anstream = { version = "1.0.0", features = ["auto"] }
 base64 = "0.22.1"
-bpaf = "0.9.24"
+bpaf = { version = "0.9.24", features = ["derive"] }
 hex = "0.4.3"
 md5 = "0.8.0"
 regex = "1"
