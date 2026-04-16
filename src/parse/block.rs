@@ -1,55 +1,69 @@
 extern crate proc_macro;
 
-use std::borrow::Borrow;
+use std::ops::Deref;
 
 use crate::{
-    parse::{Checksum, FileParser, Markers},
+    parse::{Checksum, FileContext, MarkerInst},
     utils::common_prefix_of_chars,
 };
 
+pub struct BlockMarkers<'a>([MarkerInst<'a>; 3]);
+
+impl<'a> BlockMarkers<'a> {
+    pub fn new(markers: [MarkerInst<'a>; 3]) -> BlockMarkers<'a> {
+        Self(markers)
+    }
+    pub fn prog_start(&self) -> &MarkerInst<'a> {
+        &self.0[0]
+    }
+    pub fn prog_end(&self) -> &MarkerInst<'a> {
+        &self.0[1]
+    }
+    pub fn outp_end(&self) -> &MarkerInst<'a> {
+        &self.0[2]
+    }
+}
+
+impl<'a> Deref for BlockMarkers<'a> {
+    type Target = [MarkerInst<'a>; 3];
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
 /// Everything needed to execute an embedded code block
-pub struct ParsedBlock<'a> {
+pub struct Block<'a> {
+    /// The markers which delimit this block
+    pub markers: BlockMarkers<'a>,
     /// The (pre-trimmed) lines of the program to run
     pub prog_lines: Vec<&'a str>,
     /// The text to prepend to lines of output
     pub prog_whitespace_pfx: &'a str,
-    /// The markers which delimit this block
-    pub markers: Markers<'a>,
     /// The unmodified previous output bytes found between the program end and output end markers
     pub output_prev: &'a str,
     /// The previous output checksum which followed this block's output end marker, if present
     pub output_prev_hash: Option<Checksum<'a>>,
 }
 
-fn leading_whitespace<'a>(s: impl Borrow<&'a str>) -> &'a str {
-    let s = s.borrow();
-    match s
-        .char_indices()
-        .take_while(|(_i, c)| c.is_whitespace())
-        .last()
-    {
-        Some((last_ws_idx, _)) => &s[..last_ws_idx + 1],
-        None => "",
-    }
-}
-
-impl<'a> ParsedBlock<'a> {
+impl<'a> Block<'a> {
     /// Parse a CogShell block from matched markers
-    pub fn new(ctx: &'a FileParser<'a>, markers: Markers<'a>) -> Self {
-        let FileParser { content, .. } = ctx;
-        let Markers([prog_beg, prog_end, outp_end]) = &markers;
+    pub fn new(ctx: &'a FileContext, markers: BlockMarkers<'a>) -> Self {
+        let FileContext { content, .. } = ctx;
+        let BlockMarkers([prog_beg, prog_end, outp_end]) = &markers;
 
         // find beginning of line containing start marker
-        let prog_pfx = &content[..prog_beg.span.start()];
+        let prog_pfx = &content[..prog_beg.r#match.start()];
         let prog_start_line_idx = prog_pfx.rfind('\n').map(|i| i + 1).unwrap_or(0);
-        let mut prog_lines: Vec<_> = (&content[prog_start_line_idx..prog_end.span.start()])
+        let mut prog_lines: Vec<_> = (&content[prog_start_line_idx..prog_end.r#match.start()])
             .split('\n')
             .collect();
 
         // save whitespace prefix of the marker lines for prepending to output
         // https://github.com/nedbat/cog/blob/05842d65800458b1a18eba89770d8cb705cb503a/cogapp/cogapp.py#L57-L58
         let prog_whitespace_pfx = {
-            let start_ws = leading_whitespace(&content[prog_start_line_idx..prog_beg.span.start()]);
+            let start_ws =
+                leading_whitespace(&content[prog_start_line_idx..prog_beg.r#match.start()]);
             if let Some(&prog_end_line_pfx) = prog_lines[1..].last() {
                 let end_ws = leading_whitespace(&prog_end_line_pfx);
                 common_prefix_of_chars(&vec![start_ws, end_ws]).unwrap()
@@ -68,7 +82,7 @@ impl<'a> ParsedBlock<'a> {
         }
 
         // remove start marker from first line
-        prog_lines[0] = prog_lines[0][prog_beg.span.len()..].trim_start();
+        prog_lines[0] = prog_lines[0][prog_beg.r#match.len()..].trim_start();
 
         // dedent program lines after the first
         let lines_to_dedent = prog_lines[1..].iter().filter(|l| !l.is_empty());
@@ -79,10 +93,10 @@ impl<'a> ParsedBlock<'a> {
             }
         }
 
-        let output_prev = &content[prog_end.span.end()..outp_end.span.start()]
+        let output_prev = &content[prog_end.r#match.end()..outp_end.r#match.start()]
             .trim_prefix('\n')
             .trim_suffix('\n');
-        let block_sfx = &content[outp_end.span.end()..];
+        let block_sfx = &content[outp_end.r#match.end()..];
         let output_prev_hash = Checksum::from_block_suffix(block_sfx);
 
         Self {

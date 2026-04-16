@@ -20,3 +20,16 @@ where
     }
     Some(comm_pfx)
 }
+
+/// Get any leading whitespace at the beginning of the given &str (what would be removed by `.trim_start()`)
+pub fn leading_whitespace<'a>(s: impl Borrow<&'a str>) -> &'a str {
+    let s = s.borrow();
+    match s
+        .char_indices()
+        .take_while(|(_i, c)| c.is_whitespace())
+        .last()
+    {
+        Some((last_ws_idx, _)) => &s[..last_ws_idx + 1],
+        None => "",
+    }
+}

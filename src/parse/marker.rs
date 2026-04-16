@@ -1,38 +1,29 @@
-use std::{fmt::Display, ops::Deref};
+use std::{fmt::Display, ops::Range};
 
-use regex::Match;
-
-pub struct Markers<'a>(pub [Marker<'a>; 3]);
-
-impl<'a> Markers<'a> {
-    pub fn prog_start(&self) -> &Marker<'a> {
-        &self.0[0]
-    }
-
-    pub fn prog_end(&self) -> &Marker<'a> {
-        &self.0[1]
-    }
-
-    pub fn outp_end(&self) -> &Marker<'a> {
-        &self.0[2]
-    }
-}
-
-impl<'a> Deref for Markers<'a> {
-    type Target = [Marker<'a>; 3];
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-pub struct Marker<'a> {
-    /// The marker itself, including the start & end locations within original content
-    pub span: Match<'a>,
-    /// The line number of the marker start point
+#[derive(Debug, Clone, Copy)]
+pub struct Span {
+    /// The starting byte offset of the span
+    pub start: usize,
+    /// The offset of the first byte following the span
+    pub end: usize,
+    /// The line number of the start of the span
     pub line: usize,
-    /// The column number of the marker start point
+    /// The column number of the start of the span
     pub col: usize,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct MarkerInst<'a> {
+    /// The content this marker was matched from
+    pub content: &'a str,
+    /// The span within the content where the marker was found
+    pub span: Span,
+}
+
+impl<'a> MarkerInst<'a> {
+    pub fn str(&self) -> &'a str {
+        &self.content[self.span.start..self.span.end]
+    }
 }
 
 /// A kind of marker

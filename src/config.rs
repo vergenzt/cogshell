@@ -1,7 +1,5 @@
 use std::{fmt::Display, ops::Deref, str::FromStr};
 
-use crate::parse::Marker;
-
 /// Names for the environment variables CogShell will provide to embedded programs
 #[derive(Debug, Clone)]
 pub struct EnvConfig {
@@ -23,10 +21,10 @@ pub struct EnvConfig {
 }
 
 #[derive(Debug, Clone)]
-pub struct MarkerConfig([Box<str>; 3]);
+pub struct MarkerConfig([String; 3]);
 
 impl MarkerConfig {
-    pub fn new(markers: [Box<str>; 3]) -> MarkerConfig {
+    pub fn new(markers: [String; 3]) -> MarkerConfig {
         for s in &markers {
             assert_eq!(s.find(|c: char| c.is_ascii_whitespace()), None)
         }
@@ -35,14 +33,14 @@ impl MarkerConfig {
 }
 
 impl Deref for MarkerConfig {
-    type Target = [Box<str>; 3];
+    type Target = [String; 3];
     fn deref(self: &MarkerConfig) -> &Self::Target {
         &self.0
     }
 }
 
-impl From<[Box<str>; 3]> for MarkerConfig {
-    fn from(value: [Box<str>; 3]) -> Self {
+impl From<[String; 3]> for MarkerConfig {
+    fn from(value: [String; 3]) -> Self {
         MarkerConfig::new(value)
     }
 }
@@ -78,8 +76,8 @@ pub struct Config {
     pub verify_input_checksums: bool,
     /// Shell lines which will be prepended to each embedded program before running
     pub prologue: Vec<String>,
-    /// Array of marker strings indicating start of program, end of program, and end of output
-    pub marker_strings: MarkerConfig,
+    /// Strings indicating start of program, end of program, and end of output
+    pub markers: MarkerConfig,
     /// Overrides for names of CogShell environment variables
     pub env_var_names: EnvConfig,
 }

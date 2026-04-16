@@ -3,34 +3,35 @@ use std::collections::VecDeque;
 use annotate_snippets::{AnnotationKind, Level, Renderer, Snippet};
 use regex::Match;
 
-use crate::parse::FileParser;
+use crate::parse::FileContext;
+use crate::parse::MarkerInst;
 use crate::parse::MarkerKind;
 
 #[derive(Debug)]
 pub enum ParseErrorKind<'a> {
-    UnexpectedMarker(MarkerKind, Match<'a>),
+    UnexpectedMarker(MarkerKind, MarkerInst<'a>),
     UnexpectedEOF,
 }
 
 pub struct ParseError<'a> {
     pub kind: ParseErrorKind<'a>,
-    pub state: VecDeque<Match<'a>>,
-    pub ctx: &'a FileParser<'a>,
+    pub state: Vec<MarkerInst<'a>>,
+    pub ctx: &'a FileContext<'a>,
 }
 
 impl ParseError<'_> {
     fn print(&self) {
         let ParseError { kind, ctx, state } = self;
         let sought_idx = state.len();
-        let sought_str: &str = &ctx.config.marker_strings[sought_idx];
+        let sought_str: &str = &ctx.config.markers[sought_idx];
         let sought_kind: MarkerKind = sought_idx.into();
 
-        let source = Snippet::source(&ctx.content).path(ctx.filename);
+        let source = Snippet::source(ctx.content.as_ref()).path(ctx.filename);
         let error = Level::ERROR;
 
         let error = match kind {
-            ParseErrorKind::UnexpectedMarker(kind, span) => {
-                let str = span.as_str();
+            ParseErrorKind::UnexpectedMarker(kind, marker) => {
+                let str = marker.str();
                 error
                     .primary_title(format!(
                         "unexpected {kind} {str}, expected {sought_kind} {sought_str}"
@@ -38,7 +39,7 @@ impl ParseError<'_> {
                     .element(
                         source.clone().annotation(
                             AnnotationKind::Primary
-                                .span(span.range())
+                                .span(marker.span.clone())
                                 .label(format!("unexpected {kind}")),
                         ),
                     )

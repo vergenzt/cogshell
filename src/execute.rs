@@ -6,9 +6,9 @@ use std::process::{self, Stdio};
 
 use uuid::Uuid;
 
-use crate::parse::{Marker, Markers, ParsedFile};
+use crate::parse::{BlockMarkers, File, MarkerInst};
 
-pub fn execute(&ParsedFile { ctx, blocks }: &ParsedFile) -> io::Result<()> {
+pub fn execute(&File { file: ctx, blocks }: &File) -> io::Result<()> {
     let file_path = PathBuf::from(ctx.filename);
     let file_ext = ctx
         .filename
@@ -85,7 +85,11 @@ pub fn execute(&ParsedFile { ctx, blocks }: &ParsedFile) -> io::Result<()> {
         );
         writeln!(prg, "export {}={}", vars.output_prev, output_prev)?;
 
-        let Marker { span, line, col } = block.markers[0];
+        let MarkerInst {
+            r#match: span,
+            line,
+            col,
+        } = block.markers[0];
         writeln!(prg, "export {}={}", vars.prog_start_line, line)?;
         writeln!(prg, "export {}={}", vars.prog_start_col, col)?;
         writeln!(prg, "export {}={}", vars.prog_start_offset, span.start())?;
@@ -145,13 +149,13 @@ pub fn execute(&ParsedFile { ctx, blocks }: &ParsedFile) -> io::Result<()> {
 
     for i0 in 0..blocks.len() {
         let block = blocks[i0];
-        let Markers([prog_start, prog_end, outp_end]) = block.markers;
+        let BlockMarkers([prog_start, prog_end, outp_end]) = block.markers;
 
         let block_pfx = {
-            let pfx_end = prog_end.span.end();
+            let pfx_end = prog_end.r#match.end();
             let pfx_start = blocks
                 .get(i0 - 1)
-                .map(|prev_block| prev_block.markers.outp_end().span.end())
+                .map(|prev_block| prev_block.markers.outp_end().r#match.end())
                 .unwrap_or(0);
             &ctx.content[pfx_start..pfx_end]
         };
@@ -182,11 +186,11 @@ pub fn execute(&ParsedFile { ctx, blocks }: &ParsedFile) -> io::Result<()> {
             writeln!(output_file, "");
         }
 
-        write!(output_file, "{}", outp_end.span.as_str());
+        write!(output_file, "{}", outp_end.r#match.as_str());
 
         // copy remainder of file if this is the last block
         if i1 == blocks.len() {
-            let sfx = &ctx.content[outp_end.span.end()..];
+            let sfx = &ctx.content[outp_end.r#match.end()..];
             write!(output_file, "{sfx}");
         }
     }
