@@ -1,58 +1,41 @@
-mod path_or_stdin;
+mod io;
 
-use std::path::PathBuf;
+use bpaf::Bpaf as ArgParser;
 
-use bpaf::*;
+use io::{FileOrStream, In, Out};
+use std::str::FromStr;
 
-use crate::args::path_or_stdin::PathOrStdin;
+use crate::config::MarkerConfig;
 
-fn parse_markers(s: &str) -> Result<(&str, &str, &str), String> {
-    match s.split_ascii_whitespace().collect::<Vec<_>>().as_ {
-        [a, b, c] => Ok((a, b, c)),
-        _ => Err(),
-    }
-}
-
-#[derive(Debug, Clone, Bpaf)]
+#[derive(ArgParser, Debug, Clone)]
 #[bpaf(options)]
 pub struct Args {
-    #[bpaf(positional)]
-    /// File(s) to process with CogShell, or "-" for stdin
-    files: Vec<PathOrStdin>,
+    #[bpaf(positional("FILE"))]
+    files: Vec<FileOrStream<In>>,
 
-    #[bpaf(fallback(true), display_fallback)]
+    #[bpaf(short('c'), fallback(true), display_fallback)]
     /// Checksum the output to protect it against accidental change
-    checksum: bool,
+    checksum_output: bool,
 
-    #[bpaf(argument("OUTNAME"))]
+    #[bpaf(short('C'), fallback(true), display_fallback)]
+    /// Validate existing cheksums found before re-executing
+    checksum_validate: bool,
+
+    #[bpaf(long("output"), short('o'), argument("OUTNAME"))]
     /// Write the output to OUTNAME instead of inline
-    output: Option<PathBuf>,
+    output: Option<FileOrStream<Out>>,
 
-    #[bpaf(short('p'))]
+    #[bpaf(long("prologue"), short('p'))]
     /// Prepend CogShell code in a file with PROLOGUE. Executed once per file before the first CogShell block.
     prologue: Vec<String>,
 
     #[bpaf(
-      parse(
-        |s| s.split_ascii_whitespace().collect::<Vec<_>>().as_array().ok_or(format!(
-          "Marker value {s:?} does not contain three whitespace-separated values!"
-        ))
-      ),
-      fallback(["[[[cogsh", "]]]", "[[[end]]]"])
+        long("markers"),
+        argument("START END END-OUTPUT"),
+        fallback(MarkerConfig::from_str("[[[cogsh ]]] [[[end]]]").ok()),
+        display_fallback
     )]
     /// The patterns surrounding cog inline instructions. Should include three
     /// values separated by spaces, the start, end, and end-output markers.
-    /// Defaults to '[[[cogsh ]]] [[[end]]]'.
-    markers: [String; 3],
-    // markers: Markers = Markers("[[[cog", "]]]", "[[[end]]]")
-    // _parser.add_argument(
-    //     "--markers",
-    //     metavar="'START END END-OUTPUT'",
-    //     type=Markers.from_arg,
-    //     help=dedent("""
-    //
-    //
-    //
-    //     """),
-    // )
+    markers: Option<MarkerConfig>,
 }

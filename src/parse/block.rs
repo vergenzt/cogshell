@@ -3,7 +3,7 @@ extern crate proc_macro;
 use std::borrow::Borrow;
 
 use crate::{
-    parse::{FileParser, Markers, OutputHash},
+    parse::{Checksum, FileParser, Markers},
     utils::common_prefix_of_chars,
 };
 
@@ -18,7 +18,7 @@ pub struct ParsedBlock<'a> {
     /// The unmodified previous output bytes found between the program end and output end markers
     pub output_prev: &'a str,
     /// The previous output checksum which followed this block's output end marker, if present
-    pub output_prev_hash: Option<OutputHash<'a>>,
+    pub output_prev_hash: Option<Checksum<'a>>,
 }
 
 fn leading_whitespace<'a>(s: impl Borrow<&'a str>) -> &'a str {
@@ -83,7 +83,7 @@ impl<'a> ParsedBlock<'a> {
             .trim_prefix('\n')
             .trim_suffix('\n');
         let block_sfx = &content[outp_end.span.end()..];
-        let output_prev_hash = OutputHash::from_block_suffix(block_sfx);
+        let output_prev_hash = Checksum::from_block_suffix(block_sfx);
 
         Self {
             prog_lines,
