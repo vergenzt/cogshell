@@ -33,6 +33,10 @@ pub struct MarkerInst<'a> {
 }
 
 impl<'a> MarkerInst<'a> {
+    pub fn new(content: &'a str, span: Span) -> Self {
+        Self { content, span }
+    }
+
     pub fn str(&self) -> &'a str {
         &self.content[self.span.start..self.span.end]
     }

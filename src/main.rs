@@ -2,6 +2,7 @@
 #![feature(file_buffered)]
 #![feature(iter_map_windows)]
 #![feature(never_type)]
+#![feature(exit_status_error)]
 
 mod args;
 mod config;

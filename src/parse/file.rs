@@ -75,14 +75,14 @@ impl<'a> File<'a> {
                 line,
                 col,
             };
-            let marker = MarkerInst { content, span };
+            let marker = MarkerInst::new(content, span);
 
             if kind as usize == state.len() {
                 state.push(marker);
 
                 // check for complete marker set
                 if state.len() == 3 {
-                    let markers = BlockMarkers::new(*state.split_off(0).as_array().unwrap());
+                    let markers = BlockMarkers::new(state.split_off(0).as_array().unwrap());
                     let block = Block::new(ctx, markers);
                     blocks.push(block);
                 }

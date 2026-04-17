@@ -1,27 +1,5 @@
 use std::{fmt::Display, ops::Deref, str::FromStr};
 
-/// Names for the environment variables CogShell will provide to embedded programs
-#[derive(Debug, Clone)]
-pub struct EnvConfig {
-    /// Absolute path to the source file containing current embedded CogShell program
-    pub source_path_var: String,
-    /// Line number within the source file where current program source starts
-    pub prog_start_line_var: String,
-    /// Column number on the first line the source file where current program source starts
-    pub prog_start_col_var: String,
-    /// Byte offset from start of file to where current program source starts
-    pub prog_start_offset_var: String,
-    /// Path to tempfile containing the previous output of current CogShell block
-    pub output_prev_var: String,
-    /// Internal nonce value used to separate output from multiple blocks in file
-    /// (NB: Var name is suffixed with `_` and an integer index.)
-    pub output_sep_nonce_var: String,
-    /// Total number of CogShell blocks in the file
-    pub num_blocks_var: String,
-    /// Temporary directory used for storing intermediate files during execution
-    pub temp_dir_var: String,
-}
-
 #[derive(Debug, Clone)]
 pub struct MarkerConfig([String; 3]);
 
@@ -80,6 +58,4 @@ pub struct Config {
     pub prologue: Vec<String>,
     /// Strings indicating start of program, end of program, and end of output
     pub markers: MarkerConfig,
-    /// Overrides for names of CogShell environment variables
-    pub env_var_names: EnvConfig,
 }

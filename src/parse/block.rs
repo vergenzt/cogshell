@@ -1,34 +1,24 @@
 extern crate proc_macro;
 
-use std::ops::Deref;
-
 use crate::{
     parse::{Checksum, FileContext, MarkerInst},
     utils::{common_prefix_of_chars, leading_whitespace},
 };
 
-pub struct BlockMarkers<'a>([MarkerInst<'a>; 3]);
-
-impl<'a> BlockMarkers<'a> {
-    pub fn new(markers: [MarkerInst<'a>; 3]) -> BlockMarkers<'a> {
-        Self(markers)
-    }
-    pub fn prog_start(&self) -> &MarkerInst<'a> {
-        &self.0[0]
-    }
-    pub fn prog_end(&self) -> &MarkerInst<'a> {
-        &self.0[1]
-    }
-    pub fn outp_end(&self) -> &MarkerInst<'a> {
-        &self.0[2]
-    }
+pub struct BlockMarkers<'a> {
+    pub prog_beg: MarkerInst<'a>,
+    pub prog_end: MarkerInst<'a>,
+    pub outp_end: MarkerInst<'a>,
 }
 
-impl<'a> Deref for BlockMarkers<'a> {
-    type Target = [MarkerInst<'a>; 3];
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
+impl<'a> BlockMarkers<'a> {
+    pub fn new(markers: &[MarkerInst<'a>; 3]) -> BlockMarkers<'a> {
+        let [prog_beg, prog_end, outp_end] = *markers;
+        Self {
+            prog_beg,
+            prog_end,
+            outp_end,
+        }
     }
 }
 
@@ -47,10 +37,22 @@ pub struct Block<'a> {
 }
 
 impl<'a> Block<'a> {
+    pub fn start(&self) -> usize {
+        self.markers.prog_beg.span.start
+    }
+
+    pub fn end(&self) -> usize {
+        self.markers.outp_end.span.end
+    }
+
     /// Parse a CogShell block from matched markers
     pub fn new(ctx: &'a FileContext, markers: BlockMarkers<'a>) -> Self {
         let FileContext { content, .. } = ctx;
-        let BlockMarkers([prog_beg, prog_end, outp_end]) = &markers;
+        let BlockMarkers {
+            prog_beg,
+            prog_end,
+            outp_end,
+        } = &markers;
 
         // find beginning of line containing start marker
         let prog_pfx = &content[..prog_beg.span.start];
