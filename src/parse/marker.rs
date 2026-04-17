@@ -12,10 +12,22 @@ pub struct Span {
     pub col: usize,
 }
 
+impl Span {
+    pub fn len(&self) -> usize {
+        self.end - self.start
+    }
+}
+
+impl From<Span> for Range<usize> {
+    fn from(value: Span) -> Self {
+        value.start..value.end
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct MarkerInst<'a> {
     /// The content this marker was matched from
-    pub content: &'a str,
+    content: &'a str,
     /// The span within the content where the marker was found
     pub span: Span,
 }

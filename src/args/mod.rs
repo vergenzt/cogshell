@@ -1,4 +1,4 @@
-mod io;
+pub mod io;
 
 use bpaf::Bpaf as ArgParser;
 
@@ -32,10 +32,10 @@ pub struct Args {
     #[bpaf(
         long("markers"),
         argument("START END END-OUTPUT"),
-        fallback(MarkerConfig::from_str("[[[cogsh ]]] [[[end]]]").ok()),
+        fallback(MarkerConfig::from_str("[[[cogsh ]]] [[[end]]]").unwrap()),
         display_fallback
     )]
     /// The patterns surrounding cog inline instructions. Should include three
     /// values separated by spaces, the start, end, and end-output markers.
-    markers: Option<MarkerConfig>,
+    markers: MarkerConfig,
 }

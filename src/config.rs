@@ -4,20 +4,22 @@ use std::{fmt::Display, ops::Deref, str::FromStr};
 #[derive(Debug, Clone)]
 pub struct EnvConfig {
     /// Absolute path to the source file containing current embedded CogShell program
-    pub source_path: String,
+    pub source_path_var: String,
     /// Line number within the source file where current program source starts
-    pub prog_start_line: String,
+    pub prog_start_line_var: String,
     /// Column number on the first line the source file where current program source starts
-    pub prog_start_col: String,
+    pub prog_start_col_var: String,
     /// Byte offset from start of file to where current program source starts
-    pub prog_start_offset: String,
+    pub prog_start_offset_var: String,
     /// Path to tempfile containing the previous output of current CogShell block
-    pub output_prev: String,
+    pub output_prev_var: String,
     /// Internal nonce value used to separate output from multiple blocks in file
     /// (NB: Var name is suffixed with `_` and an integer index.)
-    pub output_sep_nonce: String,
+    pub output_sep_nonce_var: String,
+    /// Total number of CogShell blocks in the file
+    pub num_blocks_var: String,
     /// Temporary directory used for storing intermediate files during execution
-    pub temp_dir: String,
+    pub temp_dir_var: String,
 }
 
 #[derive(Debug, Clone)]

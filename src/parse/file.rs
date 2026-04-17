@@ -7,23 +7,25 @@ use regex::{Match, Regex};
 use super::block::Block;
 use super::errors::{ParseError, ParseErrorKind};
 use super::marker::MarkerKind;
+use crate::args::io::{FileOrStream, In};
 use crate::config::Config;
 use crate::parse::{BlockMarkers, MarkerInst, Span};
 
 pub struct FileContext<'a> {
     /// The name of the file
-    pub filename: &'a str,
+    pub input: FileOrStream<In>,
     /// The original content of the file
-    pub content: Box<str>,
+    pub content: String,
     /// Config used to parse the file
     pub config: &'a Config,
 }
 
 impl<'a> FileContext<'a> {
-    pub fn new(filename: &'a str, config: &'a Config) -> io::Result<Self> {
-        let content = fs::read_to_string(filename)?.into_boxed_str();
+    pub fn new(input: FileOrStream<In>, config: &'a Config) -> io::Result<Self> {
+        let mut content = String::new();
+        &input.open()?.read_to_string(&mut content);
         Ok(Self {
-            filename,
+            input,
             content,
             config,
         })
@@ -39,10 +41,10 @@ pub struct File<'a> {
 
 impl<'a> File<'a> {
     pub fn from(ctx: &'a FileContext<'a>) -> Result<File<'a>, ParseError<'a>> {
-        let content = ctx.content.as_ref();
+        let content = &ctx.content;
 
         let markers_re = {
-            let pats = ctx.config.markers.map(|s| regex::escape(&s));
+            let pats = ctx.config.markers.each_ref().map(|s| regex::escape(s));
             let grps = pats.map(|pat| format!("({})", pat));
             let grps_or_nl = format!(r"{}|\n", grps.join("|"));
             Regex::new(&grps_or_nl).unwrap()
@@ -53,7 +55,7 @@ impl<'a> File<'a> {
         let mut blocks: Vec<Block> = Vec::new();
         let mut state: Vec<MarkerInst> = Vec::with_capacity(3);
 
-        for caps in markers_re.captures_iter(content.as_ref()) {
+        for caps in markers_re.captures_iter(content) {
             let mat = caps.get_match();
             if mat.as_str() == "\n" {
                 line += 1;

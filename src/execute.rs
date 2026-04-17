@@ -1,4 +1,4 @@
-use std::fs::{self, File};
+use std::fs::{self};
 use std::io::{self, BufRead as _, BufReader, Write};
 use std::iter::{self};
 use std::path::PathBuf;
@@ -6,70 +6,53 @@ use std::process::{self, Stdio};
 
 use uuid::Uuid;
 
+use crate::args::io::FileOrStream;
+use crate::config::EnvConfig;
 use crate::parse::{BlockMarkers, File, MarkerInst};
 
-pub fn execute(&File { file: ctx, blocks }: &File) -> io::Result<()> {
-    let file_path = PathBuf::from(ctx.filename);
-    let file_ext = ctx
-        .filename
-        .rfind('.')
-        .filter(|&i| i > 0)
-        .map(|i| &ctx.filename[i..])
-        .unwrap_or("");
+pub fn execute(file: &File) -> io::Result<()> {
+    let File { ctx, mut blocks } = file;
+    let file_ext = match ctx.input {
+        FileOrStream::File(path, _) => path
+            .extension()
+            .and_then(|x| x.to_str())
+            .unwrap_or_default(),
+        _ => "",
+    };
     let temp_dir_obj = tempfile::Builder::new().prefix("cogshell-").tempdir()?;
     let temp_dir = temp_dir_obj.path();
 
-    let vars = &ctx.config.env_var_names;
+    let EnvConfig {
+        source_path_var,
+        num_blocks_var,
+        temp_dir_var,
+        prog_start_line_var,
+        prog_start_col_var,
+        prog_start_offset_var,
+        output_prev_var,
+        output_sep_nonce_var,
+    } = ctx.config.env_var_names;
+
     let program_path = temp_dir.join("program.sh");
-    let mut prg = File::create_buffered(&program_path)?;
+    let mut prg = fs::File::create_buffered(&program_path)?;
     let mut prg_env = vec![];
 
-    writeln!(prg, "#!/usr/bin/env bash")?;
+    prg_env.push((temp_dir_var, temp_dir.to_str().unwrap()));
+    prg_env.push((source_path_var, &ctx.input.to_string()));
+    prg_env.push((num_blocks_var, &blocks.len().to_string()));
 
-    prg_env.push((vars.temp_dir, temp_dir.to_str().unwrap()));
-    prg_env.push((vars.source_path, ctx.filename));
-
-    // create nonces to separate blocks (incl. prologue)
-    // nonce 0 terminates the prologue, remainder terminate blocks except the last
-    // NB: each nonce val begins and ends with a newline.
-    let output_sep_nonces: Vec<String> = iter::repeat_with(|| format!("\n{}\n", Uuid::new_v4()))
-        .take(blocks.len())
-        .collect();
-
-    // push nonces into environment
-    for (i, nonce) in output_sep_nonces.iter().enumerate() {
-        prg_env.push((&format!("{}_{}", vars.output_sep_nonce, i), nonce));
-    }
-
-    macro_rules! var {
-        ($name:ident) => {
-            var!(vars.$name)
-        };
-        ($name:ident, $sfx:expr) => {
-            var!(format!("{}_{}", vars.$name, $sfx))
-        };
-        ($expr:expr) => {
-            format!("\"${{{}}}\"", $expr)
-        };
-    }
-    macro_rules! make_file {
-        ($name:expr, $content:expr) => {
-            fs::write(temp_dir.join($name), $content).and(Ok(format!(
-                "{}/{}",
-                var!(temp_dir),
-                $name
-            )))?
-        };
-    }
-    macro_rules! source {
-        ($name:expr) => {
-            writeln!(prg, "source {}/{}", var!(temp_dir), $name)?
-        };
-    }
-    macro_rules! write_nonce {
-        ($n:expr) => {
-            writeln!(prg, "echo {}", var!(output_sep_nonce, $n))?
-        };
+    for (i, block) in blocks.iter().enumerate() {
+        let block_start = block.markers.prog_start().span;
+        let block_var_vals: &[(String, &str)] = &[
+            (prog_start_line_var, &block_start.line.to_string()),
+            (prog_start_col_var, &block_start.col.to_string()),
+            (prog_start_offset_var, &block_start.start.to_string()),
+            (output_prev_var, block.output_prev),
+            (output_sep_nonce_var, &format!("\n{}\n", Uuid::new_v4())),
+        ];
+        for (var, val) in block_var_vals {
+            prg_env.push((format!("{}_{}", var, i), val));
+        }
     }
 
     // write prologue

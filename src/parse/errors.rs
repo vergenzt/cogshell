@@ -26,7 +26,7 @@ impl ParseError<'_> {
         let sought_str: &str = &ctx.config.markers[sought_idx];
         let sought_kind: MarkerKind = sought_idx.into();
 
-        let source = Snippet::source(ctx.content.as_ref()).path(ctx.filename);
+        let source = Snippet::source(&ctx.content).path(ctx.input.to_string());
         let error = Level::ERROR;
 
         let error = match kind {
@@ -39,7 +39,7 @@ impl ParseError<'_> {
                     .element(
                         source.clone().annotation(
                             AnnotationKind::Primary
-                                .span(marker.span.clone())
+                                .span(marker.span.into())
                                 .label(format!("unexpected {kind}")),
                         ),
                     )
@@ -58,14 +58,17 @@ impl ParseError<'_> {
             }
         };
 
-        let prev_markers = state.iter().enumerate().map(|(i, prev_marker)| {
-            source
-                .clone()
-                .annotation(AnnotationKind::Context.span(prev_marker.range()).label({
-                    let kind: MarkerKind = i.into();
-                    kind.description()
-                }))
-        });
+        let prev_markers =
+            state.iter().enumerate().map(|(i, prev_marker)| {
+                source.clone().annotation(
+                    AnnotationKind::Context
+                        .span(prev_marker.span.into())
+                        .label({
+                            let kind: MarkerKind = i.into();
+                            kind.description()
+                        }),
+                )
+            });
         let error = error.elements(prev_markers);
 
         let report = Renderer::styled().render(&[error]);

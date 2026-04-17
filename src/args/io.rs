@@ -18,7 +18,7 @@ pub trait InOrOut: private::SealedInOrOut {
     fn inst() -> Self;
     const STREAM_LABEL: &'static str;
     fn open_stream() -> Self::IOBox;
-    fn open_file(file: PathBuf) -> io::Result<Self::IOBox>;
+    fn open_file(file: &PathBuf) -> io::Result<Self::IOBox>;
 }
 
 macro_rules! impl_in_or_out {
@@ -32,7 +32,7 @@ macro_rules! impl_in_or_out {
             fn open_stream() -> Self::IOBox {
                 Box::new(io::$streamname())
             }
-            fn open_file(file: PathBuf) -> io::Result<Self::IOBox> {
+            fn open_file(file: &PathBuf) -> io::Result<Self::IOBox> {
                 Ok(Box::new($openfile(file)?))
             }
         }
@@ -58,7 +58,7 @@ impl<IO: InOrOut> FileOrStream<IO> {
         Self::Stream(IO::inst())
     }
     /// Get a handle to read/write the input/output
-    pub fn open(self) -> io::Result<IO::IOBox> {
+    pub fn open(&self) -> io::Result<IO::IOBox> {
         match self {
             Self::File(path, _) => IO::open_file(path),
             Self::Stream(_) => Ok(IO::open_stream()),

@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SOURCE_PATH_VAR=$1
+NUM_BLOCKS_VAR=$2
+TEMP_DIR_VAR=$3
+PROG_START_LINE_VAR=$4
+PROG_START_COL_VAR=$5
+PROG_START_OFFSET_VAR=$6
+OUTPUT_PREV_VAR=$7
+OUTPUT_SEP_NONCE_VAR=$8
+
+source prologue.sh
+
+...
