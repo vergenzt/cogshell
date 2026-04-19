@@ -1,4 +1,10 @@
-use std::{fmt::Display, fs::File, io, path::PathBuf, str::FromStr};
+use std::{
+    fmt::Display,
+    fs::{self, File},
+    io::{self, BufReader, BufWriter},
+    path::PathBuf,
+    str::FromStr,
+};
 
 // https://rust-lang.github.io/api-guidelines/future-proofing.html#sealed-traits-protect-against-downstream-implementations-c-sealed
 mod private {
@@ -63,11 +69,6 @@ impl<IO: InOrOut> FileOrStream<IO> {
             Self::File(path, _) => IO::open_file(path),
             Self::Stream(_) => Ok(IO::open_stream()),
         }
-    }
-    pub fn finalize(&self) -> io::Result<()> {
-      match self {
-        Self::File(path, _) =>
-      }
     }
 }
 

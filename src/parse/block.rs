@@ -1,7 +1,7 @@
 extern crate proc_macro;
 
 use crate::{
-    parse::{Checksum, FileContext, MarkerInst},
+    parse::{Checksum, FileContext, MarkerInst, Span},
     utils::{common_prefix_of_chars, leading_whitespace},
 };
 
@@ -34,17 +34,11 @@ pub struct Block<'a> {
     pub output_prev: &'a str,
     /// The previous output checksum which followed this block's output end marker, if present
     pub output_prev_hash: Option<Checksum<'a>>,
+    /// The full span of (the parsed version of) this block from start to end
+    pub span: Span,
 }
 
 impl<'a> Block<'a> {
-    pub fn start(&self) -> usize {
-        self.markers.prog_beg.span.start
-    }
-
-    pub fn end(&self) -> usize {
-        self.markers.outp_end.span.end
-    }
-
     /// Parse a CogShell block from matched markers
     pub fn new(ctx: &'a FileContext, markers: BlockMarkers<'a>) -> Self {
         let FileContext { content, .. } = ctx;
@@ -55,16 +49,16 @@ impl<'a> Block<'a> {
         } = &markers;
 
         // find beginning of line containing start marker
-        let prog_pfx = &content[..prog_beg.span.start];
+        let prog_pfx = &content[..*prog_beg.span.start];
         let prog_start_line_idx = prog_pfx.rfind('\n').map(|i| i + 1).unwrap_or(0);
-        let mut prog_lines: Vec<_> = (&content[prog_start_line_idx..prog_end.span.start])
+        let mut prog_lines: Vec<_> = (&content[prog_start_line_idx..*prog_end.span.start])
             .split('\n')
             .collect();
 
         // save whitespace prefix of the marker lines for prepending to output
         // https://github.com/nedbat/cog/blob/05842d65800458b1a18eba89770d8cb705cb503a/cogapp/cogapp.py#L57-L58
         let prog_whitespace_pfx = {
-            let start_ws = leading_whitespace(&content[prog_start_line_idx..prog_beg.span.start]);
+            let start_ws = leading_whitespace(&content[prog_start_line_idx..*prog_beg.span.start]);
             if let Some(&prog_end_line_pfx) = prog_lines[1..].last() {
                 let end_ws = leading_whitespace(&prog_end_line_pfx);
                 common_prefix_of_chars(&vec![start_ws, end_ws]).unwrap()
@@ -94,11 +88,16 @@ impl<'a> Block<'a> {
             }
         }
 
-        let output_prev = &content[prog_end.span.end..outp_end.span.start]
+        let output_prev = &content[*prog_end.span.start..*outp_end.span.end]
             .trim_prefix('\n')
             .trim_suffix('\n');
-        let block_sfx = &content[outp_end.span.end..];
+        let block_sfx = &content[*outp_end.span.end..];
         let output_prev_hash = Checksum::from_block_suffix(block_sfx);
+
+        let span = Span {
+            start: prog_beg.span.start,
+            end: outp_end.span.end,
+        };
 
         Self {
             prog_lines,
@@ -106,6 +105,7 @@ impl<'a> Block<'a> {
             markers,
             output_prev,
             output_prev_hash,
+            span,
         }
     }
 }

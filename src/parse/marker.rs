@@ -1,28 +1,6 @@
 use std::{fmt::Display, ops::Range};
 
-#[derive(Debug, Clone, Copy)]
-pub struct Span {
-    /// The starting byte offset of the span
-    pub start: usize,
-    /// The offset of the first byte following the span
-    pub end: usize,
-    /// The line number of the start of the span
-    pub line: usize,
-    /// The column number of the start of the span
-    pub col: usize,
-}
-
-impl Span {
-    pub fn len(&self) -> usize {
-        self.end - self.start
-    }
-}
-
-impl From<Span> for Range<usize> {
-    fn from(value: Span) -> Self {
-        value.start..value.end
-    }
-}
+use crate::parse::Span;
 
 #[derive(Debug, Clone, Copy)]
 pub struct MarkerInst<'a> {
@@ -38,7 +16,7 @@ impl<'a> MarkerInst<'a> {
     }
 
     pub fn str(&self) -> &'a str {
-        &self.content[self.span.start..self.span.end]
+        &self.content[*self.span.start..*self.span.end]
     }
 }
 

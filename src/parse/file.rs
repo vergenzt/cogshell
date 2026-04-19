@@ -9,7 +9,7 @@ use super::errors::{ParseError, ParseErrorKind};
 use super::marker::MarkerKind;
 use crate::args::io::{FileOrStream, In};
 use crate::config::Config;
-use crate::parse::{BlockMarkers, MarkerInst, Span};
+use crate::parse::{BlockMarkers, Loc, MarkerInst, Span};
 
 pub struct FileContext<'a> {
     /// The name of the file
@@ -67,14 +67,14 @@ impl<'a> File<'a> {
                 let grp_idx = (1..=3).find_map(|i| caps.get(i).and(Some(i))).unwrap();
                 (grp_idx - 1).into()
             };
-            let Range { start, end } = mat.range();
-            let col = start - line_start;
-            let span = Span {
-                start,
-                end,
+            let Range { start, .. } = mat.range();
+            let start = Loc {
+                offset: start,
                 line,
-                col,
+                col: start - line_start,
             };
+            let end = start + mat.as_str();
+            let span = Span { start, end };
             let marker = MarkerInst::new(content, span);
 
             if kind as usize == state.len() {
