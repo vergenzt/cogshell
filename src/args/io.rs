@@ -64,6 +64,11 @@ impl<IO: InOrOut> FileOrStream<IO> {
             Self::Stream(_) => Ok(IO::open_stream()),
         }
     }
+    pub fn finalize(&self) -> io::Result<()> {
+      match self {
+        Self::File(path, _) =>
+      }
+    }
 }
 
 impl<IO: InOrOut> FromStr for FileOrStream<IO> {
