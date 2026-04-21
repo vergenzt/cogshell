@@ -3,6 +3,7 @@
 #![feature(iter_map_windows)]
 #![feature(never_type)]
 #![feature(exit_status_error)]
+#![feature(macro_metavar_expr_concat)]
 
 mod args;
 mod config;

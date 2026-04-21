@@ -26,7 +26,7 @@ impl ParseError<'_> {
         let sought_str: &str = &ctx.config.markers[sought_idx];
         let sought_kind: MarkerKind = sought_idx.into();
 
-        let source = Snippet::source(&ctx.content).path(ctx.input.to_string());
+        let source = Snippet::source(&ctx.content).path(ctx.source.to_string());
         let error = Level::ERROR;
 
         let error = match kind {

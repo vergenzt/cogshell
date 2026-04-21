@@ -1,5 +1,5 @@
 use std::collections::VecDeque;
-use std::ops::Range;
+use std::ops::{Deref, Range};
 use std::{array, fs, io};
 
 use regex::{Match, Regex};
@@ -12,11 +12,11 @@ use crate::config::Config;
 use crate::parse::{BlockMarkers, Loc, MarkerInst, Span};
 
 pub struct FileContext<'a> {
-    /// The name of the file
-    pub input: FileOrStream<In>,
-    /// The original content of the file
+    /// The filename or input stream containing CogShell block(s)
+    pub source: FileOrStream<In>,
+    /// The original content of the source
     pub content: String,
-    /// Config used to parse the file
+    /// Config used to parse the source
     pub config: &'a Config,
 }
 
@@ -25,7 +25,7 @@ impl<'a> FileContext<'a> {
         let mut content = String::new();
         &input.open()?.read_to_string(&mut content);
         Ok(Self {
-            input,
+            source: input,
             content,
             config,
         })
@@ -37,6 +37,14 @@ pub struct File<'a> {
     pub ctx: &'a FileContext<'a>,
     /// The CogShell code blocks parsed from the file
     pub blocks: Vec<Block<'a>>,
+}
+
+impl<'a> Deref for File<'a> {
+    type Target = FileContext<'a>;
+
+    fn deref(&self) -> &Self::Target {
+        self.ctx
+    }
 }
 
 impl<'a> File<'a> {
@@ -57,21 +65,23 @@ impl<'a> File<'a> {
 
         for caps in markers_re.captures_iter(content) {
             let mat = caps.get_match();
+
+            // just a newline -> increment our line count and skip
             if mat.as_str() == "\n" {
                 line += 1;
                 line_start = mat.end();
                 continue;
             }
 
+            // determine marker kind based on
             let kind: MarkerKind = {
                 let grp_idx = (1..=3).find_map(|i| caps.get(i).and(Some(i))).unwrap();
                 (grp_idx - 1).into()
             };
-            let Range { start, .. } = mat.range();
             let start = Loc {
-                offset: start,
+                offset: mat.range().start,
                 line,
-                col: start - line_start,
+                col: mat.range().start - line_start,
             };
             let end = start + mat.as_str();
             let span = Span { start, end };
@@ -106,5 +116,9 @@ impl<'a> File<'a> {
 
         // all markers matched
         Ok(File { ctx, blocks })
+    }
+
+    pub fn source_name(&self) -> String {
+        self.source.to_string()
     }
 }

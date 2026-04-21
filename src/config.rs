@@ -5,8 +5,13 @@ pub struct MarkerConfig([String; 3]);
 
 impl MarkerConfig {
     pub fn new(markers: [String; 3]) -> MarkerConfig {
-        for s in &markers {
-            assert_eq!(s.find(|c: char| c.is_ascii_whitespace()), None)
+        for (i, s) in markers.iter().enumerate() {
+            // markers cannot contain whitespace
+            assert_eq!(s.find(|c: char| c.is_ascii_whitespace()), None);
+            for j in 0..i {
+                // markers must be unique
+                assert_ne!(markers[j], markers[i]);
+            }
         }
         Self(markers)
     }
