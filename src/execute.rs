@@ -1,6 +1,6 @@
 use std::fs::{self};
 use std::io::{self, BufRead as _, BufReader, BufWriter, Write, stderr};
-use std::iter::{self};
+use std::iter::{self, chain, once};
 use std::path::{self, Path, PathBuf};
 use std::process::{self, Stdio};
 use std::{array, vec};
@@ -132,6 +132,23 @@ impl<'a> FileExecutor<'a> {
         let mut out: Box<dyn Write> = Box::new(stderr());
         let mut pfx: &str = &format!("[PROLOGUE {}] ", self.file.source.to_str());
 
+        let inter_block_chunks = {
+            let capped_pairs = once(None).chain(blocks.iter().map(Some)).chain(once(None));
+            capped_pairs.map_windows(|[prev, next]| {
+                let start = match prev {
+                    None => 0,
+                    Some(prev_block) => prev_block.span.end.offset,
+                };
+                let end = match next {
+                    Some(next_block) => next_block.span.start.offset,
+                    None => ctx.content.len(),
+                };
+                FileChunk::InterBlockStr(&ctx.content[start..end])
+            })
+        };
+
+        let block_chunks = {
+
         for i in 0..=blocks.len() {
             let block_opt = blocks.get(i - 1);
             if let Some(block) = block_opt {
@@ -222,4 +239,9 @@ impl<'a> FileExecutor<'a> {
 
         var!("BLOCK_SUFFIX" [i1] => path!(format!("block_suffix_{i1}{source_ext}"), block_suffix));
     }
+}
+
+enum FileChunk<'a> {
+    BlockExec(&'a Block<'a>),
+    InterBlockStr(&'a str),
 }

@@ -117,8 +117,4 @@ impl<'a> File<'a> {
         // all markers matched
         Ok(File { ctx, blocks })
     }
-
-    pub fn source_name(&self) -> String {
-        self.source.to_string()
-    }
 }
