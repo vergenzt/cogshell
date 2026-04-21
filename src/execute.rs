@@ -5,7 +5,7 @@ use std::path::{self, Path, PathBuf};
 use std::process::{self, Stdio};
 use std::{array, vec};
 
-use tempfile::TempDir;
+use tempfile::{NamedTempFile, TempDir, TempPath};
 use uuid::Uuid;
 
 use crate::args::Args;
@@ -26,7 +26,7 @@ pub struct FileExecutor<'a> {
 impl<'a> FileExecutor<'a> {
     /// Construct a command
     pub fn new(file: &'a File<'a>) -> io::Result<FileExecutor<'a>> {
-        let source_ext = match file.source_name().rsplit_once('.') {
+        let source_ext = match file.source.to_str().rsplit_once('.') {
             Some((_, ext)) => ext,
             None => "",
         };
@@ -103,18 +103,34 @@ impl<'a> FileExecutor<'a> {
         })
     }
 
-    pub fn execute_replace(&mut self) -> io::Result<()> {}
+    pub fn execute_in_place(&mut self) -> io::Result<()> {
+        match &self.file.source {
+            FileOrStream::File(orig_path, _) => {
+                let temp_path = NamedTempFile::new_in(orig_path.parent().unwrap())?
+                    .into_temp_path()
+                    .to_path_buf();
+                let output = FileOrStream::file(temp_path.clone());
+                self.execute(output)?;
+                fs::rename(temp_path, orig_path)?;
+            }
+            FileOrStream::Stream(_) => {
+                self.execute(FileOrStream::stream())?;
+            }
+        };
+        Ok(())
+    }
 
     pub fn execute(&mut self, output: FileOrStream<Out>) -> io::Result<()> {
         let File { ctx, blocks } = self.file;
         let proc = self.cmd.spawn()?;
 
+        let mut output_writer = output.open()?;
         let mut output_reader = BufReader::new(proc.stdout.unwrap());
         let mut output_buf = String::new();
 
         let mut loc: Loc = Loc::default();
         let mut out: Box<dyn Write> = Box::new(stderr());
-        let mut pfx: &str = &format!("[PROLOGUE {}] ", self.file.source_name());
+        let mut pfx: &str = &format!("[PROLOGUE {}] ", self.file.source.to_str());
 
         for i in 0..=blocks.len() {
             let block_opt = blocks.get(i - 1);
@@ -129,7 +145,7 @@ impl<'a> FileExecutor<'a> {
                 } = block.markers;
 
                 // output previous content up to end of this block's program
-                write!(out, "{}", &file.content[*loc..*prog_end.span.end]);
+                write!(out, "{}", &self.file.content[*loc..*prog_end.span.end]);
 
                 // add newline if there's a newline between output markers
                 if prog_end.span.line() != outp_end.span.line() {
@@ -137,7 +153,7 @@ impl<'a> FileExecutor<'a> {
                 }
             }
 
-            let terminator = &output_terminators[i];
+            let terminator = &self.output_terminators[i];
 
             loop {
                 let n = output_reader.read_line(&mut output_buf)?;
@@ -146,7 +162,11 @@ impl<'a> FileExecutor<'a> {
                 if n == 0 {
                     let desc = match block_opt {
                         None => "prologue",
-                        Some(block) => &format!("block at {}:{}", source_name, block.span.start),
+                        Some(block) => &format!(
+                            "block at {}:{}",
+                            self.file.source.to_str(),
+                            block.span.start
+                        ),
                     };
                     return Err(io::Error::other(format!(
                         "unexpected EOF while waiting for end of {desc}"
@@ -163,16 +183,14 @@ impl<'a> FileExecutor<'a> {
                     if part_before_terminator != "" {
                         // check whether to add an extra newline to separate from subsequent output
                         let extra_newline = match block_opt {
-                            // prologue output => add newline if it doesn't end with one
-                            None => "\n",
-                            // block output with colinear output delimiters => no newline
+                            // block output with output delimiters on same line => no newline
                             Some(Block { markers, .. })
                                 if markers.prog_end.span.line() == markers.outp_end.span.line() =>
                             {
                                 ""
                             }
-                            // anything else
-                            _ => "",
+                            // anything else (incl. prologue)
+                            _ => "\n",
                         };
                         write!(out, "{}{}{}", pfx, part_before_terminator, extra_newline)?;
                     }
@@ -187,12 +205,21 @@ impl<'a> FileExecutor<'a> {
                     write!(out, "{}{}", pfx, last_line)?;
                 }
             }
+
+            let prev_block_end = if let Some(block) = block_opt {
+                block.markers.outp_end.span.end.offset
+            } else {
+                0
+            };
+            let next_block_beg = if let Some(next_block) = blocks.get(i) {
+                next_block.markers.prog_beg.span.start.offset
+            } else {
+                self.file.content.len()
+            };
+            let block_suffix = &self.file.content[prev_block_end..next_block_beg];
+            write!(out,)
         }
 
-        let block_suffix = match blocks.get(i1) {
-            Some(next_block) => &file.content[block.end()..next_block.start()],
-            None => &file.content[block.end()..],
-        };
         var!("BLOCK_SUFFIX" [i1] => path!(format!("block_suffix_{i1}{source_ext}"), block_suffix));
     }
 }
