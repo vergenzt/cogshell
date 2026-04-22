@@ -1,8 +1,8 @@
 use std::fs::{self};
-use std::io::{self, BufRead as _, BufReader, BufWriter, Write, stderr};
+use std::io::{self, BufRead, BufReader, BufWriter, Read, Write, stderr};
 use std::iter::{self, chain, once};
 use std::path::{self, Path, PathBuf};
-use std::process::{self, Stdio};
+use std::process::{self, Output, Stdio};
 use std::{array, vec};
 
 use tempfile::{NamedTempFile, TempDir, TempPath};
@@ -12,14 +12,13 @@ use crate::args::Args;
 use crate::args::io::{FileOrStream, Out};
 use crate::parse::{Block, BlockMarkers, File, Loc, MarkerInst, Span};
 
-pub fn execute(file: &File, output: &FileOrStream<Out>) -> io::Result<()> {
-    let executor = FileExecutor::new(file);
-}
+#[derive(Debug, Clone)]
+struct OutputTerminator(String);
 
 pub struct FileExecutor<'a> {
     pub file: &'a File<'a>,
     cmd: process::Command,
-    output_terminators: Vec<String>,
+    output_terminators: Vec<OutputTerminator>,
     temp_dir: TempDir,
 }
 
@@ -52,15 +51,14 @@ impl<'a> FileExecutor<'a> {
         }
 
         // nonces to figure out where output from one block ends and the next begins
-        let output_terminators: Vec<_> = iter::repeat_with(|| format!("{}\n", Uuid::new_v4()))
+        let output_terminators: Vec<_> = iter::repeat_with(OutputTerminator::new)
             .take(file.blocks.len() + 1)
             .collect();
 
         var!("TEMP_DIR" => temp_path.display());
-        var!("SOURCE" => file.source_name());
+        var!("SOURCE" => file.source.to_str());
         var!("NUM_BLOCKS" => file.blocks.len());
         var!("PROLOGUE" => path!("prologue.sh", file.config.prologue.join("\n")));
-        var!("PROLOGUE_TERMINATOR" => output_terminators[0]);
 
         for (i0, block) in file.blocks.iter().enumerate() {
             let i1 = i0 + 1; // 1-based indexing for var names
@@ -73,17 +71,12 @@ impl<'a> FileExecutor<'a> {
             var!("BLOCK_PROG" [i1] => path!(format!("block_{i1}.sh"), block.prog_lines.join("\n")));
             var!("BLOCK_OUTPUT_LINE_PFX" [i1] => block.prog_whitespace_pfx);
             var!("BLOCK_OUTPUT_PREV" [i1] => path!(format!("output_prev_{i1}{source_ext}"), block.output_prev));
-
-            let output_terminator: &str = match output_terminators.get(i1) {
-                Some(s) => &s,
-                None => "", // final terminator is empty (will be EOF)
-            };
-            var!("BLOCK_OUTPUT_TERMINATOR" [i1] => output_terminator);
         }
 
         let mut cmd = process::Command::new("bash");
         cmd.args(["-c", include_str!("program.sh")]);
         cmd.arg(&file.source_name()); // make $COGSH_SOURCE also available as $0
+        cmd.args(output_terminators); // pass output terminators as $1..$N rather than in env to reduce visibility to block code
         cmd.envs(env);
         cmd.stdin(Stdio::null());
         cmd.stdout(Stdio::piped());
@@ -121,7 +114,6 @@ impl<'a> FileExecutor<'a> {
     }
 
     pub fn execute(&mut self, output: FileOrStream<Out>) -> io::Result<()> {
-        let File { ctx, blocks } = self.file;
         let proc = self.cmd.spawn()?;
 
         let mut output_writer = output.open()?;
@@ -132,42 +124,22 @@ impl<'a> FileExecutor<'a> {
         let mut out: Box<dyn Write> = Box::new(stderr());
         let mut pfx: &str = &format!("[PROLOGUE {}] ", self.file.source.to_str());
 
-        let inter_block_chunks = {
-            let capped_pairs = once(None).chain(blocks.iter().map(Some)).chain(once(None));
-            capped_pairs.map_windows(|[prev, next]| {
-                let start = match prev {
-                    None => 0,
-                    Some(prev_block) => prev_block.span.end.offset,
-                };
-                let end = match next {
-                    Some(next_block) => next_block.span.start.offset,
-                    None => ctx.content.len(),
-                };
-                FileChunk::InterBlockStr(&ctx.content[start..end])
-            })
-        };
+        let blocks = self.file.blocks.iter();
 
-        let block_chunks = {
+        loop {
+
+        }
+
+    }
+}
+
+fn for_each_line_until()
 
         for i in 0..=blocks.len() {
             let block_opt = blocks.get(i - 1);
             if let Some(block) = block_opt {
                 out = Box::new(output_writer);
                 pfx = block.prog_whitespace_pfx;
-
-                let BlockMarkers {
-                    prog_beg,
-                    prog_end,
-                    outp_end,
-                } = block.markers;
-
-                // output previous content up to end of this block's program
-                write!(out, "{}", &self.file.content[*loc..*prog_end.span.end]);
-
-                // add newline if there's a newline between output markers
-                if prog_end.span.line() != outp_end.span.line() {
-                    writeln!(out, "");
-                }
             }
 
             let terminator = &self.output_terminators[i];
@@ -239,9 +211,4 @@ impl<'a> FileExecutor<'a> {
 
         var!("BLOCK_SUFFIX" [i1] => path!(format!("block_suffix_{i1}{source_ext}"), block_suffix));
     }
-}
-
-enum FileChunk<'a> {
-    BlockExec(&'a Block<'a>),
-    InterBlockStr(&'a str),
 }

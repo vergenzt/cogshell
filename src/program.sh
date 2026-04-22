@@ -3,9 +3,9 @@ set -euo pipefail
 
 if test -f "${COGSH_PROLOGUE:-}"; then
   echo "executing prologue for $COGSH_SOURCE..." >&2
-  source "$COGSH_PROLOGUE"
+  source "$COGSH_PROLOGUE" --
 fi
-echo "$COGSH_PROLOGUE_TERMINATOR"
+echo "$1"; shift
 
 for ((i=1; i<=$COGSH_NUM_BLOCKS; i++)); do
   export COGSH_BLOCK_PROG=${!COGSH_BLOCK_PROG_$i}
@@ -17,6 +17,6 @@ for ((i=1; i<=$COGSH_NUM_BLOCKS; i++)); do
 
   echo "executing block at $COGSH_SOURCE:$COGSH_BLOCK_LINE:$COGSH_BLOCK_COL..." >&2
 
-  source "$COGSH_BLOCK_PROG"
-  echo "${!COGSH_BLOCK_OUTPUT_TERMINATOR_$i}"
+  source "$COGSH_BLOCK_PROG" --
+  echo "$1"; shift
 done
