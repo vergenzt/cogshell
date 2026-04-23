@@ -1,10 +1,10 @@
 #![feature(trim_prefix_suffix)]
 #![feature(file_buffered)]
-#![feature(iter_map_windows)]
 #![feature(never_type)]
 #![feature(exit_status_error)]
 #![feature(macro_metavar_expr_concat)]
-#![feature(iter_map_windows)]
+#![feature(iter_intersperse)]
+#![feature(string_from_utf8_lossy_owned)]
 
 mod args;
 mod config;

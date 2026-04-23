@@ -27,7 +27,7 @@ pub struct Args {
 
     #[bpaf(long("prologue"), short('p'))]
     /// Prepend CogShell code in a file with PROLOGUE. Executed once per file before the first CogShell block.
-    prologue: Vec<String>,
+    prologue: Vec<Vec<u8>>,
 
     #[bpaf(
         long("markers"),

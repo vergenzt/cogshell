@@ -1,5 +1,7 @@
 extern crate proc_macro;
 
+use std::io::BufRead;
+
 use crate::{
     parse::{Checksum, FileContext, MarkerInst, Span},
     utils::{common_prefix_of_chars, leading_whitespace},
@@ -50,9 +52,13 @@ impl<'a> Block<'a> {
 
         // find beginning of line containing start marker
         let prog_pfx = &content[..*prog_beg.span.start];
-        let prog_start_line_idx = prog_pfx.rfind('\n').map(|i| i + 1).unwrap_or(0);
+        let prog_start_line_idx = prog_pfx
+            .iter()
+            .rposition(|c| *c == '\n' as u8)
+            .map(|i| i + 1)
+            .unwrap_or(0);
         let mut prog_lines: Vec<_> = (&content[prog_start_line_idx..*prog_end.span.start])
-            .split('\n')
+            .split(|c| *c == '\n' as u8)
             .collect();
 
         // save whitespace prefix of the marker lines for prepending to output

@@ -27,11 +27,17 @@ impl Display for Loc {
     }
 }
 
-impl Add<&str> for Loc {
+impl Add<&[u8]> for Loc {
     type Output = Loc;
 
-    fn add(self, rhs: &str) -> Self::Output {
-        let (lines, last_line_len) = match rhs.match_indices('\n').enumerate().last() {
+    fn add(self, rhs: &[u8]) -> Self::Output {
+        let (lines, last_line_len) = match rhs
+            .iter()
+            .enumerate()
+            .filter(|(_, c)| **c == '\n' as u8)
+            .enumerate()
+            .last()
+        {
             None => (0, rhs.len()),
             Some((nl_idx, (nl_pos, _))) => (nl_idx + 1, rhs.len() - nl_pos),
         };

@@ -31,7 +31,7 @@ impl ParseError<'_> {
 
         let error = match kind {
             ParseErrorKind::UnexpectedMarker(kind, marker) => {
-                let str = marker.str();
+                let str = marker.bytes();
                 error
                     .primary_title(format!(
                         "unexpected {kind} {str}, expected {sought_kind} {sought_str}"

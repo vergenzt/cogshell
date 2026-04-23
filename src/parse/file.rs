@@ -1,8 +1,8 @@
-use std::collections::VecDeque;
 use std::ops::{Deref, Range};
-use std::{array, fs, io};
 
-use regex::{Match, Regex};
+use std::{array, fs, io, iter};
+
+use regex::bytes::{Match, Regex};
 
 use super::block::Block;
 use super::errors::{ParseError, ParseErrorKind};
@@ -15,17 +15,17 @@ pub struct FileContext<'a> {
     /// The filename or input stream containing CogShell block(s)
     pub source: FileOrStream<In>,
     /// The original content of the source
-    pub content: String,
+    pub content: Vec<u8>,
     /// Config used to parse the source
     pub config: &'a Config,
 }
 
 impl<'a> FileContext<'a> {
-    pub fn new(input: FileOrStream<In>, config: &'a Config) -> io::Result<Self> {
-        let mut content = String::new();
-        &input.open()?.read_to_string(&mut content);
+    pub fn new(source: FileOrStream<In>, config: &'a Config) -> io::Result<Self> {
+        let mut content = vec![];
+        source.open()?.read_to_end(&mut content)?;
         Ok(Self {
-            source: input,
+            source,
             content,
             config,
         })
@@ -51,12 +51,21 @@ impl<'a> File<'a> {
     pub fn from(ctx: &'a FileContext<'a>) -> Result<File<'a>, ParseError<'a>> {
         let content = &ctx.content;
 
-        let markers_re = {
-            let pats = ctx.config.markers.each_ref().map(|s| regex::escape(s));
-            let grps = pats.map(|pat| format!("({})", pat));
-            let grps_or_nl = format!(r"{}|\n", grps.join("|"));
-            Regex::new(&grps_or_nl).unwrap()
-        };
+        let markers_re = Regex::new({
+            let re_buf = String::from("(?-u)");
+            for (i, marker) in ctx.config.markers.iter().enumerate() {
+                if i > 0 {
+                    re_buf.push('|');
+                }
+                re_buf.push('(');
+                for byte in marker.iter() {
+                    re_buf.push_str(&format!(r"\x{:02x}", byte));
+                }
+                re_buf.push(')');
+            }
+            &re_buf
+        })
+        .unwrap();
 
         let mut line: usize = 0;
         let mut line_start: usize = 0;
@@ -67,7 +76,7 @@ impl<'a> File<'a> {
             let mat = caps.get_match();
 
             // just a newline -> increment our line count and skip
-            if mat.as_str() == "\n" {
+            if mat.as_bytes() == &['\n' as u8] {
                 line += 1;
                 line_start = mat.end();
                 continue;
@@ -83,7 +92,7 @@ impl<'a> File<'a> {
                 line,
                 col: mat.range().start - line_start,
             };
-            let end = start + mat.as_str();
+            let end = start + mat.as_bytes();
             let span = Span { start, end };
             let marker = MarkerInst::new(content, span);
 

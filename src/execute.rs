@@ -1,9 +1,11 @@
+use std::collections::VecDeque;
 use std::fs::{self};
-use std::io::{self, BufRead, BufReader, BufWriter, Read, Write, stderr};
-use std::iter::{self, chain, once};
+use std::io::{self, BufRead, BufReader, BufWriter, Lines, Read, Write, stderr};
+use std::iter::{self, Peekable, chain, once};
+use std::ops::{ControlFlow, Deref, Index};
 use std::path::{self, Path, PathBuf};
 use std::process::{self, Output, Stdio};
-use std::{array, vec};
+use std::{array, mem, vec};
 
 use tempfile::{NamedTempFile, TempDir, TempPath};
 use uuid::Uuid;
@@ -14,6 +16,13 @@ use crate::parse::{Block, BlockMarkers, File, Loc, MarkerInst, Span};
 
 #[derive(Debug, Clone)]
 struct OutputTerminator(String);
+
+impl Deref for OutputTerminator {
+    type Target = String;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 pub struct FileExecutor<'a> {
     pub file: &'a File<'a>,
@@ -75,7 +84,7 @@ impl<'a> FileExecutor<'a> {
 
         let mut cmd = process::Command::new("bash");
         cmd.args(["-c", include_str!("program.sh")]);
-        cmd.arg(&file.source_name()); // make $COGSH_SOURCE also available as $0
+        cmd.arg(&file.source.to_str()); // make $COGSH_SOURCE also available as $0
         cmd.args(output_terminators); // pass output terminators as $1..$N rather than in env to reduce visibility to block code
         cmd.envs(env);
         cmd.stdin(Stdio::null());
@@ -114,101 +123,62 @@ impl<'a> FileExecutor<'a> {
     }
 
     pub fn execute(&mut self, output: FileOrStream<Out>) -> io::Result<()> {
+        let mut outp_writer = output.open()?;
+
         let proc = self.cmd.spawn()?;
+        let mut proc_reader = BufReader::new(proc.stdout.unwrap());
 
-        let mut output_writer = output.open()?;
-        let mut output_reader = BufReader::new(proc.stdout.unwrap());
-        let mut output_buf = String::new();
-
-        let mut loc: Loc = Loc::default();
-        let mut out: Box<dyn Write> = Box::new(stderr());
-        let mut pfx: &str = &format!("[PROLOGUE {}] ", self.file.source.to_str());
-
-        let blocks = self.file.blocks.iter();
-
-        loop {
-
-        }
-
-    }
-}
-
-fn for_each_line_until()
-
-        for i in 0..=blocks.len() {
-            let block_opt = blocks.get(i - 1);
-            if let Some(block) = block_opt {
-                out = Box::new(output_writer);
-                pfx = block.prog_whitespace_pfx;
-            }
-
-            let terminator = &self.output_terminators[i];
-
-            loop {
-                let n = output_reader.read_line(&mut output_buf)?;
-
-                // EOF before an expected terminator is an error
-                if n == 0 {
-                    let desc = match block_opt {
-                        None => "prologue",
-                        Some(block) => &format!(
-                            "block at {}:{}",
-                            self.file.source.to_str(),
-                            block.span.start
-                        ),
-                    };
-                    return Err(io::Error::other(format!(
-                        "unexpected EOF while waiting for end of {desc}"
-                    )));
-                }
-
-                let last_line = &output_buf[output_buf.len() - n..];
-
-                // if last_line ends with terminator...
-                // (NB: terminator_pfx may be empty string)
-                if let Some(part_before_terminator) = last_line.strip_suffix(terminator) {
-                    // if prologue or block output doesn't end with a newline then there will be a prefix to the terminator
-                    // which needs to be output.
-                    if part_before_terminator != "" {
-                        // check whether to add an extra newline to separate from subsequent output
-                        let extra_newline = match block_opt {
-                            // block output with output delimiters on same line => no newline
-                            Some(Block { markers, .. })
-                                if markers.prog_end.span.line() == markers.outp_end.span.line() =>
-                            {
-                                ""
+        macro_rules! nonce_terminated {
+            (until $term:expr, for $line:ident in $reader:expr, $body:expr) => {
+                let mut curr_line: Vec<u8> = vec![];
+                let mut next_line: Vec<u8> = vec![];
+                loop {
+                    mem::swap(&mut curr_line, &mut next_line); // avoid re-allocating vectors
+                    next_line.clear();
+                    match $reader.read_until('\n' as u8, &mut next_line)? {
+                        0 => return Err(io::Error::from(io::ErrorKind::UnexpectedEof)),
+                        _ => {
+                            if next_line.split_last() == Some((&('\n' as u8), $term.as_bytes())) {
+                                assert_eq!(curr_line.pop(), Some('\n' as u8));
+                                let $line = &curr_line[..];
+                                $body;
+                                break;
+                            } else {
+                                let $line = &curr_line[..];
+                                $body;
                             }
-                            // anything else (incl. prologue)
-                            _ => "\n",
-                        };
-                        write!(out, "{}{}{}", pfx, part_before_terminator, extra_newline)?;
+                        }
                     }
-
-                    if let Some(block) = block_opt {
-                        write!(out, "{}{}", pfx, block.markers.outp_end.str())?;
-                    }
-
-                    // always break inner line-output loop on termination
-                    break;
-                } else {
-                    write!(out, "{}{}", pfx, last_line)?;
                 }
-            }
-
-            let prev_block_end = if let Some(block) = block_opt {
-                block.markers.outp_end.span.end.offset
-            } else {
-                0
             };
-            let next_block_beg = if let Some(next_block) = blocks.get(i) {
-                next_block.markers.prog_beg.span.start.offset
-            } else {
-                self.file.content.len()
-            };
-            let block_suffix = &self.file.content[prev_block_end..next_block_beg];
-            write!(out,)
         }
 
-        var!("BLOCK_SUFFIX" [i1] => path!(format!("block_suffix_{i1}{source_ext}"), block_suffix));
+        let mut stderr = io::stderr();
+
+        nonce_terminated! {
+          until self.output_terminators[0], for prologue_line in proc_reader, {
+            stderr.write_all(format!("[PROLOGUE {}] ", self.file.source.to_str()).as_bytes())?;
+            stderr.write_all(prologue_line)?;
+          }
+        }
+
+        let pfx = &self.file.content[..*self.file.blocks[0].span.start];
+        outp_writer.write(pfx);
+
+        Ok(())
+        //   match line {
+        //     Err(e) => Some(Err(e)),
+        //     Ok(0) => {
+        //       let err = io::Error::from(io::ErrorKind::UnexpectedEof);
+        //       Some(Err(err))
+        //     },
+        //     Ok(_) if next_line[..] == terminator.as_bytes() => {
+        //       None
+        //     },
+        //     Ok(_) => {
+        //       Some(Ok(&curr_line))
+        //     }
+        //   }
+        // });
     }
 }
