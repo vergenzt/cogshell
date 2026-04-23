@@ -51,8 +51,8 @@ impl<'a> File<'a> {
     pub fn from(ctx: &'a FileContext<'a>) -> Result<File<'a>, ParseError<'a>> {
         let content = &ctx.content;
 
-        let markers_re = Regex::new({
-            let re_buf = String::from("(?-u)");
+        let markers_re = {
+            let mut re_buf = String::from("(?-u)");
             for (i, marker) in ctx.config.markers.iter().enumerate() {
                 if i > 0 {
                     re_buf.push('|');
@@ -63,9 +63,8 @@ impl<'a> File<'a> {
                 }
                 re_buf.push(')');
             }
-            &re_buf
-        })
-        .unwrap();
+            Regex::new(&re_buf).unwrap()
+        };
 
         let mut line: usize = 0;
         let mut line_start: usize = 0;

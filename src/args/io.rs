@@ -1,7 +1,9 @@
 use std::{
+    ffi::OsStr,
     fmt::Display,
     fs::File,
     io::{self},
+    os::unix::ffi::OsStrExt,
     path::PathBuf,
     str::FromStr,
 };
@@ -70,6 +72,14 @@ impl<IO: InOrOut> FileOrStream<IO> {
         match self {
             FileOrStream::File(path_buf, _) => path_buf.to_str().unwrap(),
             FileOrStream::Stream(_) => IO::STREAM_LABEL,
+        }
+    }
+
+    /// Get name for this stream for env var value
+    pub fn to_os_str(&self) -> &OsStr {
+        match self {
+            FileOrStream::File(path_buf, _) => path_buf.as_os_str(),
+            FileOrStream::Stream(_) => OsStr::new(IO::STREAM_LABEL),
         }
     }
 

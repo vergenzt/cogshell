@@ -3,9 +3,16 @@ use std::fs::{self};
 use std::io::{self, BufRead, BufReader, BufWriter, Lines, Read, Write, stderr};
 use std::iter::{self, Peekable, chain, once};
 use std::ops::{ControlFlow, Deref, Index};
+
+#[cfg(unix)]
+use std::os::unix::ffi::OsStrExt;
+#[cfg(windows)]
+use std::os::windows::ffi::OsStrExt;
+
 use std::path::{self, Path, PathBuf};
 use std::process::{self, Output, Stdio};
 use std::{array, mem, vec};
+use std::ffi::OsString;
 
 use tempfile::{NamedTempFile, TempDir, TempPath};
 use uuid::Uuid;
@@ -16,6 +23,12 @@ use crate::parse::{Block, BlockMarkers, File, Loc, MarkerInst, Span};
 
 #[derive(Debug, Clone)]
 struct OutputTerminator(String);
+
+impl OutputTerminator {
+  fn new() -> Self {
+    Self(Uuid::new_v4().into())
+  }
+}
 
 impl Deref for OutputTerminator {
     type Target = String;
@@ -41,21 +54,21 @@ impl<'a> FileExecutor<'a> {
         let temp_dir = tempfile::Builder::new().prefix("cogshell-").tempdir()?;
         let temp_path = temp_dir.path();
 
-        let mut env: Vec<(String, String)> = vec![];
+        let mut env: Vec<(String, &OsStr)> = vec![];
 
         macro_rules! var {
             ($namefmt:literal => $val:expr) => {
-                env.push((format!("COGSH_{}", $namefmt), $val.to_string()));
+                env.push((format!("COGSH_{}", $namefmt), $val));
             };
             ($namefmt:literal [$i:expr] => $val:expr) => {
-                env.push((format!("COGSH_{}_{}", $namefmt, $i), $val.to_string()));
+                env.push((format!("COGSH_{}_{}", $namefmt, $i), $val));
             };
         }
         macro_rules! path {
             ($fname:expr, $content:expr) => {{
                 let path = temp_path.join($fname);
                 fs::write(&path, $content)?;
-                path.display().to_string()
+                path
             }};
         }
 
@@ -64,7 +77,7 @@ impl<'a> FileExecutor<'a> {
             .take(file.blocks.len() + 1)
             .collect();
 
-        var!("TEMP_DIR" => temp_path.display());
+        var!("TEMP_DIR" => temp_path.as_os_str());
         var!("SOURCE" => file.source.to_str());
         var!("NUM_BLOCKS" => file.blocks.len());
         var!("PROLOGUE" => path!("prologue.sh", file.config.prologue.join("\n")));
@@ -162,8 +175,17 @@ impl<'a> FileExecutor<'a> {
           }
         }
 
-        let pfx = &self.file.content[..*self.file.blocks[0].span.start];
-        outp_writer.write(pfx);
+        // portion of the file before the first block
+        let head = &self.file.content[..*self.file.blocks[0].span.start];
+        outp_writer.write(head);
+
+        for i in self.blocks
+        nonce_terminated! {
+          until self.output_terminators[0], for prologue_line in proc_reader, {
+            stderr.write_all(format!("[PROLOGUE {}] ", self.file.source.to_str()).as_bytes())?;
+            stderr.write_all(prologue_line)?;
+          }
+        }
 
         Ok(())
         //   match line {

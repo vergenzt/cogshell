@@ -25,7 +25,7 @@ pub struct Args {
     /// Write the output to OUTNAME instead of inline
     output: Option<FileOrStream<Out>>,
 
-    #[bpaf(long("prologue"), short('p'))]
+    #[bpaf(long("prologue"), short('p'), parse())]
     /// Prepend CogShell code in a file with PROLOGUE. Executed once per file before the first CogShell block.
     prologue: Vec<Vec<u8>>,
 

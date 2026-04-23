@@ -59,13 +59,14 @@ impl<'a> Checksum<'a> {
     /// Validate this saved output hash against the output
     pub fn matches(&self, output: &[u8]) -> bool {
         let hash_computed = md5::compute(output);
-        let hash_comp_str: &[u8] = match self.kind {
-            ChecksumKind::Md5Hex => hash_computed,
+        let hash_comp_str = match self.kind {
+            ChecksumKind::Md5Hex => format!("{:x}", hash_computed),
             ChecksumKind::Md5Base64Prefix10Chars => {
                 let mut hash_comp_b64 = BASE64_STANDARD.encode(&hash_computed.0);
-                &hash_comp_b64.as_bytes()[..10]
+                hash_comp_b64.truncate(10);
+                hash_comp_b64
             }
         };
-        self.hash == hash_comp_str
+        self.hash == hash_comp_str.as_bytes()
     }
 }

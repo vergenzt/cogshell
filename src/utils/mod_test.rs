@@ -11,68 +11,68 @@ use yare::parameterized;
   },
 
   single_line_any_char = {
-    vec!["hello world"],
+    vec![b"hello world"],
     None,
   },
 
   no_common = {
-    vec!["abc", "xyz"],
-    Some(""),
+    vec![b"abc", b"xyz"],
+    Some(b""),
   },
 
   one_is_prefix_of_other = {
-    vec!["foo", "foobar"],
-    Some("foo"),
+    vec![b"foo", b"foobar"],
+    Some(b"foo"),
   },
 
   other_is_prefix_of_one = {
-    vec!["foobar", "foo"],
-    Some("foo"),
+    vec![b"foobar", b"foo"],
+    Some(b"foo"),
   },
 
   all_identical = {
-    vec!["hello", "hello", "hello"],
-    Some("hello"),
+    vec![b"hello", b"hello", b"hello"],
+    Some(b"hello"),
   },
 
   with_empty_string = {
-    vec!["foo", "", "bar"],
-    Some(""),
+    vec![b"foo", b"", b"bar"],
+    Some(b""),
   },
 
   utf8_multibyte = {
-    vec!["café latte", "cafå mocha"],
-    Some("caf"),
+    vec!["café latte".as_bytes(), "cafå mocha".as_bytes()],
+    Some(b"caf"),
   },
 
   // with character filters
 
   whitespace_single_line = {
-    vec!["    hello world"],
-    Some("    "),
+    vec![b"    hello world"],
+    Some(b"    "),
   },
 
   whitespace_all_indented = {
-    vec!["    asdf", "    jkl", "    foo"],
-    Some("    "),
+    vec![b"    asdf", b"    jklb", b"    foo"],
+    Some(b"    "),
   },
 
   whitespace_increasing = {
-    vec!["  asdf", "    jkl", "      foo"],
-    Some("  "),
+    vec![b"  asdf", b"    jkl", b"      foo"],
+    Some(b"  "),
   },
 
   whitespace_with_empty_line = {
-    vec!["  asdf", "    jkl", "", "      foo"],
-    Some(""),
+    vec![b"  asdf", b"    jkl", b"", b"      foo"],
+    Some(b""),
   },
 
   whitespace_mixed = {
-    vec!["   \tasdf", "\t jkl", "", "      foo"],
-    Some(""),
+    vec![b"   \tasdf", b"\t jkl", b"", b"      foo"],
+    Some(b""),
   },
 
 )]
-fn test_common_prefix_general(inputs: Vec<&str>, expected: Option<&str>) {
+fn test_common_prefix_general(inputs: Vec<&[u8]>, expected: Option<&[u8]>) {
     assert_eq!(common_prefix_of_chars(inputs), expected);
 }

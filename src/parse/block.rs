@@ -29,11 +29,11 @@ pub struct Block<'a> {
     /// The markers which delimit this block
     pub markers: BlockMarkers<'a>,
     /// The (pre-trimmed) lines of the program to run
-    pub prog_lines: Vec<&'a str>,
+    pub prog_lines: Vec<&'a [u8]>,
     /// The text to prepend to lines of output
-    pub prog_whitespace_pfx: &'a str,
+    pub prog_whitespace_pfx: &'a [u8],
     /// The unmodified previous output bytes found between the program end and output end markers
-    pub output_prev: &'a str,
+    pub output_prev: &'a [u8],
     /// The previous output checksum which followed this block's output end marker, if present
     pub output_prev_hash: Option<Checksum<'a>>,
     /// The full span of (the parsed version of) this block from start to end
