@@ -83,7 +83,7 @@ impl<'a> Block<'a> {
         }
 
         // remove start marker from first line
-        prog_lines[0] = prog_lines[0][prog_beg.span.len()..].trim_start();
+        prog_lines[0] = prog_lines[0][prog_beg.span.len()..].trim_ascii_start();
 
         // dedent program lines after the first
         let lines_to_dedent = prog_lines[1..].iter().filter(|l| !l.is_empty());
@@ -95,8 +95,8 @@ impl<'a> Block<'a> {
         }
 
         let output_prev = &content[*prog_end.span.start..*outp_end.span.end]
-            .trim_prefix('\n')
-            .trim_suffix('\n');
+            .trim_prefix(&['\n' as u8])
+            .trim_suffix(&['\n' as u8]);
         let block_sfx = &content[*outp_end.span.end..];
         let output_prev_hash = Checksum::from_block_suffix(block_sfx);
 
