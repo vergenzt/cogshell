@@ -78,8 +78,8 @@ impl<'a> FileExecutor<'a> {
             .collect();
 
         var!("TEMP_DIR" => temp_path.as_os_str());
-        var!("SOURCE" => file.source.to_str());
-        var!("NUM_BLOCKS" => file.blocks.len());
+        var!("SOURCE" => OsStrExt::from_bytes(file.source.to_str().as_bytes()) );
+        var!("NUM_BLOCKS" => file.blocks.len().to_string().as_bytes());
         var!("PROLOGUE" => path!("prologue.sh", file.config.prologue.join("\n")));
 
         for (i0, block) in file.blocks.iter().enumerate() {
@@ -143,16 +143,16 @@ impl<'a> FileExecutor<'a> {
 
         macro_rules! nonce_terminated {
             (until $term:expr, for $line:ident in $reader:expr, $body:expr) => {
-                let mut curr_line: Vec<u8> = vec![];
-                let mut next_line: Vec<u8> = vec![];
+                let mut curr_line: ByteString = vec![];
+                let mut next_line: ByteString = vec![];
                 loop {
                     mem::swap(&mut curr_line, &mut next_line); // avoid re-allocating vectors
                     next_line.clear();
-                    match $reader.read_until('\n' as u8, &mut next_line)? {
+                    match $reader.read_until(b'\n', &mut next_line)? {
                         0 => return Err(io::Error::from(io::ErrorKind::UnexpectedEof)),
                         _ => {
-                            if next_line.split_last() == Some((&('\n' as u8), $term.as_bytes())) {
-                                assert_eq!(curr_line.pop(), Some('\n' as u8));
+                            if next_line.split_last() == Some((&b'\n', $term.as_bytes())) {
+                                assert_eq!(curr_line.pop(), Some(b'\n'));
                                 let $line = &curr_line[..];
                                 $body;
                                 break;

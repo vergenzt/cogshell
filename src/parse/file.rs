@@ -1,3 +1,4 @@
+use std::bstr::ByteString;
 use std::ops::{Deref, Range};
 
 use std::{array, fs, io, iter};
@@ -15,14 +16,14 @@ pub struct FileContext<'a> {
     /// The filename or input stream containing CogShell block(s)
     pub source: FileOrStream<In>,
     /// The original content of the source
-    pub content: Vec<u8>,
+    pub content: ByteString,
     /// Config used to parse the source
     pub config: &'a Config,
 }
 
 impl<'a> FileContext<'a> {
     pub fn new(source: FileOrStream<In>, config: &'a Config) -> io::Result<Self> {
-        let mut content = vec![];
+        let mut content = ByteString::from(b"");
         source.open()?.read_to_end(&mut content)?;
         Ok(Self {
             source,
@@ -75,7 +76,7 @@ impl<'a> File<'a> {
             let mat = caps.get_match();
 
             // just a newline -> increment our line count and skip
-            if mat.as_bytes() == &['\n' as u8] {
+            if mat.as_bytes() == &[b'\n'] {
                 line += 1;
                 line_start = mat.end();
                 continue;

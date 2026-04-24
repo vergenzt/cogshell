@@ -29,11 +29,11 @@ pub struct Block<'a> {
     /// The markers which delimit this block
     pub markers: BlockMarkers<'a>,
     /// The (pre-trimmed) lines of the program to run
-    pub prog_lines: Vec<&'a [u8]>,
+    pub prog_lines: Vec<&'a ByteStr>,
     /// The text to prepend to lines of output
-    pub prog_whitespace_pfx: &'a [u8],
+    pub prog_whitespace_pfx: &'a ByteStr,
     /// The unmodified previous output bytes found between the program end and output end markers
-    pub output_prev: &'a [u8],
+    pub output_prev: &'a ByteStr,
     /// The previous output checksum which followed this block's output end marker, if present
     pub output_prev_hash: Option<Checksum<'a>>,
     /// The full span of (the parsed version of) this block from start to end
@@ -54,11 +54,11 @@ impl<'a> Block<'a> {
         let prog_pfx = &content[..*prog_beg.span.start];
         let prog_start_line_idx = prog_pfx
             .iter()
-            .rposition(|c| *c == '\n' as u8)
+            .rposition(|c| *c == b'\n')
             .map(|i| i + 1)
             .unwrap_or(0);
         let mut prog_lines: Vec<_> = (&content[prog_start_line_idx..*prog_end.span.start])
-            .split(|c| *c == '\n' as u8)
+            .split(b'\n')
             .collect();
 
         // save whitespace prefix of the marker lines for prepending to output
@@ -95,8 +95,8 @@ impl<'a> Block<'a> {
         }
 
         let output_prev = &content[*prog_end.span.start..*outp_end.span.end]
-            .trim_prefix(&['\n' as u8])
-            .trim_suffix(&['\n' as u8]);
+            .trim_prefix(&[b'\n'])
+            .trim_suffix(&[b'\n']);
         let block_sfx = &content[*outp_end.span.end..];
         let output_prev_hash = Checksum::from_block_suffix(block_sfx);
 

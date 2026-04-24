@@ -5,6 +5,7 @@
 #![feature(macro_metavar_expr_concat)]
 #![feature(iter_intersperse)]
 #![feature(string_from_utf8_lossy_owned)]
+#![feature(bstr)]
 
 mod args;
 mod config;

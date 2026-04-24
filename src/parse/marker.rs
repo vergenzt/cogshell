@@ -5,17 +5,17 @@ use crate::parse::Span;
 #[derive(Debug, Clone, Copy)]
 pub struct MarkerInst<'a> {
     /// The content this marker was matched from
-    content: &'a [u8],
+    content: &'a ByteStr,
     /// The span within the content where the marker was found
     pub span: Span,
 }
 
 impl<'a> MarkerInst<'a> {
-    pub fn new(content: &'a [u8], span: Span) -> Self {
+    pub fn new(content: &'a ByteStr, span: Span) -> Self {
         Self { content, span }
     }
 
-    pub fn bytes(&self) -> &'a [u8] {
+    pub fn bytes(&self) -> &'a ByteStr {
         &self.content[*self.span.start..*self.span.end]
     }
 }
