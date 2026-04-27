@@ -1,4 +1,5 @@
 use std::{
+    bstr::ByteStr,
     fmt::Display,
     ops::{Add, Deref, Sub},
 };

@@ -1,4 +1,9 @@
-use std::{fmt::Display, ops::Deref, str::FromStr};
+use std::{
+    bstr::{ByteStr, ByteString},
+    fmt::Display,
+    ops::Deref,
+    str::FromStr,
+};
 
 #[derive(Debug, Clone)]
 pub struct MarkerConfig([ByteString; 3]);
@@ -35,7 +40,9 @@ impl FromStr for MarkerConfig {
     fn from_str(str: &str) -> Result<Self, Self::Err> {
         let parts: Vec<_> = str.split_ascii_whitespace().collect();
         match parts[..] {
-            [a, b, c] => Ok(MarkerConfig::new([a, b, c].map(|s| s.into()))),
+            [a, b, c] => Ok(MarkerConfig::new(
+                [a, b, c].map(|s| ByteStr::new(s).to_owned()),
+            )),
             _ => Err({
                 format!("Marker value {str:?} does not contain three whitespace-separated values!")
             }),
@@ -48,8 +55,7 @@ impl Display for MarkerConfig {
         let markers = &self.0;
         markers
             .iter()
-            .map(|v| String::from_utf8_lossy_owned(v.clone()))
-            .intersperse(String::from(" "))
+            .intersperse(&ByteStr::new(b" ").to_owned())
             .try_for_each(|s| write!(f, "{s}"))
     }
 }

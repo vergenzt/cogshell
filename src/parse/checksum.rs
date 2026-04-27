@@ -1,4 +1,4 @@
-use std::sync::LazyLock;
+use std::{bstr::ByteStr, sync::LazyLock};
 
 use base64::{Engine as _, prelude::BASE64_STANDARD};
 use hex::ToHex;
@@ -13,8 +13,8 @@ pub enum ChecksumKind {
 impl ChecksumKind {
     fn label(&self) -> &'static ByteStr {
         match self {
-            Self::Md5Hex => "checksum".as_bytes(),
-            Self::Md5Base64Prefix10Chars => "sum".as_bytes(),
+            Self::Md5Hex => ByteStr::new(b"checksum"),
+            Self::Md5Base64Prefix10Chars => ByteStr::new(b"sum"),
         }
     }
 
@@ -51,8 +51,8 @@ impl<'a> Checksum<'a> {
     /// Search for an output hash suffix following a CogShell block, given the str starting immediately after output end mark
     pub fn from_block_suffix(block_sfx: &'a ByteStr) -> Option<Checksum<'a>> {
         let caps = CHECKSUM_RE.captures(block_sfx)?;
-        let kind = ChecksumKind::from_label(caps.name("kind")?.as_bytes())?;
-        let hash = caps.name("hash")?.as_bytes();
+        let kind = ChecksumKind::from_label(ByteStr::new(caps.name("kind")?.as_bytes()))?;
+        let hash = ByteStr::new(caps.name("hash")?.as_bytes());
         Some(Self { kind, hash })
     }
 

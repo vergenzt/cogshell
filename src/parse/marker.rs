@@ -1,4 +1,4 @@
-use std::{fmt::Display, ops::Range};
+use std::{bstr::ByteStr, fmt::Display};
 
 use crate::parse::Span;
 

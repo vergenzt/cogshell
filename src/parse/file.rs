@@ -1,4 +1,4 @@
-use std::bstr::ByteString;
+use std::bstr::{ByteStr, ByteString};
 use std::ops::{Deref, Range};
 
 use std::{array, fs, io, iter};
@@ -23,7 +23,7 @@ pub struct FileContext<'a> {
 
 impl<'a> FileContext<'a> {
     pub fn new(source: FileOrStream<In>, config: &'a Config) -> io::Result<Self> {
-        let mut content = ByteString::from(b"");
+        let mut content = ByteStr::new(b"").to_owned();
         source.open()?.read_to_end(&mut content)?;
         Ok(Self {
             source,
@@ -50,7 +50,7 @@ impl<'a> Deref for File<'a> {
 
 impl<'a> File<'a> {
     pub fn from(ctx: &'a FileContext<'a>) -> Result<File<'a>, ParseError<'a>> {
-        let content = &ctx.content;
+        let content = ByteStr::new(&ctx.content);
 
         let markers_re = {
             let mut re_buf = String::from("(?-u)");
@@ -92,7 +92,7 @@ impl<'a> File<'a> {
                 line,
                 col: mat.range().start - line_start,
             };
-            let end = start + mat.as_bytes();
+            let end = start + ByteStr::new(mat.as_bytes());
             let span = Span { start, end };
             let marker = MarkerInst::new(content, span);
 

@@ -1,4 +1,4 @@
-use std::{borrow::Borrow, iter::zip};
+use std::{borrow::Borrow, bstr::ByteStr, iter::zip};
 
 #[cfg(test)]
 mod mod_test;
@@ -29,7 +29,7 @@ pub fn leading_whitespace<'a>(s: impl Borrow<&'a ByteStr>) -> &'a ByteStr {
         .take_while(|(_i, c)| c.is_ascii_whitespace())
         .last()
     {
-        Some((last_ws_idx, _)) => &s[..last_ws_idx + 1],
-        None => &[],
+        Some((last_ws_idx, _)) => ByteStr::new(&s[..last_ws_idx + 1]),
+        None => ByteStr::new(&[]),
     }
 }

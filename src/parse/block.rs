@@ -1,6 +1,6 @@
 extern crate proc_macro;
 
-use std::io::BufRead;
+use std::bstr::ByteStr;
 
 use crate::{
     parse::{Checksum, FileContext, MarkerInst, Span},
@@ -58,7 +58,8 @@ impl<'a> Block<'a> {
             .map(|i| i + 1)
             .unwrap_or(0);
         let mut prog_lines: Vec<_> = (&content[prog_start_line_idx..*prog_end.span.start])
-            .split(b'\n')
+            .split(|b| *b == b'\n')
+            .map(ByteStr::new)
             .collect();
 
         // save whitespace prefix of the marker lines for prepending to output
@@ -78,25 +79,27 @@ impl<'a> Block<'a> {
         // https://github.com/nedbat/cog/blob/05842d65800458b1a18eba89770d8cb705cb503a/cogapp/cogapp.py#L46-L48
         if let Some(prog_pfx_to_strip) = common_prefix_of_chars(&prog_lines) {
             for line in prog_lines.iter_mut() {
-                *line = line.strip_prefix(prog_pfx_to_strip).unwrap();
+                *line = ByteStr::new(line.strip_prefix(&prog_pfx_to_strip.0).unwrap());
             }
         }
 
         // remove start marker from first line
-        prog_lines[0] = prog_lines[0][prog_beg.span.len()..].trim_ascii_start();
+        prog_lines[0] = ByteStr::new(prog_lines[0][prog_beg.span.len()..].trim_ascii_start());
 
         // dedent program lines after the first
         let lines_to_dedent = prog_lines[1..].iter().filter(|l| !l.is_empty());
         let line_indents = lines_to_dedent.map(|l| leading_whitespace(l));
         if let Some(indent) = common_prefix_of_chars(line_indents) {
             for line in prog_lines[1..].iter_mut() {
-                *line = line.strip_prefix(indent).unwrap_or(line);
+                *line = ByteStr::new(line.strip_prefix(&indent.0).unwrap_or(line));
             }
         }
 
-        let output_prev = &content[*prog_end.span.start..*outp_end.span.end]
-            .trim_prefix(&[b'\n'])
-            .trim_suffix(&[b'\n']);
+        let output_prev = ByteStr::new(
+            content[*prog_end.span.start..*outp_end.span.end]
+                .trim_prefix(&ByteStr::new(b"\n").0)
+                .trim_suffix(&ByteStr::new(b"\n").0),
+        );
         let block_sfx = &content[*outp_end.span.end..];
         let output_prev_hash = Checksum::from_block_suffix(block_sfx);
 

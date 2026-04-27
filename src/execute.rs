@@ -1,3 +1,4 @@
+use std::bstr::ByteStr;
 use std::collections::VecDeque;
 use std::fs::{self};
 use std::io::{self, BufRead, BufReader, BufWriter, Lines, Read, Write, stderr};
@@ -9,10 +10,11 @@ use std::os::unix::ffi::OsStrExt;
 #[cfg(windows)]
 use std::os::windows::ffi::OsStrExt;
 
+use std::ffi::{OsStr, OsString};
 use std::path::{self, Path, PathBuf};
 use std::process::{self, Output, Stdio};
+use std::slice::Join;
 use std::{array, mem, vec};
-use std::ffi::OsString;
 
 use tempfile::{NamedTempFile, TempDir, TempPath};
 use uuid::Uuid;
@@ -25,9 +27,9 @@ use crate::parse::{Block, BlockMarkers, File, Loc, MarkerInst, Span};
 struct OutputTerminator(String);
 
 impl OutputTerminator {
-  fn new() -> Self {
-    Self(Uuid::new_v4().into())
-  }
+    fn new() -> Self {
+        Self(Uuid::new_v4().into())
+    }
 }
 
 impl Deref for OutputTerminator {
@@ -79,19 +81,21 @@ impl<'a> FileExecutor<'a> {
 
         var!("TEMP_DIR" => temp_path.as_os_str());
         var!("SOURCE" => OsStrExt::from_bytes(file.source.to_str().as_bytes()) );
-        var!("NUM_BLOCKS" => file.blocks.len().to_string().as_bytes());
-        var!("PROLOGUE" => path!("prologue.sh", file.config.prologue.join("\n")));
+        var!("NUM_BLOCKS" => OsStrExt::from_bytes(file.blocks.len().to_string().as_bytes()));
+
+        file.config.prologue.join(b'\n');
+        var!("PROLOGUE" => path!("prologue.sh", pr).as_os_str());
 
         for (i0, block) in file.blocks.iter().enumerate() {
             let i1 = i0 + 1; // 1-based indexing for var names
 
             let span = block.markers.prog_beg.span;
-            var!("BLOCK_LINE" [i1] => span.start.line);
-            var!("BLOCK_COL" [i1] => span.start.col);
-            var!("BLOCK_OFFSET" [i1] => span.start.offset);
+            var!("BLOCK_LINE" [i1] => OsStrExt::from_bytes(span.start.line.to_string().as_bytes()));
+            var!("BLOCK_COL" [i1] => OsStrExt::from_bytes(span.start.col.to_string().as_bytes()));
+            var!("BLOCK_OFFSET" [i1] => OsStrExt::from_bytes(span.start.offset.to_string().as_bytes()));
 
-            var!("BLOCK_PROG" [i1] => path!(format!("block_{i1}.sh"), block.prog_lines.join("\n")));
-            var!("BLOCK_OUTPUT_LINE_PFX" [i1] => block.prog_whitespace_pfx);
+            var!("BLOCK_PROG" [i1] => path!(format!("block_{i1}.sh"), block.prog_lines.join("\n")).as_os_str());
+            var!("BLOCK_OUTPUT_LINE_PFX" [i1] => OsStrExt::from_bytes(block.prog_whitespace_pfx.as_bytes()));
             var!("BLOCK_OUTPUT_PREV" [i1] => path!(format!("output_prev_{i1}{source_ext}"), block.output_prev));
         }
 
@@ -143,8 +147,8 @@ impl<'a> FileExecutor<'a> {
 
         macro_rules! nonce_terminated {
             (until $term:expr, for $line:ident in $reader:expr, $body:expr) => {
-                let mut curr_line: ByteString = vec![];
-                let mut next_line: ByteString = vec![];
+                let mut curr_line = ByteStr::new(b"").to_owned();
+                let mut next_line = ByteStr::new(b"").to_owned();
                 loop {
                     mem::swap(&mut curr_line, &mut next_line); // avoid re-allocating vectors
                     next_line.clear();
@@ -166,25 +170,42 @@ impl<'a> FileExecutor<'a> {
             };
         }
 
-        let mut stderr = io::stderr();
-
-        nonce_terminated! {
-          until self.output_terminators[0], for prologue_line in proc_reader, {
-            stderr.write_all(format!("[PROLOGUE {}] ", self.file.source.to_str()).as_bytes())?;
-            stderr.write_all(prologue_line)?;
-          }
+        // write each line of output until terminator to output with the given prefix
+        macro_rules! tee_prefixed {
+            (to: $to_output:expr, prefix: $prefix:expr, until: $terminator:expr) => {
+                let mut output = $to_output;
+                nonce_terminated! {
+                  until $terminator, for line in proc_reader, {
+                    output.write_all($prefix)?;
+                    output.write_all(line)?;
+                  }
+                }
+            };
         }
+
+        tee_prefixed!(
+          to: io::stderr(),
+          prefix: format!("[PROLOGUE {}] ", self.file.source.to_str()).as_bytes(),
+          until: self.output_terminators[0]
+        );
 
         // portion of the file before the first block
         let head = &self.file.content[..*self.file.blocks[0].span.start];
-        outp_writer.write(head);
+        outp_writer.write_all(head);
 
-        for i in self.blocks
-        nonce_terminated! {
-          until self.output_terminators[0], for prologue_line in proc_reader, {
-            stderr.write_all(format!("[PROLOGUE {}] ", self.file.source.to_str()).as_bytes())?;
-            stderr.write_all(prologue_line)?;
-          }
+        // for each block
+        for i in 0..self.file.blocks.len() {
+            let block = &self.file.blocks[i];
+            let terminator = &self.output_terminators[i + 1];
+
+            // write output of block itself
+            tee_prefixed!(
+              to: &mut outp_writer,
+              prefix: block.prog_whitespace_pfx,
+              until: terminator
+            );
+
+            // write
         }
 
         Ok(())

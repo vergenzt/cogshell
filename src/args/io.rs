@@ -1,9 +1,7 @@
 use std::{
     ffi::OsStr,
-    fmt::Display,
     fs::File,
     io::{self},
-    os::unix::ffi::OsStrExt,
     path::PathBuf,
     str::FromStr,
 };
