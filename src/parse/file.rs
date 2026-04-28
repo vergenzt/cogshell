@@ -1,9 +1,8 @@
-use std::bstr::{ByteStr, ByteString};
-use std::ops::{Deref, Range};
+use std::ops::Deref;
 
-use std::{array, fs, io, iter};
+use std::{fs, io};
 
-use regex::bytes::{Match, Regex};
+use regex::bytes::Regex;
 
 use super::block::Block;
 use super::errors::{ParseError, ParseErrorKind};
@@ -16,14 +15,14 @@ pub struct FileContext<'a> {
     /// The filename or input stream containing CogShell block(s)
     pub source: FileOrStream<In>,
     /// The original content of the source
-    pub content: ByteString,
+    pub content: Vec<u8>,
     /// Config used to parse the source
     pub config: &'a Config,
 }
 
 impl<'a> FileContext<'a> {
     pub fn new(source: FileOrStream<In>, config: &'a Config) -> io::Result<Self> {
-        let mut content = ByteStr::new(b"").to_owned();
+        let mut content = vec![];
         source.open()?.read_to_end(&mut content)?;
         Ok(Self {
             source,
@@ -50,7 +49,7 @@ impl<'a> Deref for File<'a> {
 
 impl<'a> File<'a> {
     pub fn from(ctx: &'a FileContext<'a>) -> Result<File<'a>, ParseError<'a>> {
-        let content = ByteStr::new(&ctx.content);
+        let content = &ctx.content;
 
         let markers_re = {
             let mut re_buf = String::from("(?-u)");
@@ -92,7 +91,7 @@ impl<'a> File<'a> {
                 line,
                 col: mat.range().start - line_start,
             };
-            let end = start + ByteStr::new(mat.as_bytes());
+            let end = start + mat.as_bytes();
             let span = Span { start, end };
             let marker = MarkerInst::new(content, span);
 

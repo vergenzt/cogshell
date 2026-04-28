@@ -1,6 +1,6 @@
 pub mod io;
 
-use std::{bstr::ByteString, str::FromStr};
+use std::ffi::OsString;
 
 use bpaf::Bpaf as ArgParser;
 
@@ -18,9 +18,9 @@ pub struct Args {
     /// Write the output to OUTNAME instead of inline
     output: Option<FileOrStream<Out>>,
 
-    #[bpaf(long("prologue"), short('p'), argument::<ByteString>("PROLOGUE"), many)]
+    #[bpaf(long("prologue"), short('p'), argument::<OsString>("PROLOGUE"), parse(|s| Ok(s.into_encoded_bytes())), many)]
     /// Prepend CogShell code in a file with PROLOGUE. Executed once per file before the first CogShell block.
-    prologue: Vec<ByteString>,
+    prologue: Vec<Vec<u8>>,
 
     #[bpaf(
         long("markers"),

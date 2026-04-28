@@ -28,10 +28,10 @@ impl Display for Loc {
     }
 }
 
-impl Add<&ByteStr> for Loc {
+impl Add<&[u8]> for Loc {
     type Output = Loc;
 
-    fn add(self, rhs: &ByteStr) -> Self::Output {
+    fn add(self, rhs: &[u8]) -> Self::Output {
         let (lines, last_line_len) = match rhs
             .iter()
             .enumerate()

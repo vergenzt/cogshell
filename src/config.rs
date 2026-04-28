@@ -1,18 +1,26 @@
 use std::{
-    bstr::{ByteStr, ByteString},
-    fmt::Display,
+    ffi::OsString,
+    fmt::{Display, Result},
     ops::Deref,
+    os::unix::ffi::OsStringExt,
     str::FromStr,
 };
 
 #[derive(Debug, Clone)]
-pub struct MarkerConfig([ByteString; 3]);
+pub struct MarkerConfig([OsString; 3]);
 
 impl MarkerConfig {
-    pub fn new(markers: [ByteString; 3]) -> MarkerConfig {
+    pub fn parse(arg: OsString) -> Result<Self> {
+        let parts: Vec<_> = arg.into_vec().split(|c| c.is_ascii_whitespace()).collect();
+        match parts.as_array() {
+            Some(arr) => Self(arr.map(OsString::from)),
+        }
+    }
+
+    pub fn new(markers: [OsString; 3]) -> MarkerConfig {
         for (i, s) in markers.iter().enumerate() {
             // markers cannot contain whitespace
-            assert_eq!(s.iter().find(|c| c.is_ascii_whitespace()), None);
+            assert_eq!(s.find(|c| c.is_ascii_whitespace()), None);
             for j in 0..i {
                 // markers must be unique
                 assert_ne!(markers[j], markers[i]);
@@ -23,14 +31,14 @@ impl MarkerConfig {
 }
 
 impl Deref for MarkerConfig {
-    type Target = [ByteString; 3];
+    type Target = [Vec<u8>; 3];
     fn deref(self: &MarkerConfig) -> &Self::Target {
         &self.0
     }
 }
 
-impl From<[ByteString; 3]> for MarkerConfig {
-    fn from(value: [ByteString; 3]) -> Self {
+impl From<[Vec<u8>; 3]> for MarkerConfig {
+    fn from(value: [Vec<u8>; 3]) -> Self {
         MarkerConfig::new(value)
     }
 }
@@ -52,11 +60,8 @@ impl FromStr for MarkerConfig {
 
 impl Display for MarkerConfig {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let markers = &self.0;
-        markers
-            .iter()
-            .intersperse(&ByteStr::new(b" ").to_owned())
-            .try_for_each(|s| write!(f, "{s}"))
+        let [a, b, c] = &self.0.clone().map(String::from_utf8_lossy_owned);
+        write!(f, "{a} {b} {c}")
     }
 }
 
@@ -66,11 +71,11 @@ pub struct Config {
     /// Whether to protect output lines in CogShell'd files from accidental modification by including a hash after the `output_end` marker
     pub output_checksums: bool,
     /// Optional suffix to append to each output line
-    pub output_line_suffix: ByteString,
+    pub output_line_suffix: Vec<u8>,
     /// Whether to validate existing checksums following CogShell blocks
     pub verify_input_checksums: bool,
     /// Shell lines which will be prepended to each embedded program before running
-    pub prologue: Vec<ByteString>,
+    pub prologue: Vec<Vec<u8>>,
     /// Strings indicating start of program, end of program, and end of output
     pub markers: MarkerConfig,
 }

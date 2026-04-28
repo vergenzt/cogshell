@@ -1,13 +1,15 @@
 use std::{borrow::Borrow, bstr::ByteStr, iter::zip};
 
+mod bytes;
+
 #[cfg(test)]
 mod mod_test;
 
 /// Length of the longest common (fully UTF-8) prefix of characters from the given lines, in bytes.
 /// If there is not more than one line, result is None.
-pub fn common_prefix_of_chars<'a, Iter, Item>(lines: Iter) -> Option<&'a ByteStr>
+pub fn common_prefix_of_chars<'a, Iter, Item>(lines: Iter) -> Option<&'a [u8]>
 where
-    Item: Borrow<&'a ByteStr>,
+    Item: Borrow<&'a [u8]>,
     Iter: IntoIterator<Item = Item>,
 {
     let mut lines = lines.into_iter();
@@ -20,8 +22,8 @@ where
     Some(comm_pfx)
 }
 
-/// Get any leading (ascii) whitespace at the beginning of the given &ByteStr
-pub fn leading_whitespace<'a>(s: impl Borrow<&'a ByteStr>) -> &'a ByteStr {
+/// Get any leading (ascii) whitespace at the beginning of the given &[u8]
+pub fn leading_whitespace<'a>(s: impl Borrow<&'a [u8]>) -> &'a [u8] {
     let s = s.borrow();
     match s
         .iter()
