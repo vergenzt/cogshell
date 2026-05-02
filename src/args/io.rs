@@ -1,10 +1,13 @@
 use std::{
+    bstr::ByteStr,
     ffi::OsStr,
     fs::File,
     io::{self},
     path::PathBuf,
     str::FromStr,
 };
+
+use bstr::{BStr, ByteSlice};
 
 // https://rust-lang.github.io/api-guidelines/future-proofing.html#sealed-traits-protect-against-downstream-implementations-c-sealed
 mod private {
@@ -74,9 +77,9 @@ impl<IO: InOrOut> FileOrStream<IO> {
     }
 
     /// Get name for this stream for env var value
-    pub fn to_os_str(&self) -> &OsStr {
+    pub fn to_bstr(&self) -> &ByteStr {
         match self {
-            FileOrStream::File(path_buf, _) => path_buf.as_os_str(),
+          FileOrStream::File(path_buf, _) => ByteSlice::from_os_str(path_buf.
             FileOrStream::Stream(_) => OsStr::new(IO::STREAM_LABEL),
         }
     }

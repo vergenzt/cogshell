@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json
+
+language: rust
+files:
+  - vendor/**/*.rs
+
+utils:
+  test-annot:
+    any:
+      - pattern: '#[cfg($$$ test $$$)]'
+      - pattern: '#[cfg(all($$$ test $$$))]'
+      - pattern: '#[test]'
+
+rule:
+  matches: test-annot
+
+fix:
+  template: ''
+  expandEnd:
+    kind: mod_item

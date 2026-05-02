@@ -1,0 +1,39 @@
+name: "ci-msrv"
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+      - main
+      - staging # for Bors
+      - trying # for Bors
+  schedule:
+    - cron: '00 05 * * *'
+jobs:
+  msrv:
+    name: msrv
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    strategy:
+      matrix:
+        build: [ lib, macro ]
+        include:
+          - build: lib
+            path: "."
+
+          - build: macro
+            path: "yare-macro"
+    steps:
+      - name: checkout_repo
+        uses: actions/checkout@v3
+      - name: install_rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: install_cargo_msrv
+        run: cargo install --version 0.16.0-beta.20 --no-default-features cargo-msrv
+      - name: version_of_cargo_msrv
+        run: cargo msrv --version
+      - name: run_cargo_msrv
+        run: cargo msrv --path ${{ matrix.path }} --ignore-lockfile --output-format json verify -- cargo check --tests
+      - name: run_cargo_msrv_on_verify_failure
+        if: ${{ failure() }}
+        run: cargo msrv --ignore-lockfile --output-format json -- cargo check --tests

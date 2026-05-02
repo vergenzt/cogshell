@@ -8,16 +8,15 @@ license = "MIT"
 readme = "README.md"
 
 [dependencies]
-annotate-snippets = "0.12.13"
-anstream = { version = "1.0.0", features = ["auto"] }
-base64 = "0.22.1"
-bpaf = { version = "0.9.24", features = ["derive"] }
-hex = "0.4.3"
-md5 = "0.8.0"
-regex = "1"
-tempfile = "3"
-thiserror = "2.0.18"
-uuid = { version = "1.23.0", features = ["v4"] }
+annotate-snippets = { version = "0.12.13", default-features = false }
+base64 = { version = "0.22.1", default-features = false }
+bpaf = { version = "0.9.24", default-features = false, features = ["derive"] }
+bstr = { version = "1.12.1", default-features = false, features = ["std", "alloc"] }
+hex = { version = "0.4.3", default-features = false }
+md5 = { version = "0.8.0", default-features = false }
+regex = { version = "1.12.3", default-features = false, features = ["std", "perf"] }
+tempfile = { version = "3.26.0", default-features = false }
+uuid = { version = "1.23.0", features = ["v4"], default-features = false }
 
 [dev-dependencies]
 yare = "3.0.0"
