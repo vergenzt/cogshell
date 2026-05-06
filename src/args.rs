@@ -17,20 +17,22 @@ pub enum DestWriteStrategy {
 
 /// A "path" to read or write from (where `-` means stdin or stdout)
 pub enum PathArg {
-    /// Stdin or stdout
-    Stream,
+    StdStream,
     File(PathBuf),
 }
 
 impl PathArg {
+    /// Interpret exactly `-` as std{in/out}, anything else as itself.
     pub fn parse(path: PathBuf) -> Self {
         match path {
-            [b'-'] => Self::Stream,
+            [b'-'] => Self::StdStream,
             _ => Self::File(path),
         }
     }
 }
 
+/// Enum to restrict combinations of source/dest args. (Output destination can only be
+/// specified if there is exactly one source arg.)
 pub enum SourceAndDestArgs {
     /// Process any number of files in-place
     SourcesInPlace(Vec<PathArg>),
@@ -39,45 +41,93 @@ pub enum SourceAndDestArgs {
 }
 
 impl SourceAndDestArgs {
-    fn parser() -> impl Parser<Self> {
-        let source = positional::<PathBuf>("SOURCE").map(PathArg::parse);
-        let dest = long("output")
+    fn source() -> impl Parser<PathArg> {
+        positional::<PathBuf>("SOURCE").map(PathArg::parse)
+    }
+
+    fn dest() -> impl Parser<PathArg> {
+        long("output")
             .short('o')
             .argument::<PathBuf>("DEST")
-            .map(PathArg::parse);
-        let source_to_dest = construct!(SourceAndDestArgs::SourceAndDest(source, dest));
+            .map(PathArg::parse)
+    }
 
-        let sources = source.some("Must specify at least one SOURCE!");
-        let sources_in_place = construct!(SourceAndDestArgs::SourcesInPlace(sources));
+    fn source_and_dest() -> impl Parser<SourceAndDestArgs> {
+        construct!(SourceAndDestArgs::SourceAndDest(source(), dest()))
+    }
 
-        construct!([source_to_dest, sources_in_place])
+    fn sources() -> impl Parser<Vec<PathArg>> {
+        source().some("Must specify at least one SOURCE!")
+    }
+
+    fn sources_in_place() -> impl Parser<SourceAndDestArgs> {
+        construct!(SourceAndDestArgs::SourcesInPlace(sources()))
+    }
+
+    fn parser() -> impl Parser<Self> {
+        construct!([source_and_dest(), sources_in_place()])
+    }
+}
+
+pub struct MarkerConfig([OsString; 3]);
+
+impl MarkerConfig {
+    fn parse(arg: OsString) -> Result<Self, String> {
+        let parts: Vec<_> = arg.into_vec().split(|c| c.is_ascii_whitespace()).collect();
+        match parts[..] {
+            [a, b, c] => Ok(Self([a, b, c].map(OsString::from))),
+            _ => {
+                let disp = arg.display();
+                Err(format!(
+                    "Marker config `{disp}` does not consist of three whitespace-separated words!"
+                ))
+            }
+        }
+    }
+
+    /// The patterns surrounding cog inline instructions. Should include three
+    /// values separated by spaces, the start, end, and end-output markers.
+    fn parser() -> impl Parser<Self> {
+        long("markers")
+            .argument::<OsString>("START END END-OUTPUT")
+            .fallback(OsString::from("[[[cogsh ]]] [[[end]]]"))
+            .parse(parse)
+            .display_fallback()
+    }
+}
+
+impl Deref for MarkerConfig {
+    type Target = [OsString; 3];
+    fn deref(self: &MarkerConfig) -> &Self::Target {
+        &self.0
     }
 }
 
 pub struct Args {
     source_and_dest: SourceAndDestArgs,
-    prologue: Vec<&OsStr>,
+    prologue: Vec<OsString>,
+    output_line_suffix: Option<OsString>,
+    markers: MarkerConfig,
 }
 
-pub struct Args {
-    #[bpaf(positional("FILE"))]
-    files: Vec<FileOrStream<In>>,
+impl Args {
+    /// Statements to execute before running CogShell scripts. Executed once per file before the first block.
+    fn prologue() -> impl Parser<Vec<OsString>> {
+        long("prologue").argument("LINE").many()
+    }
 
-    #[bpaf(long("output"), short('o'), argument("OUTNAME"))]
-    /// Write the output to OUTNAME instead of inline
-    output: Option<FileOrStream>,
+    fn output_line_suffix() -> impl Parser<OsString> {
+        long("suffix").short('s').argument("SUFFIX")
+    }
 
-    #[bpaf(long("prologue"), short('p'), argument::<OsString>("PROLOGUE"), parse(|s| Ok(s.into_encoded_bytes())), many)]
-    /// Prepend CogShell code in a file with PROLOGUE. Executed once per file before the first CogShell block.
-    prologue: Vec<Vec<u8>>,
-
-    #[bpaf(
-        long("markers"),
-        argument::<MarkerConfig>("START END END-OUTPUT"),
-        fallback(MarkerConfig::from_str("[[[cogsh ]]] [[[end]]]").unwrap()),
-        display_fallback,
-    )]
-    /// The patterns surrounding cog inline instructions. Should include three
-    /// values separated by spaces, the start, end, and end-output markers.
-    markers: MarkerConfig,
+    pub fn parser() -> impl Parser<Self> {
+        let source_and_dest = SourceAndDestArgs::parser();
+        let markers = MarkerConfig::parser();
+        construct!(Self {
+            source_and_dest,
+            prologue(),
+            output_line_suffix(),
+            markers,
+        })
+    }
 }
