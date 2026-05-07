@@ -524,7 +524,7 @@ testconfig!(
     }
 );
 
-
+#[test]
 fn search_tests_have_unique_names() {
     let assert = |constname, tests: &[SearchTest]| {
         let mut seen = HashMap::new(); // map from test name to position

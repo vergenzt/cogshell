@@ -13,7 +13,7 @@ use proc_macro2::{Delimiter, Group, Ident, Punct, Spacing, Span, TokenStream, To
 use quote::{quote, ToTokens};
 use syn::{parse_quote, Expr, Type, TypePath};
 
-
+#[test]
 fn parse_interpolated_leading_component() {
     // mimics the token stream corresponding to `$mod::rest`
     let tokens = TokenStream::from_iter([
@@ -56,7 +56,7 @@ fn parse_interpolated_leading_component() {
     "#);
 }
 
-
+#[test]
 fn print_incomplete_qpath() {
     // qpath with `as` token
     let mut ty: TypePath = parse_quote!(<Self as A>::Q);
@@ -88,7 +88,7 @@ fn print_incomplete_qpath() {
     assert!(ty.path.segments.pop().is_none());
 }
 
-
+#[test]
 fn parse_parenthesized_path_arguments_with_disambiguator() {
     #[rustfmt::skip]
     let tokens = quote!(dyn FnOnce::() -> !);

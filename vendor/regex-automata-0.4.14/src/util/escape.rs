@@ -1,9 +1,9 @@
 /*!
 Provides convenience routines for escaping raw bytes.
 
-Since this crate tends to deal with `&[u8]` everywhere and the default
+Since this crate tends to deal with `&str` everywhere and the default
 `Debug` implementation just shows decimal integers, it makes debugging those
-representations quite difficult. This module provides types that show `&[u8]`
+representations quite difficult. This module provides types that show `&str`
 as if it were a string, with invalid UTF-8 escaped into its byte-by-byte hex
 representation.
 */
@@ -41,12 +41,12 @@ impl core::fmt::Debug for DebugByte {
     }
 }
 
-/// Provides a convenient `Debug` implementation for `&[u8]`.
+/// Provides a convenient `Debug` implementation for `&str`.
 ///
 /// This generally works best when the bytes are presumed to be mostly UTF-8,
 /// but will work for anything. For any bytes that aren't UTF-8, they are
 /// emitted as hex escape sequences.
-pub struct DebugHaystack<'a>(pub &'a [u8]);
+pub struct DebugHaystack<'a>(pub &'a str);
 
 impl<'a> core::fmt::Debug for DebugHaystack<'a> {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {

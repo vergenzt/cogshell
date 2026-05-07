@@ -27,7 +27,7 @@ where
     }
 }
 
-
+#[test]
 fn test_lookup() {
     let s = String::from;
     let mut map = HashMap::new();
@@ -38,7 +38,7 @@ fn test_lookup() {
     assert!(!map.contains_key(&Pair("b", "a")));
 }
 
-
+#[test]
 fn test_string_str() {
     let s = String::from;
     let mut map = HashMap::new();

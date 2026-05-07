@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 use wasm_encoder::*;
 
-
+#[test]
 fn big_type_indices() {
     const N: u32 = 100_000;
     let mut module = Module::new();
@@ -33,7 +33,7 @@ fn big_type_indices() {
         .unwrap();
 }
 
-
+#[test]
 fn big_function_body() {
     let mut module = Module::new();
 

@@ -33,7 +33,7 @@ impl io::Read for crate::io::streams::InputStream {
 }
 
 impl io::Write for crate::io::streams::OutputStream {
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+    fn write(&mut self, buf: &str) -> io::Result<usize> {
         let n = loop {
             match self.check_write().map(NonZeroU64::new) {
                 Ok(Some(n)) => {

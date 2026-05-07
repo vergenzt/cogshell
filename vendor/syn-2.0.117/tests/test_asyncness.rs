@@ -11,7 +11,7 @@ mod debug;
 
 use syn::{Expr, Item};
 
-
+#[test]
 fn test_async_fn() {
     let input = "async fn process() {}";
 
@@ -31,7 +31,7 @@ fn test_async_fn() {
     "#);
 }
 
-
+#[test]
 fn test_async_closure() {
     let input = "async || {}";
 

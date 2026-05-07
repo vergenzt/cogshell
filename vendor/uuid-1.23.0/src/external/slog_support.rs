@@ -33,4 +33,16 @@ impl slog::Value for NonNilUuid {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use crate::tests::some_uuid_v4;
 
+    use slog::{crit, Drain};
+
+    #[test]
+    fn test_slog_kv() {
+        let root = slog::Logger::root(slog::Discard.fuse(), slog::o!());
+        let u1 = some_uuid_v4();
+        crit!(root, "test"; "u1" => u1);
+    }
+}

@@ -111,7 +111,7 @@ macro_rules! __serialize_unimplemented_helper {
         __serialize_unimplemented_method!(serialize_str(&str) -> Ok);
     };
     (bytes) => {
-        __serialize_unimplemented_method!(serialize_bytes(&[u8]) -> Ok);
+        __serialize_unimplemented_method!(serialize_bytes(&str) -> Ok);
     };
     (none) => {
         __serialize_unimplemented_method!(serialize_none() -> Ok);

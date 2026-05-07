@@ -37,7 +37,7 @@ pub(crate) fn from_u32(x: &[u32]) -> Vec<Limb> {
     v
 }
 
-
+#[test]
 fn compare_test() {
     // Simple
     let x = Bigint {
@@ -84,7 +84,7 @@ fn compare_test() {
     assert_eq!(y.compare(&x), cmp::Ordering::Less);
 }
 
-
+#[test]
 fn hi64_test() {
     assert_eq!(Bigint::from_u64(0xA).hi64(), (0xA000000000000000, false));
     assert_eq!(Bigint::from_u64(0xAB).hi64(), (0xAB00000000000000, false));
@@ -98,7 +98,7 @@ fn hi64_test() {
     );
 }
 
-
+#[test]
 fn bit_length_test() {
     let x = Bigint {
         data: from_u32(&[0, 0, 0, 1]),
@@ -116,7 +116,7 @@ fn bit_length_test() {
     assert_eq!(x.bit_length(), 32);
 }
 
-
+#[test]
 fn iadd_small_test() {
     // Overflow check (single)
     // This should set all the internal data values to 0, the top
@@ -147,7 +147,7 @@ fn iadd_small_test() {
     assert_eq!(x.data, from_u32(&[6, 0, 1]));
 }
 
-
+#[test]
 fn imul_small_test() {
     // No overflow check, 1-int.
     let mut x = Bigint {
@@ -179,7 +179,7 @@ fn imul_small_test() {
     assert_eq!(x.data, from_u32(&[4, 0, 1]));
 }
 
-
+#[test]
 fn shl_test() {
     // Pattern generated via `''.join(["1" +"0"*i for i in range(20)])`
     let mut big = Bigint {

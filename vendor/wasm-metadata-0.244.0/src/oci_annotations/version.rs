@@ -78,4 +78,33 @@ impl Encode for Version {
     }
 }
 
+#[cfg(test)]
+mod test {
+    use super::*;
+    use wasm_encoder::Component;
+    use wasmparser::Payload;
 
+    #[test]
+    fn roundtrip() {
+        let mut component = Component::new();
+        component.section(&Version::new("1.0.0"));
+        let component = component.finish();
+
+        let mut parsed = false;
+        for section in wasmparser::Parser::new(0).parse_all(&component) {
+            if let Payload::CustomSection(reader) = section.unwrap() {
+                let version = Version::parse_custom_section(&reader).unwrap();
+                assert_eq!(version.to_string(), "1.0.0");
+                parsed = true;
+            }
+        }
+        assert!(parsed);
+    }
+
+    #[test]
+    fn serialize() {
+        let version = Version::new("1.0.0");
+        let json = serde_json::to_string(&version).unwrap();
+        assert_eq!(r#""1.0.0""#, json);
+    }
+}

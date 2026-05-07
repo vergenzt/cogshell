@@ -4,7 +4,7 @@ fn error() -> Error {
     anyhow!({ 0 }).context(1).context(2).context(3)
 }
 
-
+#[test]
 fn test_iter() {
     let e = error();
     let mut chain = e.chain();
@@ -16,7 +16,7 @@ fn test_iter() {
     assert!(chain.next_back().is_none());
 }
 
-
+#[test]
 fn test_rev() {
     let e = error();
     let mut chain = e.chain().rev();
@@ -28,7 +28,7 @@ fn test_rev() {
     assert!(chain.next_back().is_none());
 }
 
-
+#[test]
 fn test_len() {
     let e = error();
     let mut chain = e.chain();
@@ -49,13 +49,13 @@ fn test_len() {
     assert!(chain.next().is_none());
 }
 
-
+#[test]
 fn test_default() {
     let mut c = Chain::default();
     assert!(c.next().is_none());
 }
 
-
+#[test]
 #[allow(clippy::redundant_clone)]
 fn test_clone() {
     let e = error();

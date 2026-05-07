@@ -1,6 +1,6 @@
 use super::*;
 
-
+#[test]
 fn cases() {
     assert_eq!(TestFlags::empty(), TestFlags::empty());
     assert_eq!(TestFlags::all(), TestFlags::all());

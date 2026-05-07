@@ -15,7 +15,7 @@ use syn::parse::Parser;
 use syn::punctuated::Punctuated;
 use syn::{parse_quote, token, Item, Pat, PatTuple, Stmt, Token};
 
-
+#[test]
 fn test_pat_ident() {
     match Pat::parse_single.parse2(quote!(self)).unwrap() {
         Pat::Ident(_) => (),
@@ -23,7 +23,7 @@ fn test_pat_ident() {
     }
 }
 
-
+#[test]
 fn test_pat_path() {
     match Pat::parse_single.parse2(quote!(self::CONST)).unwrap() {
         Pat::Path(_) => (),
@@ -31,7 +31,7 @@ fn test_pat_path() {
     }
 }
 
-
+#[test]
 fn test_leading_vert() {
     // https://github.com/rust-lang/rust/blob/1.43.0/src/test/ui/or-patterns/remove-leading-vert.rs
 
@@ -51,7 +51,7 @@ fn test_leading_vert() {
     syn::parse_str::<Stmt>("let NS { f: || A }: NS;").unwrap_err();
 }
 
-
+#[test]
 fn test_group() {
     let group = Group::new(Delimiter::None, quote!(Some(_)));
     let tokens = TokenStream::from_iter([TokenTree::Group(group)]);
@@ -73,7 +73,7 @@ fn test_group() {
     "#);
 }
 
-
+#[test]
 fn test_ranges() {
     Pat::parse_single.parse_str("..").unwrap();
     Pat::parse_single.parse_str("..hi").unwrap();
@@ -103,7 +103,7 @@ fn test_ranges() {
     Pat::parse_single.parse_str("[_, lo..=hi, _]").unwrap();
 }
 
-
+#[test]
 fn test_tuple_comma() {
     let mut expr = PatTuple {
         attrs: Vec::new(),

@@ -8,7 +8,7 @@ enum E {
     Float(f32),
 }
 
-
+#[test]
 fn test() {
     let e = E::Float(159.1);
     let v = serde_json::to_value(e).unwrap();

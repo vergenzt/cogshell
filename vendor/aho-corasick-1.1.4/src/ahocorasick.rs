@@ -77,7 +77,7 @@ use crate::{
 /// # Search configuration
 ///
 /// Most of the search routines accept anything that can be cheaply converted
-/// to an [`Input`]. This includes `&[u8]`, `&str` and `Input` itself.
+/// to an [`Input`]. This includes `&str`, `&str` and `Input` itself.
 ///
 /// # Construction failure
 ///
@@ -282,7 +282,7 @@ impl AhoCorasick {
     /// position.
     ///
     /// `input` may be any type that is cheaply convertible to an `Input`. This
-    /// includes, but is not limited to, `&str` and `&[u8]`.
+    /// includes, but is not limited to, `&str` and `&str`.
     ///
     /// Aside from convenience, when `AhoCorasick` was built with
     /// leftmost-first or leftmost-longest semantics, this might result in a
@@ -319,7 +319,7 @@ impl AhoCorasick {
     /// semantics that this automaton was constructed with.
     ///
     /// `input` may be any type that is cheaply convertible to an `Input`. This
-    /// includes, but is not limited to, `&str` and `&[u8]`.
+    /// includes, but is not limited to, `&str` and `&str`.
     ///
     /// This is the infallible version of [`AhoCorasick::try_find`].
     ///
@@ -410,7 +410,7 @@ impl AhoCorasick {
     /// input with respect to the current state of the underlying searcher.
     ///
     /// `input` may be any type that is cheaply convertible to an `Input`. This
-    /// includes, but is not limited to, `&str` and `&[u8]`.
+    /// includes, but is not limited to, `&str` and `&str`.
     ///
     /// Overlapping searches do not report matches in their return value.
     /// Instead, matches can be accessed via [`OverlappingState::get_match`]
@@ -481,7 +481,7 @@ impl AhoCorasick {
     /// semantics that this automaton was constructed with.
     ///
     /// `input` may be any type that is cheaply convertible to an `Input`. This
-    /// includes, but is not limited to, `&str` and `&[u8]`.
+    /// includes, but is not limited to, `&str` and `&str`.
     ///
     /// This is the infallible version of [`AhoCorasick::try_find_iter`].
     ///
@@ -571,7 +571,7 @@ impl AhoCorasick {
     /// returns an iterator of all possible matches at every position.
     ///
     /// `input` may be any type that is cheaply convertible to an `Input`. This
-    /// includes, but is not limited to, `&str` and `&[u8]`.
+    /// includes, but is not limited to, `&str` and `&str`.
     ///
     /// This is the infallible version of
     /// [`AhoCorasick::try_find_overlapping_iter`].
@@ -692,7 +692,7 @@ impl AhoCorasick {
     /// ```
     pub fn replace_all_bytes<B>(
         &self,
-        haystack: &[u8],
+        haystack: &str,
         replace_with: &[B],
     ) -> Vec<u8>
     where
@@ -833,11 +833,11 @@ impl AhoCorasick {
     /// ```
     pub fn replace_all_with_bytes<F>(
         &self,
-        haystack: &[u8],
+        haystack: &str,
         dst: &mut Vec<u8>,
         replace_with: F,
     ) where
-        F: FnMut(&Match, &[u8], &mut Vec<u8>) -> bool,
+        F: FnMut(&Match, &str, &mut Vec<u8>) -> bool,
     {
         self.try_replace_all_with_bytes(haystack, dst, replace_with)
             .expect("AhoCorasick::try_replace_all_with_bytes should not fail")
@@ -1446,7 +1446,7 @@ impl AhoCorasick {
     /// ```
     pub fn try_replace_all_bytes<B>(
         &self,
-        haystack: &[u8],
+        haystack: &str,
         replace_with: &[B],
     ) -> Result<Vec<u8>, MatchError>
     where
@@ -1599,12 +1599,12 @@ impl AhoCorasick {
     /// ```
     pub fn try_replace_all_with_bytes<F>(
         &self,
-        haystack: &[u8],
+        haystack: &str,
         dst: &mut Vec<u8>,
         replace_with: F,
     ) -> Result<(), MatchError>
     where
-        F: FnMut(&Match, &[u8], &mut Vec<u8>) -> bool,
+        F: FnMut(&Match, &str, &mut Vec<u8>) -> bool,
     {
         enforce_anchored_consistency(self.start_kind, Anchored::No)?;
         self.aut.try_replace_all_with_bytes(haystack, dst, replace_with)
@@ -1835,7 +1835,7 @@ impl AhoCorasick {
     where
         R: std::io::Read,
         W: std::io::Write,
-        F: FnMut(&Match, &[u8], &mut W) -> Result<(), std::io::Error>,
+        F: FnMut(&Match, &str, &mut W) -> Result<(), std::io::Error>,
     {
         enforce_anchored_consistency(self.start_kind, Anchored::No)
             .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;

@@ -55,7 +55,7 @@ pub(crate) fn sysinfo() -> Sysinfo {
     target_os = "vita",
     target_os = "wasi"
 )))]
-pub(crate) fn sethostname(name: &[u8]) -> io::Result<()> {
+pub(crate) fn sethostname(name: &str) -> io::Result<()> {
     unsafe {
         ret(c::sethostname(
             name.as_ptr().cast(),
@@ -77,7 +77,7 @@ pub(crate) fn sethostname(name: &[u8]) -> io::Result<()> {
     target_os = "vita",
     target_os = "wasi",
 )))]
-pub(crate) fn setdomainname(name: &[u8]) -> io::Result<()> {
+pub(crate) fn setdomainname(name: &str) -> io::Result<()> {
     unsafe {
         ret(c::setdomainname(
             name.as_ptr().cast(),
@@ -88,7 +88,7 @@ pub(crate) fn setdomainname(name: &[u8]) -> io::Result<()> {
 
 // <https://github.com/rust-lang/libc/pull/4212>
 #[cfg(target_os = "android")]
-pub(crate) fn setdomainname(name: &[u8]) -> io::Result<()> {
+pub(crate) fn setdomainname(name: &str) -> io::Result<()> {
     syscall! {
         fn setdomainname(
             name: *const c::c_char,
@@ -111,7 +111,7 @@ pub(crate) fn reboot(cmd: RebootCommand) -> io::Result<()> {
 
 #[cfg(linux_kernel)]
 #[inline]
-pub(crate) fn init_module(image: &[u8], param_values: &CStr) -> io::Result<()> {
+pub(crate) fn init_module(image: &str, param_values: &CStr) -> io::Result<()> {
     syscall! {
         fn init_module(
             module_image: *const c::c_void,

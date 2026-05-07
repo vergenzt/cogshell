@@ -104,7 +104,7 @@ So given this trie, it should be somewhat straight-forward to see how it can
 be used to determine whether any particular haystack *starts* with either
 `abcd` or `cef`. It's easy to express this in code:
 
-    fn has_prefix(trie: &Trie, haystack: &[u8]) -> bool {
+    fn has_prefix(trie: &Trie, haystack: &str) -> bool {
       let mut state_id = trie.start();
       // If the empty pattern is in trie, then state_id is a match state.
       if trie.is_match(state_id) {
@@ -162,7 +162,7 @@ The code for traversing this *automaton* or *finite state machine* (it is no
 longer just a trie) is not that much different from the `has_prefix` code
 above:
 
-    fn contains(fsm: &FiniteStateMachine, haystack: &[u8]) -> bool {
+    fn contains(fsm: &FiniteStateMachine, haystack: &str) -> bool {
       let mut state_id = fsm.start();
       // If the empty pattern is in fsm, then state_id is a match state.
       if fsm.is_match(state_id) {
@@ -238,7 +238,7 @@ has a lot of overlapping patterns with a lot of failure transitions.
 
 A DFA's search code, by contrast, looks like this:
 
-    fn contains(dfa: &DFA, haystack: &[u8]) -> bool {
+    fn contains(dfa: &DFA, haystack: &str) -> bool {
       let mut state_id = dfa.start();
       // If the empty pattern is in dfa, then state_id is a match state.
       if dfa.is_match(state_id) {

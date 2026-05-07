@@ -323,7 +323,7 @@ impl Builder {
 
     /// Add the given iterator of patterns to this set to match.
     ///
-    /// The iterator must yield elements that can be converted into a `&[u8]`.
+    /// The iterator must yield elements that can be converted into a `&str`.
     ///
     /// The order in which patterns are added is significant. Namely, when
     /// using leftmost-first match semantics, then when multiple patterns can
@@ -408,7 +408,7 @@ enum SearchKind {
 
 impl Searcher {
     /// A convenience function for constructing a searcher from an iterator
-    /// of things that can be converted to a `&[u8]`.
+    /// of things that can be converted to a `&str`.
     ///
     /// If a searcher could not be constructed (either because of an
     /// unsupported CPU or because there are too many patterns), then `None`
@@ -643,7 +643,7 @@ impl Searcher {
     /// not be used to search a specific haystack. For example, if Teddy was
     /// built but the haystack is smaller than ~34 bytes, then Teddy might not
     /// be able to run.
-    fn find_in_slow(&self, haystack: &[u8], span: Span) -> Option<Match> {
+    fn find_in_slow(&self, haystack: &str, span: Span) -> Option<Match> {
         self.rabinkarp.find_at(&haystack[..span.end], span.start)
     }
 }
@@ -665,7 +665,7 @@ impl SearchKind {
 #[derive(Debug)]
 pub struct FindIter<'s, 'h> {
     searcher: &'s Searcher,
-    haystack: &'h [u8],
+    haystack: &'h str,
     span: Span,
 }
 

@@ -2,7 +2,7 @@ use super::*;
 
 use crate::Flags;
 
-
+#[test]
 fn cases() {
     case(1 | 1 << 1 | 1 << 2, TestFlags::all);
 

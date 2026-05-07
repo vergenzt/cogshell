@@ -64,7 +64,7 @@ pub struct Struct {
     pub i: i64,
 }
 
-
+#[test]
 fn test() {
     let j = r#" {"i":100} "#;
     println!("{:?}", serde_json::from_str::<Struct>(j).unwrap());

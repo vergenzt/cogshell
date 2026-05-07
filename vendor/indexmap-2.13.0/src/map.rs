@@ -12,7 +12,8 @@ pub mod raw_entry_v1;
 #[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
 pub mod serde_seq;
 
-
+#[cfg(test)]
+mod tests;
 
 pub use self::entry::{Entry, IndexedEntry};
 pub use crate::inner::{OccupiedEntry, VacantEntry};

@@ -134,7 +134,7 @@ impl Uuid {
     /// ```
     ///
     /// [`try_parse`]: #method.try_parse
-    pub const fn try_parse_ascii(input: &[u8]) -> Result<Uuid, Error> {
+    pub const fn try_parse_ascii(input: &str) -> Result<Uuid, Error> {
         match try_parse(input) {
             Ok(bytes) => Ok(Uuid::from_bytes(bytes)),
             // If parsing fails then we don't know exactly what went wrong
@@ -144,7 +144,7 @@ impl Uuid {
     }
 }
 
-const fn try_parse(input: &'_ [u8]) -> Result<[u8; 16], InvalidUuid<'_>> {
+const fn try_parse(input: &'_ str) -> Result<[u8; 16], InvalidUuid<'_>> {
     match (input.len(), input) {
         // Inputs of 32 bytes must be a non-hyphenated UUID
         (32, s) => parse_simple(s),
@@ -164,7 +164,7 @@ const fn try_parse(input: &'_ [u8]) -> Result<[u8; 16], InvalidUuid<'_>> {
 
 #[inline]
 #[allow(dead_code)]
-pub(crate) const fn parse_braced(input: &'_ [u8]) -> Result<[u8; 16], InvalidUuid<'_>> {
+pub(crate) const fn parse_braced(input: &'_ str) -> Result<[u8; 16], InvalidUuid<'_>> {
     if let (38, [b'{', s @ .., b'}']) = (input.len(), input) {
         parse_hyphenated(s)
     } else {
@@ -174,7 +174,7 @@ pub(crate) const fn parse_braced(input: &'_ [u8]) -> Result<[u8; 16], InvalidUui
 
 #[inline]
 #[allow(dead_code)]
-pub(crate) const fn parse_urn(input: &'_ [u8]) -> Result<[u8; 16], InvalidUuid<'_>> {
+pub(crate) const fn parse_urn(input: &'_ str) -> Result<[u8; 16], InvalidUuid<'_>> {
     if let (45, [b'u', b'r', b'n', b':', b'u', b'u', b'i', b'd', b':', s @ ..]) =
         (input.len(), input)
     {
@@ -185,7 +185,7 @@ pub(crate) const fn parse_urn(input: &'_ [u8]) -> Result<[u8; 16], InvalidUuid<'
 }
 
 #[inline]
-pub(crate) const fn parse_simple(s: &'_ [u8]) -> Result<[u8; 16], InvalidUuid<'_>> {
+pub(crate) const fn parse_simple(s: &'_ str) -> Result<[u8; 16], InvalidUuid<'_>> {
     // This length check here removes all other bounds
     // checks in this function
     if s.len() != 32 {
@@ -217,7 +217,7 @@ pub(crate) const fn parse_simple(s: &'_ [u8]) -> Result<[u8; 16], InvalidUuid<'_
 }
 
 #[inline]
-pub(crate) const fn parse_hyphenated(s: &'_ [u8]) -> Result<[u8; 16], InvalidUuid<'_>> {
+pub(crate) const fn parse_hyphenated(s: &'_ str) -> Result<[u8; 16], InvalidUuid<'_>> {
     // This length check here removes all other bounds
     // checks in this function
     if s.len() != 36 {
@@ -300,4 +300,282 @@ const SHL4_TABLE: &[u8; 256] = &{
     }
 };
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{std::string::ToString, tests::some_uuid_iter};
 
+    #[test]
+    fn test_parse_uuid_v4_valid() {
+        let from_hyphenated = Uuid::parse_str("67e55044-10b1-426f-9247-bb680e5fe0c8").unwrap();
+        let from_simple = Uuid::parse_str("67e5504410b1426f9247bb680e5fe0c8").unwrap();
+        let from_urn = Uuid::parse_str("urn:uuid:67e55044-10b1-426f-9247-bb680e5fe0c8").unwrap();
+        let from_guid = Uuid::parse_str("{67e55044-10b1-426f-9247-bb680e5fe0c8}").unwrap();
+
+        assert_eq!(from_hyphenated, from_simple);
+        assert_eq!(from_hyphenated, from_urn);
+        assert_eq!(from_hyphenated, from_guid);
+
+        assert!(Uuid::parse_str("00000000000000000000000000000000").is_ok());
+        assert!(Uuid::parse_str("67e55044-10b1-426f-9247-bb680e5fe0c8").is_ok());
+        assert!(Uuid::parse_str("F9168C5E-CEB2-4faa-B6BF-329BF39FA1E4").is_ok());
+        assert!(Uuid::parse_str("67e5504410b1426f9247bb680e5fe0c8").is_ok());
+        assert!(Uuid::parse_str("01020304-1112-2122-3132-414243444546").is_ok());
+        assert!(Uuid::parse_str("urn:uuid:67e55044-10b1-426f-9247-bb680e5fe0c8").is_ok());
+        assert!(Uuid::parse_str("{6d93bade-bd9f-4e13-8914-9474e1e3567b}").is_ok());
+
+        // Nil
+        let nil = Uuid::nil();
+        assert_eq!(
+            Uuid::parse_str("00000000000000000000000000000000").unwrap(),
+            nil
+        );
+        assert_eq!(
+            Uuid::parse_str("00000000-0000-0000-0000-000000000000").unwrap(),
+            nil
+        );
+    }
+
+    #[test]
+    fn test_parse_uuid_v4_invalid() {
+        // Invalid
+        assert_eq!(
+            Uuid::parse_str(""),
+            Err(Error(ErrorKind::ParseSimpleLength { len: 0 }))
+        );
+
+        assert_eq!(
+            Uuid::parse_str("!"),
+            Err(Error(ErrorKind::ParseChar {
+                character: '!',
+                index: 1,
+            }))
+        );
+
+        assert_eq!(
+            Uuid::parse_str("F9168C5E-CEB2-4faa-B6BF-329BF39FA1E45"),
+            Err(Error(ErrorKind::ParseGroupLength {
+                group: 4,
+                len: 13,
+                index: 25,
+            }))
+        );
+
+        assert_eq!(
+            Uuid::parse_str("F9168C5E-CEB2-4faa-BBF-329BF39FA1E4"),
+            Err(Error(ErrorKind::ParseGroupLength {
+                group: 3,
+                len: 3,
+                index: 20,
+            }))
+        );
+
+        assert_eq!(
+            Uuid::parse_str("F9168C5E-CEB2-4faa-BGBF-329BF39FA1E4"),
+            Err(Error(ErrorKind::ParseChar {
+                character: 'G',
+                index: 21,
+            }))
+        );
+
+        assert_eq!(
+            Uuid::parse_str("F9168C5E-CEB2F4faaFB6BFF329BF39FA1E4"),
+            Err(Error(ErrorKind::ParseGroupCount { count: 2 }))
+        );
+
+        assert_eq!(
+            Uuid::parse_str("F9168C5E-CEB2-4faaFB6BFF329BF39FA1E4"),
+            Err(Error(ErrorKind::ParseGroupCount { count: 3 }))
+        );
+
+        assert_eq!(
+            Uuid::parse_str("F9168C5E-CEB2-4faa-B6BFF329BF39FA1E4"),
+            Err(Error(ErrorKind::ParseGroupCount { count: 4 }))
+        );
+
+        assert_eq!(
+            Uuid::parse_str("F9168C5E-CEB2-4faa"),
+            Err(Error(ErrorKind::ParseGroupCount { count: 3 }))
+        );
+
+        assert_eq!(
+            Uuid::parse_str("F9168C5E-CEB2-4faaXB6BFF329BF39FA1E4"),
+            Err(Error(ErrorKind::ParseChar {
+                character: 'X',
+                index: 19,
+            }))
+        );
+
+        assert_eq!(
+            Uuid::parse_str("{F9168C5E-CEB2-4faa9B6BFF329BF39FA1E41"),
+            Err(Error(ErrorKind::ParseChar {
+                character: '{',
+                index: 1,
+            }))
+        );
+
+        assert_eq!(
+            Uuid::parse_str("{F9168C5E-CEB2-4faa9B6BFF329BF39FA1E41}"),
+            Err(Error(ErrorKind::ParseGroupCount { count: 3 }))
+        );
+
+        assert_eq!(
+            Uuid::parse_str("F9168C5E-CEB-24fa-eB6BFF32-BF39FA1E4"),
+            Err(Error(ErrorKind::ParseGroupLength {
+                group: 1,
+                len: 3,
+                index: 10,
+            }))
+        );
+
+        // // (group, found, expecting)
+        // //
+        assert_eq!(
+            Uuid::parse_str("01020304-1112-2122-3132-41424344"),
+            Err(Error(ErrorKind::ParseGroupLength {
+                group: 4,
+                len: 8,
+                index: 25,
+            }))
+        );
+
+        assert_eq!(
+            Uuid::parse_str("67e5504410b1426f9247bb680e5fe0c"),
+            Err(Error(ErrorKind::ParseSimpleLength { len: 31 }))
+        );
+
+        assert_eq!(
+            Uuid::parse_str("67e5504410b1426f9247bb680e5fe0c88"),
+            Err(Error(ErrorKind::ParseSimpleLength { len: 33 }))
+        );
+
+        assert_eq!(
+            Uuid::parse_str("67e5504410b1426f9247bb680e5fe0cg8"),
+            Err(Error(ErrorKind::ParseChar {
+                character: 'g',
+                index: 32,
+            }))
+        );
+
+        assert_eq!(
+            Uuid::parse_str("67e5504410b1426%9247bb680e5fe0c8"),
+            Err(Error(ErrorKind::ParseChar {
+                character: '%',
+                index: 16,
+            }))
+        );
+
+        assert_eq!(
+            Uuid::parse_str("231231212212423424324323477343246663"),
+            Err(Error(ErrorKind::ParseSimpleLength { len: 36 }))
+        );
+
+        assert_eq!(
+            Uuid::parse_str("{00000000000000000000000000000000}"),
+            Err(Error(ErrorKind::ParseGroupCount { count: 1 }))
+        );
+
+        assert_eq!(
+            Uuid::parse_str("67e5504410b1426f9247bb680e5fe0c"),
+            Err(Error(ErrorKind::ParseSimpleLength { len: 31 }))
+        );
+
+        assert_eq!(
+            Uuid::parse_str("67e550X410b1426f9247bb680e5fe0cd"),
+            Err(Error(ErrorKind::ParseChar {
+                character: 'X',
+                index: 7,
+            }))
+        );
+
+        assert_eq!(
+            Uuid::parse_str("67e550-4105b1426f9247bb680e5fe0c"),
+            Err(Error(ErrorKind::ParseGroupCount { count: 2 }))
+        );
+
+        assert_eq!(
+            Uuid::parse_str("F9168C5E-CEB2-4faa-B6BF1-02BF39FA1E4"),
+            Err(Error(ErrorKind::ParseGroupLength {
+                group: 3,
+                len: 5,
+                index: 20,
+            }))
+        );
+
+        assert_eq!(
+            Uuid::parse_str("\u{bcf3c}"),
+            Err(Error(ErrorKind::ParseChar {
+                character: '\u{bcf3c}',
+                index: 1
+            }))
+        );
+    }
+
+    #[test]
+    fn test_roundtrip_default() {
+        for uuid_orig in some_uuid_iter() {
+            let orig_str = uuid_orig.to_string();
+            let uuid_out = Uuid::parse_str(&orig_str).unwrap();
+            assert_eq!(uuid_orig, uuid_out);
+        }
+    }
+
+    #[test]
+    fn test_roundtrip_hyphenated() {
+        for uuid_orig in some_uuid_iter() {
+            let orig_str = uuid_orig.hyphenated().to_string();
+            let uuid_out = Uuid::parse_str(&orig_str).unwrap();
+            assert_eq!(uuid_orig, uuid_out);
+        }
+    }
+
+    #[test]
+    fn test_roundtrip_simple() {
+        for uuid_orig in some_uuid_iter() {
+            let orig_str = uuid_orig.simple().to_string();
+            let uuid_out = Uuid::parse_str(&orig_str).unwrap();
+            assert_eq!(uuid_orig, uuid_out);
+        }
+    }
+
+    #[test]
+    fn test_roundtrip_urn() {
+        for uuid_orig in some_uuid_iter() {
+            let orig_str = uuid_orig.urn().to_string();
+            let uuid_out = Uuid::parse_str(&orig_str).unwrap();
+            assert_eq!(uuid_orig, uuid_out);
+        }
+    }
+
+    #[test]
+    fn test_roundtrip_braced() {
+        for uuid_orig in some_uuid_iter() {
+            let orig_str = uuid_orig.braced().to_string();
+            let uuid_out = Uuid::parse_str(&orig_str).unwrap();
+            assert_eq!(uuid_orig, uuid_out);
+        }
+    }
+
+    #[test]
+    fn test_roundtrip_parse_urn() {
+        for uuid_orig in some_uuid_iter() {
+            let orig_str = uuid_orig.urn().to_string();
+            let uuid_out = Uuid::from_bytes(parse_urn(orig_str.as_bytes()).unwrap());
+            assert_eq!(uuid_orig, uuid_out);
+        }
+    }
+
+    #[test]
+    fn test_roundtrip_parse_braced() {
+        for uuid_orig in some_uuid_iter() {
+            let orig_str = uuid_orig.braced().to_string();
+            let uuid_out = Uuid::from_bytes(parse_braced(orig_str.as_bytes()).unwrap());
+            assert_eq!(uuid_orig, uuid_out);
+        }
+    }
+
+    #[test]
+    fn test_try_parse_ascii_non_utf8() {
+        assert!(Uuid::try_parse_ascii(b"67e55044-10b1-426f-9247-bb680e5\0e0c8").is_err());
+    }
+}

@@ -1,6 +1,6 @@
 // Tests that we can call the backtracker with more slots
 // than is actually in the compiled regex.
-
+#[test]
 fn too_many_slots_normal_pattern() {
     use regex_automata::{
         nfa::thompson::backtrack::BoundedBacktracker,

@@ -139,7 +139,7 @@ impl Component {
     }
 
     /// View the encoded bytes.
-    pub fn as_slice(&self) -> &[u8] {
+    pub fn as_slice(&self) -> &str {
         &self.bytes
     }
 }

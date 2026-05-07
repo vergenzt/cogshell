@@ -218,7 +218,7 @@ impl<'a> Metadata<'a> {
     pub fn try_new(
         name: &'a str,
         dl_openable: bool,
-        module: &'a [u8],
+        module: &'a str,
         adapter_names: &HashSet<&str>,
     ) -> Result<Self> {
         let bindgen = crate::metadata::decode(module)?.1;

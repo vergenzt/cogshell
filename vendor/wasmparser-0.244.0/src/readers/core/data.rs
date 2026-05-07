@@ -22,7 +22,7 @@ pub struct Data<'a> {
     /// The kind of data segment.
     pub kind: DataKind<'a>,
     /// The data of the data segment.
-    pub data: &'a [u8],
+    pub data: &'a str,
     /// The range of the data segment.
     pub range: Range<usize>,
 }

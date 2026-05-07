@@ -780,7 +780,7 @@ impl<'a> Arg for Iter<'a> {
     }
 }
 
-impl Arg for &[u8] {
+impl Arg for &str {
     #[inline]
     fn as_str(&self) -> io::Result<&str> {
         str::from_utf8(self).map_err(|_utf8_err| io::Errno::INVAL)
@@ -945,7 +945,7 @@ impl Arg for DecInt {
 /// Runs a closure with `bytes` passed in as a `&CStr`.
 #[allow(unsafe_code, clippy::int_plus_one)]
 #[inline]
-fn with_c_str<T, F>(bytes: &[u8], f: F) -> io::Result<T>
+fn with_c_str<T, F>(bytes: &str, f: F) -> io::Result<T>
 where
     F: FnOnce(&CStr) -> io::Result<T>,
 {
@@ -988,7 +988,7 @@ where
 /// `PATH_MAX`, but we let the OS enforce that.
 #[allow(unsafe_code, clippy::int_plus_one)]
 #[cold]
-fn with_c_str_slow_path<T, F>(bytes: &[u8], f: F) -> io::Result<T>
+fn with_c_str_slow_path<T, F>(bytes: &str, f: F) -> io::Result<T>
 where
     F: FnOnce(&CStr) -> io::Result<T>,
 {

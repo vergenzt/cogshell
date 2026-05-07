@@ -85,8 +85,8 @@ where
 }
 
 impl<'a> Deserializer<read::SliceRead<'a>> {
-    /// Creates a JSON deserializer from a `&[u8]`.
-    pub fn from_slice(bytes: &'a [u8]) -> Self {
+    /// Creates a JSON deserializer from a `&str`.
+    pub fn from_slice(bytes: &'a str) -> Self {
         Deserializer::new(read::SliceRead::new(bytes))
     }
 }
@@ -442,7 +442,7 @@ impl<'de, R: Read<'de>> Deserializer<R> {
         err.fix_position(move |code| self.error(code))
     }
 
-    fn parse_ident(&mut self, ident: &[u8]) -> Result<()> {
+    fn parse_ident(&mut self, ident: &str) -> Result<()> {
         for expected in ident {
             match tri!(self.next_char()) {
                 None => {
@@ -2633,7 +2633,7 @@ where
 /// }
 ///
 /// fn main() {
-///     // The type of `j` is `&[u8]`
+///     // The type of `j` is `&str`
 ///     let j = b"
 ///         {
 ///             \"fingerprint\": \"0xF9BA143B95FF6D82\",
@@ -2654,7 +2654,7 @@ where
 /// is wrong with the data, for example required struct fields are missing from
 /// the JSON map or some number is too big to fit in the expected primitive
 /// type.
-pub fn from_slice<'a, T>(v: &'a [u8]) -> Result<T>
+pub fn from_slice<'a, T>(v: &'a str) -> Result<T>
 where
     T: de::Deserialize<'a>,
 {

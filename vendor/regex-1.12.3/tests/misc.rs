@@ -6,14 +6,14 @@ macro_rules! regex {
     };
 }
 
-
+#[test]
 fn unclosed_group_error() {
     let err = Regex::new(r"(").unwrap_err();
     let msg = err.to_string();
     assert!(msg.contains("unclosed group"), "error message: {msg:?}");
 }
 
-
+#[test]
 fn regex_string() {
     assert_eq!(r"[a-zA-Z0-9]+", regex!(r"[a-zA-Z0-9]+").as_str());
     assert_eq!(r"[a-zA-Z0-9]+", &format!("{}", regex!(r"[a-zA-Z0-9]+")));
@@ -23,7 +23,7 @@ fn regex_string() {
     );
 }
 
-
+#[test]
 fn capture_names() {
     let re = regex!(r"(.)(?P<a>.)");
     assert_eq!(3, re.captures_len());
@@ -34,7 +34,7 @@ fn capture_names() {
     );
 }
 
-
+#[test]
 fn capture_index() {
     let re = regex!(r"^(?P<name>.+)$");
     let cap = re.captures("abc").unwrap();
@@ -43,7 +43,7 @@ fn capture_index() {
     assert_eq!(&cap["name"], "abc");
 }
 
-
+#[test]
 #[should_panic]
 fn capture_index_panic_usize() {
     let re = regex!(r"^(?P<name>.+)$");
@@ -51,7 +51,7 @@ fn capture_index_panic_usize() {
     let _ = cap[2];
 }
 
-
+#[test]
 #[should_panic]
 fn capture_index_panic_name() {
     let re = regex!(r"^(?P<name>.+)$");
@@ -59,7 +59,7 @@ fn capture_index_panic_name() {
     let _ = cap["bad name"];
 }
 
-
+#[test]
 fn capture_index_lifetime() {
     // This is a test of whether the types on `caps["..."]` are general
     // enough. If not, this will fail to typecheck.
@@ -71,7 +71,7 @@ fn capture_index_lifetime() {
     assert_eq!(3, inner("123"));
 }
 
-
+#[test]
 fn capture_misc() {
     let re = regex!(r"(.)(?P<a>a)?(.)(?P<b>.)");
     let cap = re.captures("abc").unwrap();
@@ -96,7 +96,7 @@ fn capture_misc() {
     assert_eq!("c", cap.name("b").unwrap().as_str());
 }
 
-
+#[test]
 fn sub_capture_matches() {
     let re = regex!(r"([a-z])(([a-z])|([0-9]))");
     let cap = re.captures("a5").unwrap();
@@ -118,7 +118,7 @@ fn sub_capture_matches() {
 // Test that the DFA can handle pathological cases. (This should result in the
 // DFA's cache being flushed too frequently, which should cause it to quit and
 // fall back to the NFA algorithm.)
-
+#[test]
 fn dfa_handles_pathological_case() {
     fn ones_and_zeroes(count: usize) -> String {
         let mut s = String::new();

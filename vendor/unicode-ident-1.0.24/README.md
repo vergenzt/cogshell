@@ -110,7 +110,7 @@ pub struct TrieSet {
     tree2_level1: &'static [u8; 992],
     tree2_level2: &'static [u64],
     tree3_level1: &'static [u8; 256],
-    tree3_level2: &'static [u8],
+    tree3_level2: &'static str,
     tree3_level3: &'static [u64],
 }
 ```

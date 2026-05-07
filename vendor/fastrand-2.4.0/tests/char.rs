@@ -17,7 +17,7 @@ where
     assert_eq!(covered, all);
 }
 
-
+#[test]
 fn test_char() {
     // ASCII control chars.
     let nul = 0u8 as char;

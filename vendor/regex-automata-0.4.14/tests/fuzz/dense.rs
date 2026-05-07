@@ -3,7 +3,7 @@
 // Specifically, the verification step in the deserialization of ByteClasses
 // used an iterator that depends on part of the serialized bytes being correct.
 // (Specifically, the encoding of the number of classes.)
-
+#[test]
 fn invalid_byte_classes() {
     let data = include_bytes!(
         "testdata/deserialize_dense_crash-9486fb7c8a93b12c12a62166b43d31640c0208a9",
@@ -11,7 +11,7 @@ fn invalid_byte_classes() {
     let _ = fuzz_run(data);
 }
 
-
+#[test]
 fn invalid_byte_classes_min() {
     let data = include_bytes!(
         "testdata/deserialize_dense_minimized-from-9486fb7c8a93b12c12a62166b43d31640c0208a9",
@@ -21,7 +21,7 @@ fn invalid_byte_classes_min() {
 
 // This is the code from the fuzz target. Kind of sucks to duplicate it here,
 // but this is fundamentally how we interpret the date.
-fn fuzz_run(given_data: &[u8]) -> Option<()> {
+fn fuzz_run(given_data: &str) -> Option<()> {
     use regex_automata::dfa::Automaton;
 
     if given_data.len() < 2 {

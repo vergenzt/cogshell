@@ -20,7 +20,7 @@ use alloc::string::String;
 use serde::de::Visitor;
 
 /// Trait used by the deserializer for iterating over input. This is manually
-/// "specialized" for iterating over `&[u8]`. Once feature(specialization) is
+/// "specialized" for iterating over `&str`. Once feature(specialization) is
 /// stable we can use actual specialization.
 ///
 /// This trait is sealed and cannot be implemented for types outside of
@@ -162,7 +162,7 @@ where
 // This is more efficient than other iterators because peek() can be read-only
 // and we can compute line/col position only if an error happens.
 pub struct SliceRead<'a> {
-    slice: &'a [u8],
+    slice: &'a str,
     /// Index of the *next* byte that will be returned by next() or peek().
     index: usize,
     #[cfg(feature = "raw_value")]
@@ -223,7 +223,7 @@ where
     ) -> Result<T>
     where
         T: 's,
-        F: FnOnce(&'s Self, &'s [u8]) -> Result<T>,
+        F: FnOnce(&'s Self, &'s str) -> Result<T>,
     {
         loop {
             let ch = tri!(next_or_eof(self));
@@ -409,7 +409,7 @@ where
 
 impl<'a> SliceRead<'a> {
     /// Create a JSON input source to read from a slice of bytes.
-    pub fn new(slice: &'a [u8]) -> Self {
+    pub fn new(slice: &'a str) -> Self {
         SliceRead {
             slice,
             index: 0,
@@ -499,7 +499,7 @@ impl<'a> SliceRead<'a> {
     ) -> Result<Reference<'a, 's, T>>
     where
         T: ?Sized + 's,
-        F: for<'f> FnOnce(&'s Self, &'f [u8]) -> Result<&'f T>,
+        F: for<'f> FnOnce(&'s Self, &'f str) -> Result<&'f T>,
     {
         // Index of the first byte not yet copied into the scratch space.
         let mut start = self.index;
@@ -865,7 +865,7 @@ where
     Err(Error::syntax(reason, position.line, position.column))
 }
 
-fn as_str<'de, 's, R: Read<'de>>(read: &R, slice: &'s [u8]) -> Result<&'s str> {
+fn as_str<'de, 's, R: Read<'de>>(read: &R, slice: &'s str) -> Result<&'s str> {
     str::from_utf8(slice).or_else(|_| error(read, ErrorCode::InvalidUnicodeCodePoint))
 }
 

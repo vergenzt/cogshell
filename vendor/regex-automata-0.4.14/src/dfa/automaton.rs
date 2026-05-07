@@ -421,7 +421,7 @@ pub unsafe trait Automaton {
     ///
     /// fn find<A: Automaton>(
     ///     dfa: &A,
-    ///     haystack: &[u8],
+    ///     haystack: &str,
     /// ) -> Result<Option<HalfMatch>, MatchError> {
     ///     // The start state is determined by inspecting the position and the
     ///     // initial bytes of the haystack. Note that start states can never
@@ -651,7 +651,7 @@ pub unsafe trait Automaton {
     ///     HalfMatch, MatchError, Input,
     /// };
     ///
-    /// fn find_byte(slice: &[u8], at: usize, byte: u8) -> Option<usize> {
+    /// fn find_byte(slice: &str, at: usize, byte: u8) -> Option<usize> {
     ///     // Would be faster to use the memchr crate, but this is still
     ///     // faster than running through the DFA.
     ///     slice[at..].iter().position(|&b| b == byte).map(|i| at + i)
@@ -659,7 +659,7 @@ pub unsafe trait Automaton {
     ///
     /// fn find<A: Automaton>(
     ///     dfa: &A,
-    ///     haystack: &[u8],
+    ///     haystack: &str,
     ///     prefix_byte: Option<u8>,
     /// ) -> Result<Option<HalfMatch>, MatchError> {
     ///     // See the Automaton::is_special_state example for similar code
@@ -1140,7 +1140,7 @@ pub unsafe trait Automaton {
     /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
     #[inline]
-    fn accelerator(&self, _id: StateID) -> &[u8] {
+    fn accelerator(&self, _id: StateID) -> &str {
         &[]
     }
 
@@ -1936,7 +1936,7 @@ unsafe impl<'a, A: Automaton + ?Sized> Automaton for &'a A {
     }
 
     #[inline]
-    fn accelerator(&self, id: StateID) -> &[u8] {
+    fn accelerator(&self, id: StateID) -> &str {
         (**self).accelerator(id)
     }
 
@@ -2238,4 +2238,23 @@ pub(crate) fn fmt_state_indicator<A: Automaton>(
     Ok(())
 }
 
+#[cfg(all(test, feature = "syntax", feature = "dfa-build"))]
+mod tests {
+    // A basic test ensuring that our Automaton trait is object safe. (This is
+    // the main reason why we don't define the search routines as generic over
+    // Into<Input>.)
+    #[test]
+    fn object_safe() {
+        use crate::{
+            dfa::{dense, Automaton},
+            HalfMatch, Input,
+        };
 
+        let dfa = dense::DFA::new("abc").unwrap();
+        let dfa: &dyn Automaton = &dfa;
+        assert_eq!(
+            Ok(Some(HalfMatch::must(0, 6))),
+            dfa.try_search_fwd(&Input::new(b"xyzabcxyz")),
+        );
+    }
+}

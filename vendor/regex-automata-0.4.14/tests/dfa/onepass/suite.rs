@@ -16,7 +16,7 @@ use crate::{create_input, suite, testify_captures, untestify_kind};
 const EXPANSIONS: &[&str] = &["is_match", "find", "captures"];
 
 /// Tests the default configuration of the hybrid NFA/DFA.
-
+#[test]
 fn default() -> Result<()> {
     let builder = DFA::builder();
     TestRunner::new()?
@@ -28,7 +28,7 @@ fn default() -> Result<()> {
 
 /// Tests the hybrid NFA/DFA when 'starts_for_each_pattern' is enabled for all
 /// tests.
-
+#[test]
 fn starts_for_each_pattern() -> Result<()> {
     let mut builder = DFA::builder();
     builder.configure(DFA::config().starts_for_each_pattern(true));
@@ -44,7 +44,7 @@ fn starts_for_each_pattern() -> Result<()> {
 /// N.B. Disabling byte classes doesn't avoid any indirection at search time.
 /// All it does is cause every byte value to be its own distinct equivalence
 /// class.
-
+#[test]
 fn no_byte_classes() -> Result<()> {
     let mut builder = DFA::builder();
     builder.configure(DFA::config().byte_classes(false));

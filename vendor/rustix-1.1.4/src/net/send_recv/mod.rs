@@ -101,7 +101,7 @@ pub fn recv<Fd: AsFd, Buf: Buffer<u8>>(
 /// [illumos]: https://illumos.org/man/3SOCKET/send
 /// [glibc]: https://sourceware.org/glibc/manual/latest/html_node/Sending-Data.html
 #[inline]
-pub fn send<Fd: AsFd>(fd: Fd, buf: &[u8], flags: SendFlags) -> io::Result<usize> {
+pub fn send<Fd: AsFd>(fd: Fd, buf: &str, flags: SendFlags) -> io::Result<usize> {
     backend::net::syscalls::send(fd.as_fd(), buf, flags)
 }
 
@@ -182,7 +182,7 @@ pub fn recvfrom<Fd: AsFd, Buf: Buffer<u8>>(
 /// [glibc]: https://sourceware.org/glibc/manual/latest/html_node/Sending-Datagrams.html
 pub fn sendto<Fd: AsFd>(
     fd: Fd,
-    buf: &[u8],
+    buf: &str,
     flags: SendFlags,
     addr: &impl SocketAddrArg,
 ) -> io::Result<usize> {

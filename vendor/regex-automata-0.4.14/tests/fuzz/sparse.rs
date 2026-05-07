@@ -7,7 +7,7 @@
 //
 // We fixed this by adding some validation to both dense and sparse DFAs that
 // checks that this property is true for every state ID in the DFA.
-
+#[test]
 fn invalid_special_state() {
     let data = include_bytes!(
         "testdata/deserialize_sparse_crash-a1b839d899ced76d5d7d0f78f9edb7a421505838",
@@ -29,7 +29,7 @@ fn invalid_special_state() {
 // it's not clear how to fix it. And it's worth pointing out that the search
 // routine won't panic in production. It will just provide invalid results. And
 // that's acceptable within the contract of DFA::from_bytes.
-
+#[test]
 fn transition_to_invalid_but_valid_state() {
     let data = include_bytes!(
         "testdata/deserialize_sparse_crash-dbb8172d3984e7e7d03f4b5f8bb86ecd1460eff9",
@@ -41,7 +41,7 @@ fn transition_to_invalid_but_valid_state() {
 // start state as a match state. Since matches are always delayed by one byte,
 // start states specifically cannot be match states. And indeed, the search
 // code relies on this.
-
+#[test]
 fn start_state_is_not_match_state() {
     let data = include_bytes!(
         "testdata/deserialize_sparse_crash-0da59c0434eaf35e5a6b470fa9244bb79c72b000",
@@ -56,7 +56,7 @@ fn start_state_is_not_match_state() {
 // of transitions, and its those transitions that point to a state that does
 // *not* satisfy state decoding validation. But we never checked those. So the
 // fix here was to add validation of the transitions off of the start state.
-
+#[test]
 fn start_state_has_valid_transitions() {
     let data = include_bytes!(
         "testdata/deserialize_sparse_crash-61fd8e3003bf9d99f6c1e5a8488727eefd234b98",
@@ -67,7 +67,7 @@ fn start_state_has_valid_transitions() {
 // This fuzz input generated a DFA with a state whose ID was in the match state
 // ID range, but where the state itself was encoded with zero pattern IDs. We
 // added validation code to check this case.
-
+#[test]
 fn match_state_inconsistency() {
     let data = include_bytes!(
         "testdata/deserialize_sparse_crash-c383ae07ec5e191422eadc492117439011816570",
@@ -79,7 +79,7 @@ fn match_state_inconsistency() {
 // range, but who didn't have any accelerators. This violated an invariant that
 // assumes that if 'dfa.is_accel_state(sid)' returns true, then the state must
 // have some accelerators.
-
+#[test]
 fn invalid_accelerators() {
     let data = include_bytes!(
         "testdata/deserialize_sparse_crash-d07703ceb94b10dcd9e4acb809f2051420449e2b",
@@ -91,7 +91,7 @@ fn invalid_accelerators() {
 // a quit state, which is generally considered illegal. Why? Because the EOI
 // transition is defined over a special sentinel alphabet element and one
 // cannot configure a DFA to "quit" on that sentinel.
-
+#[test]
 fn eoi_transition_to_quit_state() {
     let data = include_bytes!(
         "testdata/deserialize_sparse_crash-18cfc246f2ddfc3dfc92b0c7893178c7cf65efa9",
@@ -101,7 +101,7 @@ fn eoi_transition_to_quit_state() {
 
 // This is the code from the fuzz target. Kind of sucks to duplicate it here,
 // but this is fundamentally how we interpret the date.
-fn fuzz_run(given_data: &[u8]) -> Option<()> {
+fn fuzz_run(given_data: &str) -> Option<()> {
     use regex_automata::dfa::Automaton;
 
     if given_data.len() < 2 {

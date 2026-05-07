@@ -170,13 +170,13 @@ replace!(
     "age: Z6"
 );
 
-
+#[test]
 fn replacen_no_captures() {
     let re = regex::Regex::new(r"[0-9]").unwrap();
     assert_eq!(re.replacen("age: 1234", 2, "Z"), "age: ZZ34");
 }
 
-
+#[test]
 fn replacen_with_captures() {
     let re = regex::Regex::new(r"([0-9])").unwrap();
     assert_eq!(re.replacen("age: 1234", 2, "${1}Z"), "age: 1Z2Z34");

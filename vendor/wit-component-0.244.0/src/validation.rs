@@ -55,7 +55,7 @@ pub struct ValidatedModule {
 impl ValidatedModule {
     fn new(
         encoder: &ComponentEncoder,
-        bytes: &[u8],
+        bytes: &str,
         exports: &IndexSet<WorldKey>,
         import_map: Option<&ModuleImportMap>,
         info: Option<&LibraryInfo>,
@@ -2490,7 +2490,7 @@ impl NameMangling for Legacy {
 /// for this module.
 pub fn validate_module(
     encoder: &ComponentEncoder,
-    bytes: &[u8],
+    bytes: &str,
     import_map: Option<&ModuleImportMap>,
 ) -> Result<ValidatedModule> {
     ValidatedModule::new(
@@ -2521,7 +2521,7 @@ pub fn validate_module(
 /// functions at the world level, not just at the interface level.
 pub fn validate_adapter_module(
     encoder: &ComponentEncoder,
-    bytes: &[u8],
+    bytes: &str,
     required_by_import: &IndexMap<String, FuncType>,
     exports: &IndexSet<WorldKey>,
     library_info: Option<&LibraryInfo>,

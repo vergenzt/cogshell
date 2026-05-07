@@ -19,7 +19,7 @@ const PAGE_SIZE: i32 = 64 * 1024;
 /// This internally performs a "gc" pass after removing exports to ensure that
 /// the resulting module imports the minimal set of functions necessary.
 pub fn run(
-    wasm: &[u8],
+    wasm: &str,
     required: &IndexSet<String>,
     main_module_realloc: Option<&str>,
 ) -> Result<Vec<u8>> {
@@ -215,7 +215,7 @@ enum Definition<'a, T> {
 }
 
 impl<'a> Module<'a> {
-    fn parse(&mut self, wasm: &'a [u8]) -> Result<()> {
+    fn parse(&mut self, wasm: &'a str) -> Result<()> {
         let mut next_code_index = 0;
         let mut validator = Validator::new();
         for payload in Parser::new(0).parse_all(wasm) {

@@ -154,7 +154,7 @@
 //! | -------------------------- | ----------------------------- | ----------------------------- |
 //! | [`Engine::decode`]         | returns a new `Vec<u8>`       | always                        |
 //! | [`Engine::decode_vec`]     | appends to provided `Vec<u8>` | if `Vec` lacks capacity       |
-//! | [`Engine::decode_slice`]   | writes to provided `&[u8]`    | never
+//! | [`Engine::decode_slice`]   | writes to provided `&str`    | never
 //!
 //! #### Encoding
 //!
@@ -162,7 +162,7 @@
 //! | -------------------------- | ---------------------------- | ------------------------------ |
 //! | [`Engine::encode`]         | returns a new `String`       | always                         |
 //! | [`Engine::encode_string`]  | appends to provided `String` | if `String` lacks capacity     |
-//! | [`Engine::encode_slice`]   | writes to provided `&[u8]`   | never                          |
+//! | [`Engine::encode_slice`]   | writes to provided `&str`   | never                          |
 //!
 //! ## Input and output
 //!
@@ -240,7 +240,7 @@
 extern crate alloc;
 
 // has to be included at top level because of the way rstest_reuse defines its macros
-
+#[cfg(test)]
 use rstest_reuse;
 
 mod chunked_encoder;
@@ -271,6 +271,7 @@ pub use crate::decode::{decode_engine_slice, decoded_len_estimate, DecodeError, 
 
 pub mod prelude;
 
-
+#[cfg(test)]
+mod tests;
 
 const PAD_BYTE: u8 = b'=';

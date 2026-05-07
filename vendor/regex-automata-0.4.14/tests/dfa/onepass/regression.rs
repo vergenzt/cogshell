@@ -4,7 +4,7 @@
 // have any results.
 //
 // See: https://github.com/rust-lang/regex/issues/1327
-
+#[test]
 fn zero_repetition_capture_group() {
     use regex_automata::{
         dfa::onepass::DFA, util::primitives::NonMaxUsize, Anchored, Input,
@@ -42,7 +42,7 @@ fn zero_repetition_capture_group() {
 // is, a zero-repetition capture group is a red herring. The actual bug
 // is simpler: it happens whenever too many slots are provided by the
 // caller.
-
+#[test]
 fn too_many_slots_normal_pattern() {
     use regex_automata::{
         dfa::onepass::DFA, util::primitives::NonMaxUsize, Anchored, Input,

@@ -13,7 +13,7 @@ const MSG: &str = "\
 ‖
 ";
 
-
+#[test]
 fn notice() -> io::Result<()> {
     let header = "WARNING";
     let index_of_header = MSG.find(header).unwrap();

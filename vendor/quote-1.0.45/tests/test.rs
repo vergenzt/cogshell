@@ -22,7 +22,7 @@ impl quote::ToTokens for X {
     }
 }
 
-
+#[test]
 fn test_quote_impl() {
     let tokens = quote! {
         impl<'a, T: ToTokens> ToTokens for &'a T {
@@ -43,7 +43,7 @@ fn test_quote_impl() {
     assert_eq!(expected, tokens.to_string());
 }
 
-
+#[test]
 fn test_quote_spanned_impl() {
     let span = Span::call_site();
     let tokens = quote_spanned! {span=>
@@ -65,7 +65,7 @@ fn test_quote_spanned_impl() {
     assert_eq!(expected, tokens.to_string());
 }
 
-
+#[test]
 fn test_substitution() {
     let x = X;
     let tokens = quote!(#x <#x> (#x) [#x] {#x});
@@ -75,7 +75,7 @@ fn test_substitution() {
     assert_eq!(expected, tokens.to_string());
 }
 
-
+#[test]
 fn test_iter() {
     let primes = &[X, X, X, X];
 
@@ -86,7 +86,7 @@ fn test_iter() {
     assert_eq!("X , X , X , X", quote!(#(#primes),*).to_string());
 }
 
-
+#[test]
 fn test_array() {
     let array: [u8; 40] = [0; 40];
     let _ = quote!(#(#array #array)*);
@@ -94,7 +94,7 @@ fn test_array() {
     let ref_array: &[u8; 40] = &[0; 40];
     let _ = quote!(#(#ref_array #ref_array)*);
 
-    let ref_slice: &[u8] = &[0; 40];
+    let ref_slice: &str = &[0; 40];
     let _ = quote!(#(#ref_slice #ref_slice)*);
 
     let array: [X; 2] = [X, X]; // !Copy
@@ -110,7 +110,7 @@ fn test_array() {
     let _ = quote!(#(#(#array_of_array)*)*);
 }
 
-
+#[test]
 fn test_advanced() {
     let generics = quote!( <'a, T> );
 
@@ -165,7 +165,7 @@ fn test_advanced() {
     assert_eq!(expected, tokens.to_string());
 }
 
-
+#[test]
 fn test_integer() {
     let ii8 = -1i8;
     let ii16 = -1i16;
@@ -190,7 +190,7 @@ fn test_integer() {
     assert_eq!(expected, tokens.to_string());
 }
 
-
+#[test]
 fn test_floating() {
     let e32 = 2.345f32;
 
@@ -204,7 +204,7 @@ fn test_floating() {
     assert_eq!(expected, tokens.to_string());
 }
 
-
+#[test]
 fn test_char() {
     let zero = '\u{1}';
     let pound = '#';
@@ -220,7 +220,7 @@ fn test_char() {
     assert_eq!(expected, tokens.to_string());
 }
 
-
+#[test]
 fn test_str() {
     let s = "\u{1} a 'b \" c";
     let tokens = quote!(#s);
@@ -228,7 +228,7 @@ fn test_str() {
     assert_eq!(expected, tokens.to_string());
 }
 
-
+#[test]
 fn test_string() {
     let s = "\u{1} a 'b \" c".to_string();
     let tokens = quote!(#s);
@@ -236,7 +236,7 @@ fn test_string() {
     assert_eq!(expected, tokens.to_string());
 }
 
-
+#[test]
 fn test_c_str() {
     let s = CStr::from_bytes_with_nul(b"\x01 a 'b \" c\0").unwrap();
     let tokens = quote!(#s);
@@ -244,7 +244,7 @@ fn test_c_str() {
     assert_eq!(expected, tokens.to_string());
 }
 
-
+#[test]
 fn test_c_string() {
     let s = CString::new(&b"\x01 a 'b \" c"[..]).unwrap();
     let tokens = quote!(#s);
@@ -252,7 +252,7 @@ fn test_c_string() {
     assert_eq!(expected, tokens.to_string());
 }
 
-
+#[test]
 fn test_interpolated_literal() {
     macro_rules! m {
         ($literal:literal) => {
@@ -277,7 +277,7 @@ fn test_interpolated_literal() {
     assert_eq!(expected, tokens.to_string());
 }
 
-
+#[test]
 fn test_ident() {
     let foo = Ident::new("Foo", Span::call_site());
     let bar = Ident::new(&format!("Bar{}", 7), Span::call_site());
@@ -286,14 +286,14 @@ fn test_ident() {
     assert_eq!(expected, tokens.to_string());
 }
 
-
+#[test]
 fn test_underscore() {
     let tokens = quote!(let _;);
     let expected = "let _ ;";
     assert_eq!(expected, tokens.to_string());
 }
 
-
+#[test]
 fn test_duplicate() {
     let ch = 'x';
 
@@ -303,7 +303,7 @@ fn test_duplicate() {
     assert_eq!(expected, tokens.to_string());
 }
 
-
+#[test]
 fn test_fancy_repetition() {
     let foo = vec!["a", "b"];
     let bar = vec![true, false];
@@ -316,7 +316,7 @@ fn test_fancy_repetition() {
     assert_eq!(expected, tokens.to_string());
 }
 
-
+#[test]
 fn test_nested_fancy_repetition() {
     let nested = vec![vec!['a', 'b', 'c'], vec!['x', 'y', 'z']];
 
@@ -330,7 +330,7 @@ fn test_nested_fancy_repetition() {
     assert_eq!(expected, tokens.to_string());
 }
 
-
+#[test]
 fn test_duplicate_name_repetition() {
     let foo = &["a", "b"];
 
@@ -343,7 +343,7 @@ fn test_duplicate_name_repetition() {
     assert_eq!(expected, tokens.to_string());
 }
 
-
+#[test]
 fn test_duplicate_name_repetition_no_copy() {
     let foo = vec!["a".to_owned(), "b".to_owned()];
 
@@ -355,7 +355,7 @@ fn test_duplicate_name_repetition_no_copy() {
     assert_eq!(expected, tokens.to_string());
 }
 
-
+#[test]
 fn test_btreeset_repetition() {
     let mut set = BTreeSet::new();
     set.insert("a".to_owned());
@@ -369,7 +369,7 @@ fn test_btreeset_repetition() {
     assert_eq!(expected, tokens.to_string());
 }
 
-
+#[test]
 fn test_variable_name_conflict() {
     // The implementation of `#(...),*` uses the variable `_i` but it should be
     // fine, if a little confusing when debugging.
@@ -379,7 +379,7 @@ fn test_variable_name_conflict() {
     assert_eq!(expected, tokens.to_string());
 }
 
-
+#[test]
 fn test_nonrep_in_repetition() {
     let rep = vec!["a", "b"];
     let nonrep = "c";
@@ -392,20 +392,20 @@ fn test_nonrep_in_repetition() {
     assert_eq!(expected, tokens.to_string());
 }
 
-
+#[test]
 fn test_empty_quote() {
     let tokens = quote!();
     assert_eq!("", tokens.to_string());
 }
 
-
+#[test]
 fn test_box_str() {
     let b = "str".to_owned().into_boxed_str();
     let tokens = quote! { #b };
     assert_eq!("\"str\"", tokens.to_string());
 }
 
-
+#[test]
 fn test_cow() {
     let owned: Cow<Ident> = Cow::Owned(Ident::new("owned", Span::call_site()));
 
@@ -416,7 +416,7 @@ fn test_cow() {
     assert_eq!("owned borrowed", tokens.to_string());
 }
 
-
+#[test]
 fn test_closure() {
     fn field_i(i: usize) -> Ident {
         format_ident!("__field{}", i)
@@ -430,7 +430,7 @@ fn test_closure() {
     assert_eq!("__field0 __field1 __field2", tokens.to_string());
 }
 
-
+#[test]
 fn test_append_tokens() {
     let mut a = quote!(a);
     let b = quote!(b);
@@ -438,7 +438,7 @@ fn test_append_tokens() {
     assert_eq!("a b", a.to_string());
 }
 
-
+#[test]
 fn test_format_ident() {
     let id0 = format_ident!("Aa");
     let id1 = format_ident!("Hello{x}", x = id0);
@@ -455,7 +455,7 @@ fn test_format_ident() {
     assert_eq!(id5, "HelloWorld");
 }
 
-
+#[test]
 fn test_format_ident_strip_raw() {
     let id = format_ident!("r#struct");
     let my_id = format_ident!("MyId{}", id);
@@ -466,7 +466,7 @@ fn test_format_ident_strip_raw() {
     assert_eq!(raw_my_id, "r#MyIdstruct");
 }
 
-
+#[test]
 fn test_outer_line_comment() {
     let tokens = quote! {
         /// doc
@@ -475,7 +475,7 @@ fn test_outer_line_comment() {
     assert_eq!(expected, tokens.to_string());
 }
 
-
+#[test]
 fn test_inner_line_comment() {
     let tokens = quote! {
         //! doc
@@ -484,7 +484,7 @@ fn test_inner_line_comment() {
     assert_eq!(expected, tokens.to_string());
 }
 
-
+#[test]
 fn test_outer_block_comment() {
     let tokens = quote! {
         /** doc */
@@ -493,7 +493,7 @@ fn test_outer_block_comment() {
     assert_eq!(expected, tokens.to_string());
 }
 
-
+#[test]
 fn test_inner_block_comment() {
     let tokens = quote! {
         /*! doc */
@@ -502,7 +502,7 @@ fn test_inner_block_comment() {
     assert_eq!(expected, tokens.to_string());
 }
 
-
+#[test]
 fn test_outer_attr() {
     let tokens = quote! {
         #[inline]
@@ -511,7 +511,7 @@ fn test_outer_attr() {
     assert_eq!(expected, tokens.to_string());
 }
 
-
+#[test]
 fn test_inner_attr() {
     let tokens = quote! {
         #![no_std]
@@ -521,7 +521,7 @@ fn test_inner_attr() {
 }
 
 // https://github.com/dtolnay/quote/issues/130
-
+#[test]
 fn test_star_after_repetition() {
     let c = vec!['0', '1'];
     let tokens = quote! {
@@ -534,19 +534,19 @@ fn test_star_after_repetition() {
     assert_eq!(expected, tokens.to_string());
 }
 
-
+#[test]
 fn test_quote_raw_id() {
     let id = quote!(r#raw_id);
     assert_eq!(id.to_string(), "r#raw_id");
 }
 
-
+#[test]
 fn test_quote_raw_lifetime() {
     let lifetime = quote!('r#async);
     assert_eq!(lifetime.to_string(), "'r#async");
 }
 
-
+#[test]
 fn test_type_inference_for_span() {
     trait CallSite {
         fn get() -> Self;

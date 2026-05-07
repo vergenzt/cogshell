@@ -99,7 +99,7 @@ pub(crate) fn to_custom_case(input: &str, sep: char) -> String {
     res
 }
 
-
+#[test]
 fn check_to_snake_case() {
     assert_eq!(to_snake_case("Foo"), "foo");
     assert_eq!(to_snake_case("FooBar"), "foo_bar");
@@ -185,12 +185,12 @@ impl Iterator for LineIter<'_> {
     }
 }
 
-
+#[cfg(test)]
 fn split(input: &str) -> LineIter<'_> {
     LineIter::from(input)
 }
 
-
+#[test]
 fn splitter_preserves_line_breaks() {
     let x = split("a\nb").collect::<Vec<_>>();
     assert_eq!(x, ["a\nb"]);
@@ -202,7 +202,7 @@ fn splitter_preserves_line_breaks() {
     assert_eq!(x, ["a", "b"]);
 }
 
-
+#[test]
 fn splitter_with_code_blocks() {
     let input = "Make a tree\n\n\n\n\nExamples:\n\n```sh\ncargo 1\ncargo 2\n```";
     let out = split(input).collect::<Vec<_>>();

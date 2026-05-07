@@ -11,7 +11,7 @@ use std::fmt::{self, Display};
 use thiserror::Error;
 
 // https://github.com/dtolnay/anyhow/issues/18
-
+#[test]
 fn test_inference() -> Result<()> {
     let x = "1";
     let y: u32 = x.parse().context("...")?;
@@ -93,7 +93,7 @@ fn make_chain() -> (Error, Dropped) {
     (high, dropped)
 }
 
-
+#[test]
 fn test_downcast_ref() {
     let (err, dropped) = make_chain();
 
@@ -117,7 +117,7 @@ fn test_downcast_ref() {
     assert!(dropped.all());
 }
 
-
+#[test]
 fn test_downcast_high() {
     let (err, dropped) = make_chain();
 
@@ -129,7 +129,7 @@ fn test_downcast_high() {
     assert!(dropped.all());
 }
 
-
+#[test]
 fn test_downcast_mid() {
     let (err, dropped) = make_chain();
 
@@ -141,7 +141,7 @@ fn test_downcast_mid() {
     assert!(dropped.all());
 }
 
-
+#[test]
 fn test_downcast_low() {
     let (err, dropped) = make_chain();
 
@@ -153,7 +153,7 @@ fn test_downcast_low() {
     assert!(dropped.all());
 }
 
-
+#[test]
 fn test_unsuccessful_downcast() {
     let (err, dropped) = make_chain();
 
@@ -164,7 +164,7 @@ fn test_unsuccessful_downcast() {
     assert!(dropped.all());
 }
 
-
+#[test]
 fn test_root_cause() {
     let (err, _) = make_chain();
 

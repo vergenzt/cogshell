@@ -1,7 +1,7 @@
 use super::*;
 use std::string::String;
 
-
+#[test]
 fn it_works() {
     let mut set = IndexSet::new();
     assert_eq!(set.is_empty(), true);
@@ -12,7 +12,7 @@ fn it_works() {
     assert_eq!(set.is_empty(), false);
 }
 
-
+#[test]
 fn new() {
     let set = IndexSet::<String>::new();
     println!("{:?}", set);
@@ -21,7 +21,7 @@ fn new() {
     assert_eq!(set.is_empty(), true);
 }
 
-
+#[test]
 fn insert() {
     let insert = [0, 4, 2, 12, 8, 7, 11, 5];
     let not_present = [1, 3, 6, 9, 10];
@@ -40,7 +40,7 @@ fn insert() {
     }
 }
 
-
+#[test]
 fn insert_full() {
     let insert = vec![9, 2, 7, 1, 4, 6, 13];
     let present = vec![1, 6, 2];
@@ -63,7 +63,7 @@ fn insert_full() {
     }
 }
 
-
+#[test]
 fn insert_2() {
     let mut set = IndexSet::with_capacity(16);
 
@@ -88,7 +88,7 @@ fn insert_2() {
     }
 }
 
-
+#[test]
 fn insert_dup() {
     let mut elements = vec![0, 2, 4, 6, 8];
     let mut set: IndexSet<u8> = elements.drain(..).collect();
@@ -108,7 +108,7 @@ fn insert_dup() {
     }
 }
 
-
+#[test]
 fn insert_order() {
     let insert = [0, 4, 2, 12, 8, 7, 11, 5, 3, 17, 19, 22, 23];
     let mut set = IndexSet::new();
@@ -127,7 +127,7 @@ fn insert_order() {
     }
 }
 
-
+#[test]
 fn shift_insert() {
     let insert = [0, 4, 2, 12, 8, 7, 11, 5, 3, 17, 19, 22, 23];
     let mut set = IndexSet::new();
@@ -154,7 +154,7 @@ fn shift_insert() {
     }
 }
 
-
+#[test]
 fn replace() {
     let replace = [0, 4, 2, 12, 8, 7, 11, 5];
     let not_present = [1, 3, 6, 9, 10];
@@ -173,7 +173,7 @@ fn replace() {
     }
 }
 
-
+#[test]
 fn replace_full() {
     let replace = vec![9, 2, 7, 1, 4, 6, 13];
     let present = vec![1, 6, 2];
@@ -196,7 +196,7 @@ fn replace_full() {
     }
 }
 
-
+#[test]
 fn replace_2() {
     let mut set = IndexSet::with_capacity(16);
 
@@ -221,7 +221,7 @@ fn replace_2() {
     }
 }
 
-
+#[test]
 fn replace_dup() {
     let mut elements = vec![0, 2, 4, 6, 8];
     let mut set: IndexSet<u8> = elements.drain(..).collect();
@@ -241,7 +241,7 @@ fn replace_dup() {
     }
 }
 
-
+#[test]
 fn replace_order() {
     let replace = [0, 4, 2, 12, 8, 7, 11, 5, 3, 17, 19, 22, 23];
     let mut set = IndexSet::new();
@@ -260,7 +260,7 @@ fn replace_order() {
     }
 }
 
-
+#[test]
 fn replace_change() {
     // Check pointers to make sure it really changes
     let mut set = indexset!(vec![42]);
@@ -272,7 +272,7 @@ fn replace_change() {
     assert_eq!(replaced.as_ptr(), old_ptr);
 }
 
-
+#[test]
 fn grow() {
     let insert = [0, 4, 2, 12, 8, 7, 11];
     let not_present = [1, 3, 6, 9, 10];
@@ -301,7 +301,7 @@ fn grow() {
     }
 }
 
-
+#[test]
 fn reserve() {
     let mut set = IndexSet::<usize>::new();
     assert_eq!(set.capacity(), 0);
@@ -321,7 +321,7 @@ fn reserve() {
     assert_eq!(set.get(&capacity), Some(&capacity));
 }
 
-
+#[test]
 fn try_reserve() {
     let mut set = IndexSet::<usize>::new();
     assert_eq!(set.capacity(), 0);
@@ -330,7 +330,7 @@ fn try_reserve() {
     assert!(set.try_reserve(usize::MAX).is_err());
 }
 
-
+#[test]
 fn shrink_to_fit() {
     let mut set = IndexSet::<usize>::new();
     assert_eq!(set.capacity(), 0);
@@ -347,7 +347,7 @@ fn shrink_to_fit() {
     }
 }
 
-
+#[test]
 fn remove() {
     let insert = [0, 4, 2, 12, 8, 7, 11, 5, 3, 17, 19, 22, 23];
     let mut set = IndexSet::new();
@@ -383,7 +383,7 @@ fn remove() {
     assert_eq!(set.iter().count(), insert.len() - remove.len());
 }
 
-
+#[test]
 fn swap_remove_index() {
     let insert = [0, 4, 2, 12, 8, 7, 11, 5, 3, 17, 19, 22, 23];
     let mut set = IndexSet::new();
@@ -408,7 +408,7 @@ fn swap_remove_index() {
     }
 }
 
-
+#[test]
 fn partial_eq_and_eq() {
     let mut set_a = IndexSet::new();
     set_a.insert(1);
@@ -423,7 +423,7 @@ fn partial_eq_and_eq() {
     assert_ne!(set_c, set_a);
 }
 
-
+#[test]
 fn extend() {
     let mut set = IndexSet::new();
     set.extend(vec![&1, &2, &3, &4]);
@@ -431,7 +431,7 @@ fn extend() {
     assert_eq!(set.into_iter().collect::<Vec<_>>(), vec![1, 2, 3, 4, 5, 6]);
 }
 
-
+#[test]
 fn comparisons() {
     let set_a: IndexSet<_> = (0..3).collect();
     let set_b: IndexSet<_> = (3..6).collect();
@@ -464,7 +464,7 @@ fn comparisons() {
     assert!(!set_d.is_superset(&set_c));
 }
 
-
+#[test]
 fn iter_comparisons() {
     use std::iter::empty;
 
@@ -517,7 +517,7 @@ fn iter_comparisons() {
     check(set_d.union(&set_c), (3..9).rev().chain(0..3));
 }
 
-
+#[test]
 fn ops() {
     let empty = IndexSet::<i32>::new();
     let set_a: IndexSet<_> = (0..3).collect();
@@ -561,7 +561,7 @@ fn ops() {
     assert_eq!(&set_d - &set_c, &set_d - &set_b);
 }
 
-
+#[test]
 #[cfg(feature = "std")]
 fn from_array() {
     let set1 = IndexSet::from([1, 2, 3, 4]);
@@ -570,7 +570,7 @@ fn from_array() {
     assert_eq!(set1, set2);
 }
 
-
+#[test]
 fn iter_default() {
     struct Item;
     fn assert_default<T>()
@@ -583,7 +583,7 @@ fn iter_default() {
     assert_default::<IntoIter<Item>>();
 }
 
-
+#[test]
 #[allow(deprecated)]
 fn take() {
     let mut index_set: IndexSet<i32> = IndexSet::new();
@@ -598,7 +598,7 @@ fn take() {
     assert_eq!(result, None);
 }
 
-
+#[test]
 fn swap_take() {
     let mut index_set: IndexSet<i32> = IndexSet::new();
     index_set.insert(10);
@@ -616,7 +616,7 @@ fn swap_take() {
     assert_eq!(result, None);
 }
 
-
+#[test]
 fn sort_unstable() {
     let mut index_set: IndexSet<i32> = IndexSet::new();
     index_set.insert(30);
@@ -627,7 +627,7 @@ fn sort_unstable() {
     assert_eq!(index_set.as_slice(), &[10, 20, 30]);
 }
 
-
+#[test]
 fn try_reserve_exact() {
     let mut index_set: IndexSet<i32> = IndexSet::new();
     index_set.insert(10);
@@ -640,7 +640,7 @@ fn try_reserve_exact() {
     assert_eq!(index_set.capacity(), 5);
 }
 
-
+#[test]
 fn shift_remove_full() {
     let mut set: IndexSet<i32> = IndexSet::new();
     set.insert(10);
@@ -665,7 +665,7 @@ fn shift_remove_full() {
     assert_eq!(set.as_slice(), &[10, 30, 40]);
 }
 
-
+#[test]
 fn shift_remove_index() {
     let mut set: IndexSet<i32> = IndexSet::new();
     set.insert(10);
@@ -690,14 +690,14 @@ fn shift_remove_index() {
     assert_eq!(set.as_slice(), &[10, 40, 50]);
 }
 
-
+#[test]
 fn sort_unstable_by() {
     let mut set: IndexSet<i32> = IndexSet::from([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
     set.sort_unstable_by(|a, b| b.cmp(a));
     assert_eq!(set.as_slice(), &[10, 9, 8, 7, 6, 5, 4, 3, 2, 1]);
 }
 
-
+#[test]
 fn sort_by() {
     let mut set: IndexSet<i32> = IndexSet::new();
     set.insert(3);
@@ -707,7 +707,7 @@ fn sort_by() {
     assert_eq!(set.as_slice(), &[1, 2, 3]);
 }
 
-
+#[test]
 fn drain() {
     let mut set: IndexSet<i32> = IndexSet::new();
     set.insert(1);
@@ -723,7 +723,7 @@ fn drain() {
     assert_eq!(set.as_slice(), &[3]);
 }
 
-
+#[test]
 fn split_off() {
     let mut set: IndexSet<i32> = IndexSet::from([1, 2, 3, 4, 5]);
     let split_set: IndexSet<i32> = set.split_off(3);
@@ -735,7 +735,7 @@ fn split_off() {
     assert_eq!(set.as_slice(), &[1, 2, 3]);
 }
 
-
+#[test]
 fn retain() {
     let mut set: IndexSet<i32> = IndexSet::from([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
     set.retain(|&x| x > 4);
@@ -746,7 +746,7 @@ fn retain() {
     assert_eq!(set.len(), 0);
 }
 
-
+#[test]
 fn first() {
     let mut index_set: IndexSet<i32> = IndexSet::new();
     index_set.insert(10);
@@ -761,7 +761,7 @@ fn first() {
     assert!(result.is_none());
 }
 
-
+#[test]
 fn sort_by_key() {
     let mut index_set: IndexSet<i32> = IndexSet::new();
     index_set.insert(3);
@@ -772,7 +772,7 @@ fn sort_by_key() {
     assert_eq!(index_set.as_slice(), &[3, 2, 1, 0]);
 }
 
-
+#[test]
 fn sort_unstable_by_key() {
     let mut index_set: IndexSet<i32> = IndexSet::new();
     index_set.insert(3);
@@ -783,7 +783,7 @@ fn sort_unstable_by_key() {
     assert_eq!(index_set.as_slice(), &[3, 2, 1, 0]);
 }
 
-
+#[test]
 fn sort_by_cached_key() {
     let mut index_set: IndexSet<i32> = IndexSet::new();
     index_set.insert(3);
@@ -794,7 +794,7 @@ fn sort_by_cached_key() {
     assert_eq!(index_set.as_slice(), &[3, 2, 1, 0]);
 }
 
-
+#[test]
 fn insert_sorted() {
     let mut set: IndexSet<i32> = IndexSet::<i32>::new();
     set.insert_sorted(1);
@@ -802,7 +802,7 @@ fn insert_sorted() {
     assert_eq!(set.insert_sorted(2), (1, true));
 }
 
-
+#[test]
 fn binary_search() {
     let mut set: IndexSet<i32> = IndexSet::new();
     set.insert(100);
@@ -816,14 +816,14 @@ fn binary_search() {
     assert_eq!(result, Err(4));
 }
 
-
+#[test]
 fn sorted_unstable_by() {
     let mut set: IndexSet<i32> = IndexSet::from([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
     set.sort_unstable_by(|a, b| b.cmp(a));
     assert_eq!(set.as_slice(), &[10, 9, 8, 7, 6, 5, 4, 3, 2, 1]);
 }
 
-
+#[test]
 fn last() {
     let mut set: IndexSet<i32> = IndexSet::new();
     set.insert(1);
@@ -842,7 +842,7 @@ fn last() {
     assert_eq!(set.last(), None);
 }
 
-
+#[test]
 fn get_range() {
     let set: IndexSet<i32> = IndexSet::from([1, 2, 3, 4, 5]);
     let result = set.get_range(0..3);
@@ -856,7 +856,7 @@ fn get_range() {
     assert!(result.is_none());
 }
 
-
+#[test]
 fn shift_take() {
     let mut set: IndexSet<i32> = IndexSet::new();
     set.insert(1);
@@ -881,7 +881,7 @@ fn shift_take() {
     assert_eq!(set.as_slice(), &[1, 3, 4]);
 }
 
-
+#[test]
 fn test_binary_search_by() {
     // adapted from std's test for binary_search
     let b: IndexSet<i32> = [].into();
@@ -930,7 +930,7 @@ fn test_binary_search_by() {
     assert_eq!(b.binary_search_by(|x| x.cmp(&8)), Err(3));
 }
 
-
+#[test]
 fn test_binary_search_by_key() {
     // adapted from std's test for binary_search
     let b: IndexSet<i32> = [].into();
@@ -979,7 +979,7 @@ fn test_binary_search_by_key() {
     assert_eq!(b.binary_search_by_key(&8, |&x| x), Err(3));
 }
 
-
+#[test]
 fn test_partition_point() {
     // adapted from std's test for partition_point
     let b: IndexSet<i32> = [].into();
@@ -1020,7 +1020,7 @@ fn test_partition_point() {
     assert_eq!(b.partition_point(|&x| x < 8), 3);
 }
 
-
+#[test]
 fn is_sorted() {
     fn expect(set: &IndexSet<i32>, e: [bool; 4]) {
         assert_eq!(e[0], set.is_sorted());
@@ -1036,7 +1036,7 @@ fn is_sorted() {
     expect(&set, [false, false, false, false]);
 }
 
-
+#[test]
 fn is_sorted_trivial() {
     fn expect(set: &IndexSet<i32>, e: [bool; 5]) {
         assert_eq!(e[0], set.is_sorted());

@@ -85,7 +85,7 @@ impl RabinKarp {
     /// search at `at`.
     pub(crate) fn find_at(
         &self,
-        haystack: &[u8],
+        haystack: &str,
         mut at: usize,
     ) -> Option<Match> {
         assert_eq!(NUM_BUCKETS, self.buckets.len());
@@ -135,7 +135,7 @@ impl RabinKarp {
     fn verify(
         &self,
         id: PatternID,
-        haystack: &[u8],
+        haystack: &str,
         at: usize,
     ) -> Option<Match> {
         let pat = self.patterns.get(id);
@@ -147,7 +147,7 @@ impl RabinKarp {
     }
 
     /// Hash the given bytes.
-    fn hash(&self, bytes: &[u8]) -> Hash {
+    fn hash(&self, bytes: &str) -> Hash {
         assert_eq!(self.hash_len, bytes.len());
 
         let mut hash = 0usize;

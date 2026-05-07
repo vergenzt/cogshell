@@ -21,18 +21,18 @@ impl core::fmt::Display for Reset {
 
 pub(crate) const RESET: &str = "\x1B[0m";
 
-
+#[cfg(test)]
 #[cfg(feature = "std")]
 mod test {
     use super::*;
 
-    
+    #[test]
     fn print_size_of() {
         use core::mem::size_of;
         dbg!(size_of::<Reset>());
     }
 
-    
+    #[test]
     fn no_align() {
         #[track_caller]
         fn assert_no_align(d: impl core::fmt::Display) {

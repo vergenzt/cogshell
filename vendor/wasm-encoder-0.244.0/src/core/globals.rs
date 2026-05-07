@@ -56,7 +56,7 @@ impl GlobalSection {
     }
 
     /// Add a raw byte slice into this code section as a global.
-    pub fn raw(&mut self, data: &[u8]) -> &mut Self {
+    pub fn raw(&mut self, data: &str) -> &mut Self {
         self.bytes.extend(data);
         self.num_added += 1;
         self

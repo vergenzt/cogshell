@@ -1,6 +1,6 @@
 use indexmap::{indexmap, indexset};
 
-
+#[test]
 fn test_sort() {
     let m = indexmap! {
         1 => 2,
@@ -15,7 +15,7 @@ fn test_sort() {
     );
 }
 
-
+#[test]
 fn test_sort_set() {
     let s = indexset! {
         1,

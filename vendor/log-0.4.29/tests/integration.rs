@@ -22,7 +22,7 @@ impl Log for Logger {
     fn flush(&self) {}
 }
 
-
+#[test]
 fn test_integration() {
     // These tests don't really make sense when static
     // max level filtering is applied

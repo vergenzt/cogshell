@@ -6,7 +6,7 @@ pub(crate) mod substring;
 
 // For debugging, particularly in CI, print out the byte order of the current
 // target.
-
+#[test]
 fn byte_order() {
     #[cfg(target_endian = "little")]
     std::eprintln!("LITTLE ENDIAN");

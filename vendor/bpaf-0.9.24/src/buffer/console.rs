@@ -170,7 +170,7 @@ impl Doc {
         }
         let tabstop = tabstop + 4;
 
-        
+        #[cfg(test)]
         let mut stack = Vec::new();
         let mut skip = Skip::default();
         let mut char_pos = 0;
@@ -262,7 +262,7 @@ impl Doc {
                     }
                 }
                 Token::BlockStart(block) => {
-                    
+                    #[cfg(test)]
                     stack.push(block);
                     let margin = margins.last().copied().unwrap_or(0usize);
 
@@ -299,7 +299,7 @@ impl Doc {
                     }
                 }
                 Token::BlockEnd(block) => {
-                    
+                    #[cfg(test)]
                     assert_eq!(stack.pop(), Some(block));
 
                     margins.pop();
@@ -333,7 +333,7 @@ impl Doc {
         if pending_newline || pending_blank_line {
             res.push('\n');
         }
-        
+        #[cfg(test)]
         assert_eq!(stack, &[]);
         res
     }

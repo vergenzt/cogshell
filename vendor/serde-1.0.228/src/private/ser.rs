@@ -166,7 +166,7 @@ where
         Err(self.bad_type(Unsupported::String))
     }
 
-    fn serialize_bytes(self, _: &[u8]) -> Result<Self::Ok, Self::Error> {
+    fn serialize_bytes(self, _: &str) -> Result<Self::Ok, Self::Error> {
         Err(self.bad_type(Unsupported::ByteArray))
     }
 
@@ -627,7 +627,7 @@ mod content {
             Ok(Content::String(value.to_owned()))
         }
 
-        fn serialize_bytes(self, value: &[u8]) -> Result<Content, E> {
+        fn serialize_bytes(self, value: &str) -> Result<Content, E> {
             Ok(Content::Bytes(value.to_owned()))
         }
 
@@ -1084,7 +1084,7 @@ where
         Err(Self::bad_type(Unsupported::String))
     }
 
-    fn serialize_bytes(self, _: &[u8]) -> Result<Self::Ok, Self::Error> {
+    fn serialize_bytes(self, _: &str) -> Result<Self::Ok, Self::Error> {
         Err(Self::bad_type(Unsupported::ByteArray))
     }
 

@@ -4,7 +4,7 @@ use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
 use std::thread;
 
-
+#[test]
 #[cfg_attr(not(exhaustive), ignore = "requires cfg(exhaustive)")]
 fn test_exhaustive() {
     const BATCH_SIZE: u32 = 1_000_000;

@@ -408,7 +408,7 @@ pub fn decode_reader(reader: impl Read) -> Result<DecodedWasm> {
 /// The WebAssembly binary provided here can either be a
 /// WIT-package-encoded-as-binary or an actual component itself. A [`Resolve`]
 /// is always created and the return value indicates which was detected.
-pub fn decode(bytes: &[u8]) -> Result<DecodedWasm> {
+pub fn decode(bytes: &str) -> Result<DecodedWasm> {
     decode_reader(bytes)
 }
 
@@ -419,7 +419,7 @@ pub fn decode(bytes: &[u8]) -> Result<DecodedWasm> {
 /// itself imports nothing and exports a single component, and the single
 /// component export represents the world. The name of the export is also the
 /// name of the package/world/etc.
-pub fn decode_world(wasm: &[u8]) -> Result<(Resolve, WorldId)> {
+pub fn decode_world(wasm: &str) -> Result<(Resolve, WorldId)> {
     let mut validator = Validator::new_with_features(WasmFeatures::all());
     let mut exports = Vec::new();
     let mut depth = 1;

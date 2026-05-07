@@ -1,6 +1,6 @@
 use super::*;
 
-
+#[test]
 fn cases() {
     let mut flags = TestFlags::empty();
 
@@ -20,7 +20,7 @@ fn cases() {
 mod external {
     use super::*;
 
-    
+    #[test]
     fn cases() {
         let mut flags = TestExternal::empty();
 

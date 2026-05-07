@@ -34,7 +34,7 @@ fn assert_match_none(req: &VersionReq, versions: &[&str]) {
     }
 }
 
-
+#[test]
 fn test_basic() {
     let ref r = req("1.0.0");
     assert_to_string(r, "^1.0.0");
@@ -42,13 +42,13 @@ fn test_basic() {
     assert_match_none(r, &["0.9.9", "0.10.0", "0.1.0", "1.0.0-pre", "1.0.1-pre"]);
 }
 
-
+#[test]
 fn test_default() {
     let ref r = VersionReq::default();
     assert_eq!(r, &VersionReq::STAR);
 }
 
-
+#[test]
 fn test_exact() {
     let ref r = req("=1.0.0");
     assert_to_string(r, "=1.0.0");
@@ -75,7 +75,7 @@ fn test_exact() {
     assert_match_all(r, &["0.1.0", "0.1.0+meta", "0.1.0+any"]);
 }
 
-
+#[test]
 pub fn test_greater_than() {
     let ref r = req(">= 1.0.0");
     assert_to_string(r, ">=1.0.0");
@@ -91,7 +91,7 @@ pub fn test_greater_than() {
     );
 }
 
-
+#[test]
 pub fn test_less_than() {
     let ref r = req("< 1.0.0");
     assert_to_string(r, "<1.0.0");
@@ -115,7 +115,7 @@ pub fn test_less_than() {
     assert_match_none(r, &["1.0.0-beta"]);
 }
 
-
+#[test]
 pub fn test_multiple() {
     let ref r = req("> 0.0.9, <= 2.5.3");
     assert_to_string(r, ">0.0.9, <=2.5.3");
@@ -173,14 +173,14 @@ pub fn test_multiple() {
     assert_to_string(err, "excessive number of version comparators");
 }
 
-
+#[test]
 pub fn test_whitespace_delimited_comparator_sets() {
     // https://github.com/steveklabnik/semver/issues/55
     let err = req_err("> 0.0.9 <= 2.5.3");
     assert_to_string(err, "expected comma after patch version number, found '<'");
 }
 
-
+#[test]
 pub fn test_tilde() {
     let ref r = req("~1");
     assert_match_all(r, &["1.0.0", "1.0.1", "1.1.1"]);
@@ -199,7 +199,7 @@ pub fn test_tilde() {
     assert_match_none(r, &["1.3.3", "1.1.4", "1.2.3-beta.1", "1.2.4-beta.2"]);
 }
 
-
+#[test]
 pub fn test_caret() {
     let ref r = req("^1");
     assert_match_all(r, &["1.1.2", "1.1.0", "1.2.1", "1.0.1"]);
@@ -271,7 +271,7 @@ pub fn test_caret() {
     );
 }
 
-
+#[test]
 pub fn test_wildcard() {
     let err = req_err("");
     assert_to_string(
@@ -304,7 +304,7 @@ pub fn test_wildcard() {
     }
 }
 
-
+#[test]
 pub fn test_logical_or() {
     // https://github.com/steveklabnik/semver/issues/57
     let err = req_err("=1.2.3 || =2.3.4");
@@ -317,19 +317,19 @@ pub fn test_logical_or() {
     assert_to_string(err, "expected comma after minor version number, found '|'");
 }
 
-
+#[test]
 pub fn test_any() {
     let ref r = VersionReq::STAR;
     assert_match_all(r, &["0.0.1", "0.1.0", "1.0.0"]);
 }
 
-
+#[test]
 pub fn test_pre() {
     let ref r = req("=2.1.1-really.0");
     assert_match_all(r, &["2.1.1-really.0"]);
 }
 
-
+#[test]
 pub fn test_parse() {
     let err = req_err("\0");
     assert_to_string(
@@ -365,7 +365,7 @@ pub fn test_parse() {
     );
 }
 
-
+#[test]
 fn test_comparator_parse() {
     let parsed = comparator("1.2.3-alpha");
     assert_to_string(parsed, "^1.2.3-alpha");
@@ -404,7 +404,7 @@ fn test_comparator_parse() {
     assert_to_string(err, "unexpected character 'ÿ' after build metadata");
 }
 
-
+#[test]
 fn test_cargo3202() {
     let ref r = req("0.*.*");
     assert_to_string(r, "0.*");
@@ -414,7 +414,7 @@ fn test_cargo3202() {
     assert_to_string(r, "0.0.*");
 }
 
-
+#[test]
 fn test_digit_after_wildcard() {
     let err = req_err("*.1");
     assert_to_string(err, "unexpected character after wildcard in version req");
@@ -426,7 +426,7 @@ fn test_digit_after_wildcard() {
     assert_to_string(err, "unexpected character after wildcard in version req");
 }
 
-
+#[test]
 fn test_eq_hash() {
     fn calculate_hash(value: impl Hash) -> u64 {
         let mut hasher = DefaultHasher::new();
@@ -439,7 +439,7 @@ fn test_eq_hash() {
     assert!(req("^1") != req("^2"));
 }
 
-
+#[test]
 fn test_leading_digit_in_pre_and_build() {
     for op in &["=", ">", ">=", "<", "<=", "~", "^"] {
         // digit then alpha
@@ -458,7 +458,7 @@ fn test_leading_digit_in_pre_and_build() {
     }
 }
 
-
+#[test]
 fn test_wildcard_and_another() {
     let err = req_err("*, 0.20.0-any");
     assert_to_string(

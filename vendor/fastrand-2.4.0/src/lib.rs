@@ -325,14 +325,14 @@ impl Rng {
     /// Generates a random `char` in ranges a-z and A-Z.
     #[inline]
     pub fn alphabetic(&mut self) -> char {
-        const CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+        const CHARS: &str = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
         *self.choice(CHARS).unwrap() as char
     }
 
     /// Generates a random `char` in ranges a-z, A-Z and 0-9.
     #[inline]
     pub fn alphanumeric(&mut self) -> char {
-        const CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        const CHARS: &str = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         *self.choice(CHARS).unwrap() as char
     }
 
@@ -532,7 +532,7 @@ impl Rng {
     /// Generates a random `char` in range a-z.
     #[inline]
     pub fn lowercase(&mut self) -> char {
-        const CHARS: &[u8] = b"abcdefghijklmnopqrstuvwxyz";
+        const CHARS: &str = b"abcdefghijklmnopqrstuvwxyz";
         *self.choice(CHARS).unwrap() as char
     }
 
@@ -671,7 +671,7 @@ impl Rng {
     /// Generates a random `char` in range A-Z.
     #[inline]
     pub fn uppercase(&mut self) -> char {
-        const CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const CHARS: &str = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         *self.choice(CHARS).unwrap() as char
     }
 

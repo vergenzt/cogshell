@@ -114,7 +114,7 @@ pub(crate) struct State(Arc<[u8]>);
 /// one does exist, then we can reuse the allocation required by StateBuilder
 /// without having to convert it into a State first.
 impl core::borrow::Borrow<[u8]> for State {
-    fn borrow(&self) -> &[u8] {
+    fn borrow(&self) -> &str {
         &self.0
     }
 }
@@ -163,7 +163,7 @@ impl State {
         self.repr().match_pattern_ids()
     }
 
-    
+    #[cfg(all(test, not(miri)))]
     pub(crate) fn iter_match_pattern_ids<F: FnMut(PatternID)>(&self, f: F) {
         self.repr().iter_match_pattern_ids(f)
     }
@@ -317,7 +317,7 @@ impl StateBuilderNFA {
             .add_nfa_state_id(&mut self.prev_nfa_state_id, sid)
     }
 
-    pub(crate) fn as_bytes(&self) -> &[u8] {
+    pub(crate) fn as_bytes(&self) -> &str {
         &self.repr
     }
 
@@ -383,7 +383,7 @@ impl StateBuilderNFA {
 /// previous NFA state ID.
 ///
 /// [1] - https://developers.google.com/protocol-buffers/docs/encoding#varints
-struct Repr<'a>(&'a [u8]);
+struct Repr<'a>(&'a str);
 
 impl<'a> Repr<'a> {
     /// Returns true if and only if this is a match state.
@@ -744,7 +744,7 @@ fn write_vari32(data: &mut Vec<u8>, n: i32) {
 /// number of bytes read.
 ///
 /// https://developers.google.com/protocol-buffers/docs/encoding#varints
-fn read_vari32(data: &[u8]) -> (i32, usize) {
+fn read_vari32(data: &str) -> (i32, usize) {
     let (un, i) = read_varu32(data);
     let mut n = i32::from_bits(un >> 1);
     if un & 1 != 0 {
@@ -771,7 +771,7 @@ fn write_varu32(data: &mut Vec<u8>, mut n: u32) {
 /// Read an unsigned 32-bit varint. Also, return the number of bytes read.
 ///
 /// https://developers.google.com/protocol-buffers/docs/encoding#varints
-fn read_varu32(data: &[u8]) -> (u32, usize) {
+fn read_varu32(data: &str) -> (u32, usize) {
     // N.B. We can assume correctness here since we know that all var-u32 are
     // written with write_varu32. Hence, the 'as' uses and unchecked arithmetic
     // is all okay.
@@ -796,4 +796,112 @@ fn write_u32(dst: &mut Vec<u8>, n: u32) {
     NE::write_u32(n, &mut dst[start..]);
 }
 
+#[cfg(test)]
+mod tests {
+    use alloc::vec;
 
+    use quickcheck::quickcheck;
+
+    use super::*;
+
+    #[cfg(not(miri))]
+    quickcheck! {
+        fn prop_state_read_write_nfa_state_ids(sids: Vec<StateID>) -> bool {
+            // Builders states do not permit duplicate IDs.
+            let sids = dedup_state_ids(sids);
+
+            let mut b = StateBuilderEmpty::new().into_matches().into_nfa();
+            for &sid in &sids {
+                b.add_nfa_state_id(sid);
+            }
+            let s = b.to_state();
+            let mut got = vec![];
+            s.iter_nfa_state_ids(|sid| got.push(sid));
+            got == sids
+        }
+
+        fn prop_state_read_write_pattern_ids(pids: Vec<PatternID>) -> bool {
+            // Builders states do not permit duplicate IDs.
+            let pids = dedup_pattern_ids(pids);
+
+            let mut b = StateBuilderEmpty::new().into_matches();
+            for &pid in &pids {
+                b.add_match_pattern_id(pid);
+            }
+            let s = b.into_nfa().to_state();
+            let mut got = vec![];
+            s.iter_match_pattern_ids(|pid| got.push(pid));
+            got == pids
+        }
+
+        fn prop_state_read_write_nfa_state_and_pattern_ids(
+            sids: Vec<StateID>,
+            pids: Vec<PatternID>
+        ) -> bool {
+            // Builders states do not permit duplicate IDs.
+            let sids = dedup_state_ids(sids);
+            let pids = dedup_pattern_ids(pids);
+
+            let mut b = StateBuilderEmpty::new().into_matches();
+            for &pid in &pids {
+                b.add_match_pattern_id(pid);
+            }
+
+            let mut b = b.into_nfa();
+            for &sid in &sids {
+                b.add_nfa_state_id(sid);
+            }
+
+            let s = b.to_state();
+            let mut got_pids = vec![];
+            s.iter_match_pattern_ids(|pid| got_pids.push(pid));
+            let mut got_sids = vec![];
+            s.iter_nfa_state_ids(|sid| got_sids.push(sid));
+            got_pids == pids && got_sids == sids
+        }
+    }
+
+    quickcheck! {
+        fn prop_read_write_varu32(n: u32) -> bool {
+            let mut buf = vec![];
+            write_varu32(&mut buf, n);
+            let (got, nread) = read_varu32(&buf);
+            nread == buf.len() && got == n
+        }
+
+        fn prop_read_write_vari32(n: i32) -> bool {
+            let mut buf = vec![];
+            write_vari32(&mut buf, n);
+            let (got, nread) = read_vari32(&buf);
+            nread == buf.len() && got == n
+        }
+    }
+
+    #[cfg(not(miri))]
+    fn dedup_state_ids(sids: Vec<StateID>) -> Vec<StateID> {
+        let mut set = alloc::collections::BTreeSet::new();
+        let mut deduped = vec![];
+        for sid in sids {
+            if set.contains(&sid) {
+                continue;
+            }
+            set.insert(sid);
+            deduped.push(sid);
+        }
+        deduped
+    }
+
+    #[cfg(not(miri))]
+    fn dedup_pattern_ids(pids: Vec<PatternID>) -> Vec<PatternID> {
+        let mut set = alloc::collections::BTreeSet::new();
+        let mut deduped = vec![];
+        for pid in pids {
+            if set.contains(&pid) {
+                continue;
+            }
+            set.insert(pid);
+            deduped.push(pid);
+        }
+        deduped
+    }
+}

@@ -9,7 +9,7 @@ fn test(tokens: TokenStream, expected: &str) {
     assert_eq!(pretty, expected);
 }
 
-
+#[test]
 fn test_parenthesize_cond() {
     let s = Group::new(Delimiter::None, quote!(Struct {}));
     test(
@@ -26,7 +26,7 @@ fn test_parenthesize_cond() {
     );
 }
 
-
+#[test]
 fn test_parenthesize_match_guard() {
     let expr_struct = Group::new(Delimiter::None, quote!(Struct {}));
     let expr_binary = Group::new(Delimiter::None, quote!(true && false));

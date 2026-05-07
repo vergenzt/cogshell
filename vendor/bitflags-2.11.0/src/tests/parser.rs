@@ -2,7 +2,7 @@ use super::*;
 
 use crate::{parser::*, Flags};
 
-
+#[test]
 #[cfg(not(miri))] // Very slow in miri
 fn roundtrip() {
     let mut s = String::new();
@@ -19,7 +19,7 @@ fn roundtrip() {
     }
 }
 
-
+#[test]
 #[cfg(not(miri))] // Very slow in miri
 fn roundtrip_truncate() {
     let mut s = String::new();
@@ -39,7 +39,7 @@ fn roundtrip_truncate() {
     }
 }
 
-
+#[test]
 #[cfg(not(miri))] // Very slow in miri
 fn roundtrip_strict() {
     let mut s = String::new();
@@ -67,7 +67,7 @@ fn roundtrip_strict() {
 mod from_str {
     use super::*;
 
-    
+    #[test]
     fn valid() {
         assert_eq!(0, from_str::<TestFlags>("").unwrap().bits());
 
@@ -99,7 +99,7 @@ mod from_str {
         );
     }
 
-    
+    #[test]
     fn invalid() {
         assert!(from_str::<TestFlags>("a")
             .unwrap_err()
@@ -124,7 +124,7 @@ mod from_str {
 mod to_writer {
     use super::*;
 
-    
+    #[test]
     fn cases() {
         assert_eq!("", write(TestFlags::empty()));
         assert_eq!("A", write(TestFlags::A));
@@ -162,7 +162,7 @@ mod to_writer {
 mod from_str_truncate {
     use super::*;
 
-    
+    #[test]
     fn valid() {
         assert_eq!(0, from_str_truncate::<TestFlags>("").unwrap().bits());
 
@@ -202,7 +202,7 @@ mod from_str_truncate {
 mod to_writer_truncate {
     use super::*;
 
-    
+    #[test]
     fn cases() {
         assert_eq!("", write(TestFlags::empty()));
         assert_eq!("A", write(TestFlags::A));
@@ -240,7 +240,7 @@ mod to_writer_truncate {
 mod from_str_strict {
     use super::*;
 
-    
+    #[test]
     fn valid() {
         assert_eq!(0, from_str_strict::<TestFlags>("").unwrap().bits());
 
@@ -267,7 +267,7 @@ mod from_str_strict {
         );
     }
 
-    
+    #[test]
     fn invalid() {
         assert!(from_str_strict::<TestFlags>("a")
             .unwrap_err()
@@ -296,7 +296,7 @@ mod from_str_strict {
 mod to_writer_strict {
     use super::*;
 
-    
+    #[test]
     fn cases() {
         assert_eq!("", write(TestFlags::empty()));
         assert_eq!("A", write(TestFlags::A));

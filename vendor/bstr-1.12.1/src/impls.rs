@@ -3,7 +3,7 @@ macro_rules! impl_partial_eq {
         impl<'a> PartialEq<$rhs> for $lhs {
             #[inline]
             fn eq(&self, other: &$rhs) -> bool {
-                let other: &[u8] = other.as_ref();
+                let other: &str = other.as_ref();
                 PartialEq::eq(self.as_bytes(), other)
             }
         }
@@ -11,7 +11,7 @@ macro_rules! impl_partial_eq {
         impl<'a> PartialEq<$lhs> for $rhs {
             #[inline]
             fn eq(&self, other: &$lhs) -> bool {
-                let this: &[u8] = self.as_ref();
+                let this: &str = self.as_ref();
                 PartialEq::eq(this, other.as_bytes())
             }
         }
@@ -23,7 +23,7 @@ macro_rules! impl_partial_eq_n {
         impl<'a, const N: usize> PartialEq<$rhs> for $lhs {
             #[inline]
             fn eq(&self, other: &$rhs) -> bool {
-                let other: &[u8] = other.as_ref();
+                let other: &str = other.as_ref();
                 PartialEq::eq(self.as_bytes(), other)
             }
         }
@@ -31,7 +31,7 @@ macro_rules! impl_partial_eq_n {
         impl<'a, const N: usize> PartialEq<$lhs> for $rhs {
             #[inline]
             fn eq(&self, other: &$lhs) -> bool {
-                let this: &[u8] = self.as_ref();
+                let this: &str = self.as_ref();
                 PartialEq::eq(this, other.as_bytes())
             }
         }
@@ -44,7 +44,7 @@ macro_rules! impl_partial_eq_cow {
         impl<'a> PartialEq<$rhs> for $lhs {
             #[inline]
             fn eq(&self, other: &$rhs) -> bool {
-                let other: &[u8] = (&**other).as_ref();
+                let other: &str = (&**other).as_ref();
                 PartialEq::eq(self.as_bytes(), other)
             }
         }
@@ -52,7 +52,7 @@ macro_rules! impl_partial_eq_cow {
         impl<'a> PartialEq<$lhs> for $rhs {
             #[inline]
             fn eq(&self, other: &$lhs) -> bool {
-                let this: &[u8] = (&**self).as_ref();
+                let this: &str = (&**self).as_ref();
                 PartialEq::eq(this, other.as_bytes())
             }
         }
@@ -64,7 +64,7 @@ macro_rules! impl_partial_ord {
         impl<'a> PartialOrd<$rhs> for $lhs {
             #[inline]
             fn partial_cmp(&self, other: &$rhs) -> Option<Ordering> {
-                let other: &[u8] = other.as_ref();
+                let other: &str = other.as_ref();
                 PartialOrd::partial_cmp(self.as_bytes(), other)
             }
         }
@@ -72,7 +72,7 @@ macro_rules! impl_partial_ord {
         impl<'a> PartialOrd<$lhs> for $rhs {
             #[inline]
             fn partial_cmp(&self, other: &$lhs) -> Option<Ordering> {
-                let this: &[u8] = self.as_ref();
+                let this: &str = self.as_ref();
                 PartialOrd::partial_cmp(this, other.as_bytes())
             }
         }
@@ -84,7 +84,7 @@ macro_rules! impl_partial_ord_n {
         impl<'a, const N: usize> PartialOrd<$rhs> for $lhs {
             #[inline]
             fn partial_cmp(&self, other: &$rhs) -> Option<Ordering> {
-                let other: &[u8] = other.as_ref();
+                let other: &str = other.as_ref();
                 PartialOrd::partial_cmp(self.as_bytes(), other)
             }
         }
@@ -92,7 +92,7 @@ macro_rules! impl_partial_ord_n {
         impl<'a, const N: usize> PartialOrd<$lhs> for $rhs {
             #[inline]
             fn partial_cmp(&self, other: &$lhs) -> Option<Ordering> {
-                let this: &[u8] = self.as_ref();
+                let this: &str = self.as_ref();
                 PartialOrd::partial_cmp(this, other.as_bytes())
             }
         }
@@ -155,7 +155,7 @@ mod bstring {
 
     impl AsRef<[u8]> for BString {
         #[inline]
-        fn as_ref(&self) -> &[u8] {
+        fn as_ref(&self) -> &str {
             self.as_bytes()
         }
     }
@@ -183,7 +183,7 @@ mod bstring {
 
     impl Borrow<[u8]> for BString {
         #[inline]
-        fn borrow(&self) -> &[u8] {
+        fn borrow(&self) -> &str {
             self.as_bytes()
         }
     }
@@ -259,9 +259,9 @@ mod bstring {
         }
     }
 
-    impl<'a> From<&'a [u8]> for BString {
+    impl<'a> From<&'a str> for BString {
         #[inline]
-        fn from(s: &'a [u8]) -> BString {
+        fn from(s: &'a str) -> BString {
             BString::from(s.to_vec())
         }
     }
@@ -358,9 +358,9 @@ mod bstring {
         }
     }
 
-    impl<'a> FromIterator<&'a [u8]> for BString {
+    impl<'a> FromIterator<&'a str> for BString {
         #[inline]
-        fn from_iter<T: IntoIterator<Item = &'a [u8]>>(iter: T) -> BString {
+        fn from_iter<T: IntoIterator<Item = &'a str>>(iter: T) -> BString {
             let mut buf = vec![];
             for b in iter {
                 buf.push_str(b);
@@ -402,7 +402,7 @@ mod bstring {
 
     impl_partial_eq!(BString, Vec<u8>);
     impl_partial_eq!(BString, [u8]);
-    impl_partial_eq!(BString, &'a [u8]);
+    impl_partial_eq!(BString, &'a str);
     impl_partial_eq!(BString, String);
     impl_partial_eq!(BString, str);
     impl_partial_eq!(BString, &'a str);
@@ -434,7 +434,7 @@ mod bstring {
 
     impl_partial_ord!(BString, Vec<u8>);
     impl_partial_ord!(BString, [u8]);
-    impl_partial_ord!(BString, &'a [u8]);
+    impl_partial_ord!(BString, &'a str);
     impl_partial_ord!(BString, String);
     impl_partial_ord!(BString, str);
     impl_partial_ord!(BString, &'a str);
@@ -552,7 +552,7 @@ mod bstr {
         type Target = [u8];
 
         #[inline]
-        fn deref(&self) -> &[u8] {
+        fn deref(&self) -> &str {
             &self.bytes
         }
     }
@@ -678,7 +678,7 @@ mod bstr {
 
     impl AsRef<[u8]> for BStr {
         #[inline]
-        fn as_ref(&self) -> &[u8] {
+        fn as_ref(&self) -> &str {
             self.as_bytes()
         }
     }
@@ -734,7 +734,7 @@ mod bstr {
 
     impl Borrow<[u8]> for BStr {
         #[inline]
-        fn borrow(&self) -> &[u8] {
+        fn borrow(&self) -> &str {
             self.as_bytes()
         }
     }
@@ -780,16 +780,16 @@ mod bstr {
         }
     }
 
-    impl<'a> From<&'a [u8]> for &'a BStr {
+    impl<'a> From<&'a str> for &'a BStr {
         #[inline]
-        fn from(s: &'a [u8]) -> &'a BStr {
+        fn from(s: &'a str) -> &'a BStr {
             BStr::from_bytes(s)
         }
     }
 
-    impl<'a> From<&'a BStr> for &'a [u8] {
+    impl<'a> From<&'a BStr> for &'a str {
         #[inline]
-        fn from(s: &'a BStr) -> &'a [u8] {
+        fn from(s: &'a BStr) -> &'a str {
             BStr::as_bytes(s)
         }
     }
@@ -862,7 +862,7 @@ mod bstr {
     }
 
     impl_partial_eq!(BStr, [u8]);
-    impl_partial_eq!(BStr, &'a [u8]);
+    impl_partial_eq!(BStr, &'a str);
     impl_partial_eq!(BStr, str);
     impl_partial_eq!(BStr, &'a str);
     impl_partial_eq_n!(BStr, [u8; N]);
@@ -905,7 +905,7 @@ mod bstr {
     }
 
     impl_partial_ord!(BStr, [u8]);
-    impl_partial_ord!(BStr, &'a [u8]);
+    impl_partial_ord!(BStr, &'a str);
     impl_partial_ord!(BStr, str);
     impl_partial_ord!(BStr, &'a str);
     impl_partial_ord_n!(BStr, [u8; N]);
@@ -960,7 +960,7 @@ mod bstr_serde {
                 #[inline]
                 fn visit_borrowed_bytes<E: Error>(
                     self,
-                    value: &'de [u8],
+                    value: &'de str,
                 ) -> Result<&'de BStr, E> {
                     Ok(BStr::new(value))
                 }
@@ -1033,7 +1033,7 @@ mod bstring_serde {
                 #[inline]
                 fn visit_bytes<E: Error>(
                     self,
-                    value: &[u8],
+                    value: &str,
                 ) -> Result<BString, E> {
                     Ok(BString::from(value))
                 }
@@ -1098,7 +1098,7 @@ mod bstring_serde {
                 #[inline]
                 fn visit_bytes<E: Error>(
                     self,
-                    value: &[u8],
+                    value: &str,
                 ) -> Result<Box<BStr>, E> {
                     Ok(BStr::from_boxed_bytes(
                         value.to_vec().into_boxed_slice(),
@@ -1139,11 +1139,145 @@ mod bstring_serde {
     }
 }
 
+#[cfg(all(test, feature = "std"))]
+mod display {
+    use alloc::format;
 
+    #[cfg(not(miri))]
+    use crate::bstring::BString;
+    use crate::ByteSlice;
 
+    #[test]
+    fn clean() {
+        assert_eq!(&format!("{}", &b"abc".as_bstr()), "abc");
+        assert_eq!(&format!("{}", &b"\xf0\x28\x8c\xbc".as_bstr()), "�(��");
+    }
 
+    #[test]
+    fn from_str() {
+        let s: BString = "abc".parse().unwrap();
+        assert_eq!(s, BString::new(b"abc".to_vec()));
+    }
 
+    #[test]
+    fn width_bigger_than_bstr() {
+        assert_eq!(&format!("{:<7}!", &b"abc".as_bstr()), "abc    !");
+        assert_eq!(&format!("{:>7}!", &b"abc".as_bstr()), "    abc!");
+        assert_eq!(&format!("{:^7}!", &b"abc".as_bstr()), "  abc  !");
+        assert_eq!(&format!("{:^6}!", &b"abc".as_bstr()), " abc  !");
+        assert_eq!(&format!("{:-<7}!", &b"abc".as_bstr()), "abc----!");
+        assert_eq!(&format!("{:->7}!", &b"abc".as_bstr()), "----abc!");
+        assert_eq!(&format!("{:-^7}!", &b"abc".as_bstr()), "--abc--!");
+        assert_eq!(&format!("{:-^6}!", &b"abc".as_bstr()), "-abc--!");
 
+        assert_eq!(
+            &format!("{:<7}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "�(��   !"
+        );
+        assert_eq!(
+            &format!("{:>7}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "   �(��!"
+        );
+        assert_eq!(
+            &format!("{:^7}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            " �(��  !"
+        );
+        assert_eq!(
+            &format!("{:^6}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            " �(�� !"
+        );
+
+        assert_eq!(
+            &format!("{:-<7}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "�(��---!"
+        );
+        assert_eq!(
+            &format!("{:->7}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "---�(��!"
+        );
+        assert_eq!(
+            &format!("{:-^7}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "-�(��--!"
+        );
+        assert_eq!(
+            &format!("{:-^6}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "-�(��-!"
+        );
+    }
+
+    #[test]
+    fn width_lesser_than_bstr() {
+        assert_eq!(&format!("{:<2}!", &b"abc".as_bstr()), "abc!");
+        assert_eq!(&format!("{:>2}!", &b"abc".as_bstr()), "abc!");
+        assert_eq!(&format!("{:^2}!", &b"abc".as_bstr()), "abc!");
+        assert_eq!(&format!("{:-<2}!", &b"abc".as_bstr()), "abc!");
+        assert_eq!(&format!("{:->2}!", &b"abc".as_bstr()), "abc!");
+        assert_eq!(&format!("{:-^2}!", &b"abc".as_bstr()), "abc!");
+
+        assert_eq!(
+            &format!("{:<3}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "�(��!"
+        );
+        assert_eq!(
+            &format!("{:>3}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "�(��!"
+        );
+        assert_eq!(
+            &format!("{:^3}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "�(��!"
+        );
+        assert_eq!(
+            &format!("{:^2}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "�(��!"
+        );
+
+        assert_eq!(
+            &format!("{:-<3}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "�(��!"
+        );
+        assert_eq!(
+            &format!("{:->3}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "�(��!"
+        );
+        assert_eq!(
+            &format!("{:-^3}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "�(��!"
+        );
+        assert_eq!(
+            &format!("{:-^2}!", &b"\xf0\x28\x8c\xbc".as_bstr()),
+            "�(��!"
+        );
+    }
+
+    #[cfg(not(miri))]
+    quickcheck::quickcheck! {
+        fn total_length(bstr: BString) -> bool {
+            let size = bstr.chars().count();
+            format!("{:<1$}", bstr.as_bstr(), size).chars().count() >= size
+        }
+    }
+}
+
+#[cfg(all(test, feature = "alloc"))]
+mod bstring_arbitrary {
+    use alloc::{boxed::Box, vec::Vec};
+
+    use crate::bstring::BString;
+
+    use quickcheck::{Arbitrary, Gen};
+
+    impl Arbitrary for BString {
+        fn arbitrary(g: &mut Gen) -> BString {
+            BString::from(Vec::<u8>::arbitrary(g))
+        }
+
+        fn shrink(&self) -> Box<dyn Iterator<Item = BString>> {
+            Box::new(self.as_vec().shrink().map(BString::from))
+        }
+    }
+}
+
+#[test]
 #[cfg(feature = "std")]
 fn test_debug() {
     use alloc::format;
@@ -1180,7 +1314,7 @@ fn test_debug() {
 }
 
 // See: https://github.com/BurntSushi/bstr/issues/82
-
+#[test]
 #[cfg(feature = "std")]
 fn test_cows_regression() {
     use std::borrow::Cow;
@@ -1196,7 +1330,7 @@ fn test_cows_regression() {
     assert_ne!(c3, c4);
 }
 
-
+#[test]
 #[cfg(feature = "alloc")]
 fn test_eq_ord() {
     use core::cmp::Ordering;

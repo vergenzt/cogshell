@@ -2146,7 +2146,7 @@ pub mod wasi {
                 #[allow(async_fn_in_trait)]
                 pub fn write(
                     &self,
-                    buffer: &[u8],
+                    buffer: &str,
                     offset: Filesize,
                 ) -> Result<Filesize, ErrorCode> {
                     unsafe {
@@ -4463,7 +4463,7 @@ pub mod wasi {
                 /// returns Err(closed) without writing if the stream has closed since
                 /// the last call to check-write provided a permit.
                 #[allow(async_fn_in_trait)]
-                pub fn write(&self, contents: &[u8]) -> Result<(), StreamError> {
+                pub fn write(&self, contents: &str) -> Result<(), StreamError> {
                     unsafe {
                         #[repr(align(4))]
                         struct RetArea([::core::mem::MaybeUninit<u8>; 12]);
@@ -4539,7 +4539,7 @@ pub mod wasi {
                 #[allow(async_fn_in_trait)]
                 pub fn blocking_write_and_flush(
                     &self,
-                    contents: &[u8],
+                    contents: &str,
                 ) -> Result<(), StreamError> {
                     unsafe {
                         #[repr(align(4))]

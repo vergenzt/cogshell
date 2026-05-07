@@ -557,7 +557,45 @@ pub mod context {
         #[doc(hidden)]
         pub type Context = ContextV1;
 
-        
+        #[cfg(test)]
+        mod tests {
+            use crate::Timestamp;
+
+            use super::*;
+
+            #[test]
+            fn context() {
+                let seconds = 1_496_854_535;
+                let subsec_nanos = 812_946_000;
+
+                let context = ContextV1::new(u16::MAX >> 2);
+
+                let ts = Timestamp::from_unix(&context, seconds, subsec_nanos);
+                assert_eq!(16383, ts.counter);
+                assert_eq!(14, ts.usable_counter_bits);
+
+                let seconds = 1_496_854_536;
+
+                let ts = Timestamp::from_unix(&context, seconds, subsec_nanos);
+                assert_eq!(0, ts.counter);
+
+                let seconds = 1_496_854_535;
+
+                let ts = Timestamp::from_unix(&context, seconds, subsec_nanos);
+                assert_eq!(1, ts.counter);
+            }
+
+            #[test]
+            fn context_overflow() {
+                let seconds = u64::MAX;
+                let subsec_nanos = u32::MAX;
+
+                let context = ContextV1::new(u16::MAX);
+
+                // Ensure we don't panic
+                Timestamp::from_unix(&context, seconds, subsec_nanos);
+            }
+        }
     }
 
     #[cfg(any(feature = "v1", feature = "v6"))]
@@ -1007,7 +1045,131 @@ pub mod context {
             }
         }
 
-        
+        #[cfg(test)]
+        mod tests {
+            use core::time::Duration;
+
+            use super::*;
+
+            use crate::{Timestamp, Uuid};
+
+            #[test]
+            fn context() {
+                let seconds = 1_496_854_535;
+                let subsec_nanos = 812_946_000;
+
+                let context = ContextV7::new();
+
+                let ts1 = Timestamp::from_unix(&context, seconds, subsec_nanos);
+                assert_eq!(42, ts1.usable_counter_bits);
+
+                // Backwards second
+                let seconds = 1_496_854_534;
+
+                let ts2 = Timestamp::from_unix(&context, seconds, subsec_nanos);
+
+                // The backwards time should be ignored
+                // The counter should still increment
+                assert_eq!(ts1.seconds, ts2.seconds);
+                assert_eq!(ts1.subsec_nanos, ts2.subsec_nanos);
+                assert_eq!(ts1.counter + 1, ts2.counter);
+
+                // Forwards second
+                let seconds = 1_496_854_536;
+
+                let ts3 = Timestamp::from_unix(&context, seconds, subsec_nanos);
+
+                // The counter should have reseeded
+                assert_ne!(ts2.counter + 1, ts3.counter);
+                assert_ne!(0, ts3.counter);
+            }
+
+            #[test]
+            fn context_wrap() {
+                let seconds = 1_496_854_535u64;
+                let subsec_nanos = 812_946_000u32;
+
+                // This context will wrap
+                let context = ContextV7 {
+                    timestamp: Cell::new(ReseedingTimestamp::from_ts(seconds, subsec_nanos)),
+                    adjust: Adjust::by_millis(0),
+                    precision: Precision {
+                        bits: 0,
+                        mask: 0,
+                        factor: 0,
+                        shift: 0,
+                    },
+                    counter: Cell::new(Counter {
+                        value: u64::MAX >> 22,
+                    }),
+                };
+
+                let ts = Timestamp::from_unix(&context, seconds, subsec_nanos);
+
+                // The timestamp should be incremented by 1ms
+                let expected_ts = Duration::new(seconds, subsec_nanos) + Duration::from_millis(1);
+                assert_eq!(expected_ts.as_secs(), ts.seconds);
+                assert_eq!(expected_ts.subsec_nanos(), ts.subsec_nanos);
+
+                // The counter should have reseeded
+                assert!(ts.counter < (u64::MAX >> 22) as u128);
+                assert_ne!(0, ts.counter);
+            }
+
+            #[test]
+            fn context_shift() {
+                let seconds = 1_496_854_535;
+                let subsec_nanos = 812_946_000;
+
+                let context = ContextV7::new().with_adjust_by_millis(1);
+
+                let ts = Timestamp::from_unix(&context, seconds, subsec_nanos);
+
+                assert_eq!((1_496_854_535, 813_946_000), ts.to_unix());
+            }
+
+            #[test]
+            fn context_additional_precision() {
+                let seconds = 1_496_854_535;
+                let subsec_nanos = 812_946_000;
+
+                let context = ContextV7::new().with_additional_precision();
+
+                let ts1 = Timestamp::from_unix(&context, seconds, subsec_nanos);
+
+                // NOTE: Future changes in rounding may change this value slightly
+                assert_eq!(3861, ts1.counter >> 30);
+
+                assert!(ts1.counter < (u64::MAX >> 22) as u128);
+
+                // Generate another timestamp; it should continue to sort
+                let ts2 = Timestamp::from_unix(&context, seconds, subsec_nanos);
+
+                assert!(Uuid::new_v7(ts2) > Uuid::new_v7(ts1));
+
+                // Generate another timestamp with an extra nanosecond
+                let subsec_nanos = subsec_nanos + 1;
+
+                let ts3 = Timestamp::from_unix(&context, seconds, subsec_nanos);
+
+                assert!(Uuid::new_v7(ts3) > Uuid::new_v7(ts2));
+            }
+
+            #[test]
+            fn context_overflow() {
+                let seconds = u64::MAX;
+                let subsec_nanos = u32::MAX;
+
+                // Ensure we don't panic
+                for context in [
+                    ContextV7::new(),
+                    ContextV7::new().with_additional_precision(),
+                    ContextV7::new().with_adjust_by_millis(u32::MAX),
+                ] {
+                    Timestamp::from_unix(&context, seconds, subsec_nanos);
+                }
+            }
+        }
     }
 
     #[cfg(feature = "v7")]
@@ -1039,4 +1201,101 @@ pub mod context {
     }
 }
 
+#[cfg(all(test, any(feature = "v1", feature = "v6")))]
+mod tests {
+    use super::*;
 
+    #[cfg(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none")))]
+    use wasm_bindgen_test::*;
+
+    #[test]
+    #[cfg_attr(
+        all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none")),
+        wasm_bindgen_test
+    )]
+    fn gregorian_unix_does_not_panic() {
+        // Ensure timestamp conversions never panic
+        Timestamp::unix_to_gregorian_ticks(u64::MAX, 0);
+        Timestamp::unix_to_gregorian_ticks(0, u32::MAX);
+        Timestamp::unix_to_gregorian_ticks(u64::MAX, u32::MAX);
+
+        Timestamp::gregorian_to_unix(u64::MAX);
+    }
+
+    #[test]
+    #[cfg_attr(
+        all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none")),
+        wasm_bindgen_test
+    )]
+    fn to_gregorian_truncates_to_usable_bits() {
+        let ts = Timestamp::from_gregorian_time(123, u16::MAX);
+
+        assert_eq!((123, u16::MAX >> 2), ts.to_gregorian());
+    }
+
+    #[test]
+    #[cfg_attr(
+        all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none")),
+        wasm_bindgen_test
+    )]
+    fn clock_sequence_usable_bits() {
+        struct MyContext;
+
+        impl ClockSequence for MyContext {
+            type Output = u16;
+
+            fn generate_sequence(&self, _: u64, _: u32) -> Self::Output {
+                0
+            }
+        }
+
+        assert_eq!(16, MyContext.usable_bits());
+    }
+
+    #[cfg(all(test, feature = "std", not(miri)))]
+    mod std_support {
+        use super::*;
+
+        use std::time::{Duration, SystemTime};
+
+        // Components of an arbitrary timestamp with non-zero nanoseconds.
+        const KNOWN_SECONDS: u64 = 1_501_520_400;
+        const KNOWN_NANOS: u32 = 1_000;
+
+        fn known_system_time() -> SystemTime {
+            SystemTime::UNIX_EPOCH
+                .checked_add(Duration::new(KNOWN_SECONDS, KNOWN_NANOS))
+                .unwrap()
+        }
+
+        fn known_timestamp() -> Timestamp {
+            Timestamp::from_unix_time(KNOWN_SECONDS, KNOWN_NANOS, 0, 0)
+        }
+
+        #[test]
+        fn to_system_time() {
+            let st: SystemTime = known_timestamp().into();
+
+            assert_eq!(known_system_time(), st);
+        }
+
+        #[test]
+        fn from_system_time() {
+            let ts: Timestamp = known_system_time().try_into().unwrap();
+
+            assert_eq!(known_timestamp(), ts);
+        }
+
+        #[test]
+        fn from_system_time_before_epoch() {
+            let before_epoch = match SystemTime::UNIX_EPOCH.checked_sub(Duration::from_nanos(1_000))
+            {
+                Some(st) => st,
+                None => return,
+            };
+
+            Timestamp::try_from(before_epoch)
+                .expect_err("Timestamp should not be created from before epoch");
+        }
+    }
+}

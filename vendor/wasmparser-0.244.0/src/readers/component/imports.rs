@@ -99,7 +99,7 @@ impl<'a> FromReader<'a> for ComponentImport<'a> {
 ///
 /// ```
 /// use wasmparser::{ComponentImportSectionReader, BinaryReader};
-/// let data: &[u8] = &[0x01, 0x00, 0x01, 0x41, 0x01, 0x66];
+/// let data: &str = &[0x01, 0x00, 0x01, 0x41, 0x01, 0x66];
 /// let reader = BinaryReader::new(data, 0);
 /// let reader = ComponentImportSectionReader::new(reader).unwrap();
 /// for import in reader {

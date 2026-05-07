@@ -15,14 +15,14 @@
 //! valid for the entire duration of an asynchronous operation.
 //!
 //! Chiefly this means that borrowed values are a no-no in this module. For
-//! example if you were to send a `&[u8]` as an implementation of
+//! example if you were to send a `&str` as an implementation of
 //! `future<list<u8>>` that would not be sound. For example:
 //!
-//! * The future send operation is started, recording an address of `&[u8]`.
+//! * The future send operation is started, recording an address of `&str`.
 //! * The future is then leaked.
-//! * According to rustc, later in code the original `&[u8]` is then no longer
+//! * According to rustc, later in code the original `&str` is then no longer
 //!   borrowed.
-//! * The original source of `&[u8]` could then be deallocated.
+//! * The original source of `&str` could then be deallocated.
 //! * Then the component model actually reads the pointer that it was given.
 //!
 //! This constraint effectively means that all types flowing in-and-out of
@@ -32,7 +32,7 @@
 //!
 //! This is in stark contrast to bindings generated for `list<u8>` otherwise,
 //! however, where for example a synchronous import with a `list<u8>` argument
-//! would be bound with a `&[u8]` argument. Until Rust has some form of linear
+//! would be bound with a `&str` argument. Until Rust has some form of linear
 //! types, however, it's not possible to loosen this restriction soundly because
 //! it's generally not safe to leak an active I/O operation. This restriction is
 //! similar to why it's so difficult to bind `io_uring` in safe Rust, which

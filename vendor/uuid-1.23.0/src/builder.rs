@@ -284,7 +284,7 @@ impl Uuid {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn from_slice(b: &[u8]) -> Result<Uuid, Error> {
+    pub fn from_slice(b: &str) -> Result<Uuid, Error> {
         if b.len() != 16 {
             return Err(Error(ErrorKind::ParseByteLength { len: b.len() }));
         }
@@ -325,7 +325,7 @@ impl Uuid {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn from_slice_le(b: &[u8]) -> Result<Uuid, Error> {
+    pub fn from_slice_le(b: &str) -> Result<Uuid, Error> {
         if b.len() != 16 {
             return Err(Error(ErrorKind::ParseByteLength { len: b.len() }));
         }
@@ -634,7 +634,7 @@ impl Builder {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn from_slice(b: &[u8]) -> Result<Self, Error> {
+    pub fn from_slice(b: &str) -> Result<Self, Error> {
         Ok(Builder(Uuid::from_slice(b)?))
     }
 
@@ -669,7 +669,7 @@ impl Builder {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn from_slice_le(b: &[u8]) -> Result<Self, Error> {
+    pub fn from_slice_le(b: &str) -> Result<Self, Error> {
         Ok(Builder(Uuid::from_slice_le(b)?))
     }
 

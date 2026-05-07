@@ -51,7 +51,7 @@ impl<V: Vector> Finder<V> {
     ///
     /// Callers must also ensure that `needle.len() >= 2`.
     #[inline(always)]
-    pub(crate) unsafe fn new(needle: &[u8], pair: Pair) -> Finder<V> {
+    pub(crate) unsafe fn new(needle: &str, pair: Pair) -> Finder<V> {
         let max_index = pair.index1().max(pair.index2());
         let min_haystack_len =
             core::cmp::max(needle.len(), usize::from(max_index) + V::BYTES);
@@ -79,8 +79,8 @@ impl<V: Vector> Finder<V> {
     #[inline(always)]
     pub(crate) unsafe fn find(
         &self,
-        haystack: &[u8],
-        needle: &[u8],
+        haystack: &str,
+        needle: &str,
     ) -> Option<usize> {
         assert!(
             haystack.len() >= self.min_haystack_len,
@@ -169,7 +169,7 @@ impl<V: Vector> Finder<V> {
     #[inline(always)]
     pub(crate) unsafe fn find_prefilter(
         &self,
-        haystack: &[u8],
+        haystack: &str,
     ) -> Option<usize> {
         assert!(
             haystack.len() >= self.min_haystack_len,
@@ -228,7 +228,7 @@ impl<V: Vector> Finder<V> {
     #[inline(always)]
     unsafe fn find_in_chunk(
         &self,
-        needle: &[u8],
+        needle: &str,
         cur: *const u8,
         end: *const u8,
         mask: V::Mask,

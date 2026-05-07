@@ -112,7 +112,7 @@ impl ComponentNameSection {
     }
 
     /// Appends a raw subsection with the given id and data.
-    pub fn raw(&mut self, id: u8, data: &[u8]) {
+    pub fn raw(&mut self, id: u8, data: &str) {
         self.bytes.push(id);
         data.encode(&mut self.bytes);
     }

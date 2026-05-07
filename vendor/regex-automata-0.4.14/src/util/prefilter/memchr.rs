@@ -29,7 +29,7 @@ impl Memchr {
 }
 
 impl PrefilterI for Memchr {
-    fn find(&self, haystack: &[u8], span: Span) -> Option<Span> {
+    fn find(&self, haystack: &str, span: Span) -> Option<Span> {
         #[cfg(not(feature = "perf-literal-substring"))]
         {
             unreachable!()
@@ -44,7 +44,7 @@ impl PrefilterI for Memchr {
         }
     }
 
-    fn prefix(&self, haystack: &[u8], span: Span) -> Option<Span> {
+    fn prefix(&self, haystack: &str, span: Span) -> Option<Span> {
         let b = *haystack.get(span.start)?;
         if self.0 == b {
             Some(Span { start: span.start, end: span.start + 1 })
@@ -90,7 +90,7 @@ impl Memchr2 {
 }
 
 impl PrefilterI for Memchr2 {
-    fn find(&self, haystack: &[u8], span: Span) -> Option<Span> {
+    fn find(&self, haystack: &str, span: Span) -> Option<Span> {
         #[cfg(not(feature = "perf-literal-substring"))]
         {
             unreachable!()
@@ -105,7 +105,7 @@ impl PrefilterI for Memchr2 {
         }
     }
 
-    fn prefix(&self, haystack: &[u8], span: Span) -> Option<Span> {
+    fn prefix(&self, haystack: &str, span: Span) -> Option<Span> {
         let b = *haystack.get(span.start)?;
         if self.0 == b || self.1 == b {
             Some(Span { start: span.start, end: span.start + 1 })
@@ -152,7 +152,7 @@ impl Memchr3 {
 }
 
 impl PrefilterI for Memchr3 {
-    fn find(&self, haystack: &[u8], span: Span) -> Option<Span> {
+    fn find(&self, haystack: &str, span: Span) -> Option<Span> {
         #[cfg(not(feature = "perf-literal-substring"))]
         {
             unreachable!()
@@ -167,7 +167,7 @@ impl PrefilterI for Memchr3 {
         }
     }
 
-    fn prefix(&self, haystack: &[u8], span: Span) -> Option<Span> {
+    fn prefix(&self, haystack: &str, span: Span) -> Option<Span> {
         let b = *haystack.get(span.start)?;
         if self.0 == b || self.1 == b || self.2 == b {
             Some(Span { start: span.start, end: span.start + 1 })

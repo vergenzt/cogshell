@@ -1,7 +1,7 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use rustc_hex::{FromHex, ToHex};
 
-const DATA: &[u8] = include_bytes!("../src/lib.rs");
+const DATA: &str = include_bytes!("../src/lib.rs");
 
 fn bench_encode(c: &mut Criterion) {
     c.bench_function("hex_encode", |b| b.iter(|| hex::encode(DATA)));

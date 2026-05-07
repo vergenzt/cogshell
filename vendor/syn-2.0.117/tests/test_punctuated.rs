@@ -32,7 +32,7 @@ macro_rules! check_exact_size_iterator {
     }};
 }
 
-
+#[test]
 fn pairs() {
     let mut p: Punctuated<_, Token![,]> = punctuated!(2, 3, 4);
 
@@ -50,7 +50,7 @@ fn pairs() {
     assert_eq!(p.into_pairs().next_back().map(Pair::into_value), Some(4));
 }
 
-
+#[test]
 fn iter() {
     let mut p: Punctuated<_, Token![,]> = punctuated!(2, 3, 4);
 
@@ -65,7 +65,7 @@ fn iter() {
     assert_eq!(p.into_iter().next_back(), Some(4));
 }
 
-
+#[test]
 fn may_dangle() {
     let p: Punctuated<_, Token![,]> = punctuated!(2, 3, 4);
     for element in &p {
@@ -84,7 +84,7 @@ fn may_dangle() {
     }
 }
 
-
+#[test]
 #[should_panic = "index out of bounds: the len is 0 but the index is 0"]
 fn index_out_of_bounds() {
     let p = Punctuated::<syn::Ident, Token![,]>::new();

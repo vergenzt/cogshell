@@ -993,4 +993,5 @@ mod external;
 #[cfg(feature = "example_generated")]
 pub mod example_generated;
 
-
+#[cfg(test)]
+mod tests;

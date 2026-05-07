@@ -1,6 +1,6 @@
 bstr
 ====
-This crate provides extension traits for `&[u8]` and `Vec<u8>` that enable
+This crate provides extension traits for `&str` and `Vec<u8>` that enable
 their use as byte strings, where byte strings are _conventionally_ UTF-8. This
 differs from the standard library's `String` and `str` types in that they are
 not required to be valid UTF-8, but may be fully or partially valid UTF-8.
@@ -192,12 +192,12 @@ optional.
 ### High level motivation
 
 Strictly speaking, the `bstr` crate provides very little that can't already be
-achieved with the standard library `Vec<u8>`/`&[u8]` APIs and the ecosystem of
+achieved with the standard library `Vec<u8>`/`&str` APIs and the ecosystem of
 library crates. For example:
 
 * The standard library's
   [`Utf8Error`](https://doc.rust-lang.org/std/str/struct.Utf8Error.html) can be
-  used for incremental lossy decoding of `&[u8]`.
+  used for incremental lossy decoding of `&str`.
 * The
   [`unicode-segmentation`](https://unicode-rs.github.io/unicode-segmentation/unicode_segmentation/index.html)
   crate can be used for iterating over graphemes (or words), but is only
@@ -205,7 +205,7 @@ library crates. For example:
   grapheme iteration with the same semantics as what `bstr` provides (automatic
   Unicode replacement codepoint substitution).
 * The [`twoway`](https://docs.rs/twoway) crate can be used for fast substring
-  searching on `&[u8]`.
+  searching on `&str`.
 
 So why create `bstr`? Part of the point of the `bstr` crate is to provide a
 uniform API of coupled components instead of relying on users to piece together

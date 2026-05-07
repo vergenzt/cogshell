@@ -115,5 +115,6 @@ mod ext;
 mod pattern;
 mod rabinkarp;
 mod teddy;
-
+#[cfg(all(feature = "std", test))]
+mod tests;
 mod vector;

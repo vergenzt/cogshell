@@ -156,7 +156,7 @@ fn encode(wat: &str, wit: Option<&str>) -> Result<Vec<u8>> {
     Ok(module)
 }
 
-
+#[test]
 fn linking() -> Result<()> {
     let component = [
         ("libfoo.so", FOO, None),
@@ -248,7 +248,7 @@ world bar {
 }
 "#;
 
-
+#[test]
 fn linking_got_weak() -> Result<()> {
     let component = [
         ("libfoo.so", GOT_IMPORT, Some(GOT_IMPORT_WIT)),

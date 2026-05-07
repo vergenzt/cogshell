@@ -48,7 +48,7 @@ fn field_trans_fail(input: TokenStream, expected_err: &str) {
     assert_eq!(err, expected_err)
 }
 
-
+#[test]
 fn implicit_parser() {
     let input: NamedField = parse_quote! {
         /// help
@@ -60,7 +60,7 @@ fn implicit_parser() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn implicit_parser_custom_help() {
     let input: NamedField = parse_quote! {
         /// help
@@ -73,7 +73,7 @@ fn implicit_parser_custom_help() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn short_long() {
     let input: NamedField = parse_quote! {
         #[bpaf(short, long)]
@@ -85,7 +85,7 @@ fn short_long() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn derive_fallback() {
     let input: NamedField = parse_quote! {
         #[bpaf(fallback(3.1415))]
@@ -97,7 +97,7 @@ fn derive_fallback() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn derive_fallback_display() {
     let input: NamedField = parse_quote! {
         #[bpaf(fallback(3.1415), display_fallback)]
@@ -109,7 +109,7 @@ fn derive_fallback_display() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn adjacent_argument() {
     let input: NamedField = parse_quote! {
         #[bpaf(argument, adjacent)]
@@ -121,7 +121,7 @@ fn adjacent_argument() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn derive_fallback_with() {
     let input: NamedField = parse_quote! {
         #[bpaf(fallback_with(external))]
@@ -133,7 +133,7 @@ fn derive_fallback_with() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn derive_external_help() {
     let input: NamedField = parse_quote! {
         /// help
@@ -146,7 +146,7 @@ fn derive_external_help() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn derive_external_no_help() {
     let input: NamedField = parse_quote! {
         #[bpaf(external(level))]
@@ -158,7 +158,7 @@ fn derive_external_no_help() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn derive_external_with_path() {
     let input: NamedField = parse_quote! {
         #[bpaf(external(path::level))]
@@ -170,7 +170,7 @@ fn derive_external_with_path() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn derive_external_nohelp() {
     let input: NamedField = parse_quote! {
         /// help
@@ -183,7 +183,7 @@ fn derive_external_nohelp() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn derive_field_guard() {
     let input: NamedField = parse_quote! {
         #[bpaf(guard(positive, "msg"))]
@@ -195,7 +195,7 @@ fn derive_field_guard() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn derive_field_guard_const() {
     let input: NamedField = parse_quote! {
         #[bpaf(guard(positive, MSG))]
@@ -207,7 +207,7 @@ fn derive_field_guard_const() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn derive_help() {
     let input: NamedField = parse_quote! {
         /// multi
@@ -222,7 +222,7 @@ fn derive_help() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn map_requires_explicit_parser() {
     let input: NamedField = parse_quote! {
         #[bpaf(argument::<usize>("NUM"), map(double))]
@@ -234,7 +234,7 @@ fn map_requires_explicit_parser() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn map_requires_explicit_parser2() {
     let input = quote! {
         #[bpaf(map(double))]
@@ -244,7 +244,7 @@ fn map_requires_explicit_parser2() {
     field_trans_fail(input, err);
 }
 
-
+#[test]
 fn check_guard() {
     let input: UnnamedField = parse_quote! {
         #[bpaf(guard(odd, "must be odd"))]
@@ -257,7 +257,7 @@ fn check_guard() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn pure_value() {
     let input: UnnamedField = parse_quote! {
         #[bpaf(pure(42))]
@@ -271,7 +271,7 @@ fn pure_value() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn pure_with_value() {
     let input: UnnamedField = parse_quote! {
         #[bpaf(pure_with(detect_color))]
@@ -285,7 +285,7 @@ fn pure_with_value() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn check_fallback() {
     let input: NamedField = parse_quote! {
         #[bpaf(argument("SPEED"), fallback(42.0))]
@@ -297,7 +297,7 @@ fn check_fallback() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn check_many_files_implicit() {
     let input: NamedField = parse_quote! {
         files: Vec<std::path::PathBuf>
@@ -308,7 +308,7 @@ fn check_many_files_implicit() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn many_catch() {
     let input: NamedField = parse_quote! {
         #[bpaf(argument("FILE"), many, catch)]
@@ -320,7 +320,7 @@ fn many_catch() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn collect_catch() {
     let input: NamedField = parse_quote! {
         #[bpaf(argument("FILE"), collect, catch)]
@@ -332,7 +332,7 @@ fn collect_catch() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn option_catch() {
     let input: NamedField = parse_quote! {
         #[bpaf(argument("FILE"), optional, catch)]
@@ -344,7 +344,7 @@ fn option_catch() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn some_catch() {
     let input: NamedField = parse_quote! {
         #[bpaf(argument("ARG"), some("files"), catch)]
@@ -356,7 +356,7 @@ fn some_catch() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn check_option_file_implicit() {
     let input: NamedField = parse_quote! {
         files: Option<PathBuf>
@@ -367,7 +367,7 @@ fn check_option_file_implicit() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn check_guard_fallback() {
     let input: NamedField = parse_quote! {
         #[bpaf(guard(positive, "must be positive"), fallback(1))]
@@ -379,7 +379,7 @@ fn check_guard_fallback() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn better_error_for_unnamed_argument() {
     let input = quote!(
         #[bpaf(argument("FILE"))]
@@ -392,7 +392,7 @@ fn better_error_for_unnamed_argument() {
     );
 }
 
-
+#[test]
 fn postprocessing_after_external() {
     let input: NamedField = parse_quote! {
         #[bpaf(external(verbose), fallback(42))]
@@ -404,7 +404,7 @@ fn postprocessing_after_external() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn optional_external() {
     let input: NamedField = parse_quote! {
         #[bpaf(external(verbose))]
@@ -416,7 +416,7 @@ fn optional_external() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn optional_external_shortcut() {
     let input: NamedField = parse_quote! {
         #[bpaf(external)]
@@ -428,7 +428,7 @@ fn optional_external_shortcut() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn optional_external_unnamed() {
     let input: UnnamedField = parse_quote! {
         #[bpaf(external(verbose))]
@@ -440,7 +440,7 @@ fn optional_external_unnamed() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn optional_field_is_sane() {
     let input: NamedField = parse_quote! {
         name: Option<String>
@@ -451,7 +451,7 @@ fn optional_field_is_sane() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn vec_field_is_sane() {
     let input: NamedField = parse_quote! {
         names: Vec<String>
@@ -462,7 +462,7 @@ fn vec_field_is_sane() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn positional_named_fields() {
     let input: NamedField = parse_quote! {
         #[bpaf(positional("ARG"))]
@@ -474,7 +474,7 @@ fn positional_named_fields() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn strict_positional_named_fields() {
     let input: NamedField = parse_quote! {
         #[bpaf(positional("ARG"), strict)]
@@ -486,7 +486,7 @@ fn strict_positional_named_fields() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn non_strict_positional_named_fields() {
     let input: NamedField = parse_quote! {
         #[bpaf(positional("ARG"), non_strict)]
@@ -498,7 +498,7 @@ fn non_strict_positional_named_fields() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn optional_named_pathed() {
     let input: NamedField = parse_quote! {
         #[bpaf(long, short)]
@@ -513,7 +513,7 @@ fn optional_named_pathed() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn optional_unnamed_pathed() {
     let input: UnnamedField = parse_quote! {
         #[bpaf(long("config"), short('c'))]
@@ -528,7 +528,7 @@ fn optional_unnamed_pathed() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn implicit_optional_argument_with_name() {
     let input: NamedField = parse_quote! {
         #[bpaf(argument("N"))]
@@ -542,7 +542,7 @@ fn implicit_optional_argument_with_name() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn explicit_optional_argument_with_name() {
     let input: NamedField = parse_quote! {
         #[bpaf(argument("N"), optional)]
@@ -556,7 +556,7 @@ fn explicit_optional_argument_with_name() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn optional_argument_with_name_complete() {
     let input: NamedField = parse_quote! {
         #[bpaf(argument("N"), complete(magic), group("hi"))]
@@ -572,7 +572,7 @@ fn optional_argument_with_name_complete() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn optional_argument_with_name_shell_complete() {
     let input: NamedField = parse_quote! {
         #[bpaf(argument("N"), complete_shell(magic))]
@@ -587,7 +587,7 @@ fn optional_argument_with_name_shell_complete() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn some_arguments() {
     let input: NamedField = parse_quote! {
         #[bpaf(argument("N"), some("need params"))]
@@ -601,7 +601,7 @@ fn some_arguments() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn env_argument() {
     let input: NamedField = parse_quote! {
         #[bpaf(env(sim::DB), argument("N"), some("need params"))]
@@ -616,7 +616,7 @@ fn env_argument() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn explicit_switch_argument() {
     let input: NamedField = parse_quote! {
         #[bpaf(switch)]
@@ -628,7 +628,7 @@ fn explicit_switch_argument() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn explicit_req_flag_argument() {
     let input: NamedField = parse_quote! {
         #[bpaf(req_flag(true))]
@@ -640,7 +640,7 @@ fn explicit_req_flag_argument() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn implicit_switch_argument() {
     let input: NamedField = parse_quote! {
         item: bool
@@ -651,7 +651,7 @@ fn implicit_switch_argument() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn explicit_flag_argument_1() {
     let input: NamedField = parse_quote! {
         #[bpaf(flag(true, false))]
@@ -663,7 +663,7 @@ fn explicit_flag_argument_1() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn explicit_flag_argument_2() {
     let input: NamedField = parse_quote! {
         #[bpaf(flag(True, False))]
@@ -675,7 +675,7 @@ fn explicit_flag_argument_2() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn explicit_flag_argument_3() {
     let input: NamedField = parse_quote! {
         #[bpaf(flag(True, False), optional)]
@@ -687,7 +687,7 @@ fn explicit_flag_argument_3() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn hide_and_group_help() {
     let input: NamedField = parse_quote! {
         #[bpaf(hide, group_help("potato"))]
@@ -699,7 +699,7 @@ fn hide_and_group_help() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn any_field_1() {
     let input: NamedField = parse_quote! {
         #[bpaf(any("ARG", Some))]
@@ -712,7 +712,7 @@ fn any_field_1() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn unnamed_field_with_ignore_rustdoc() {
     let input: UnnamedField = parse_quote! {
         #[bpaf(any("FOO", Some), ignore_rustdoc)]
@@ -725,7 +725,7 @@ fn unnamed_field_with_ignore_rustdoc() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn any_field_2() {
     let input: UnnamedField = parse_quote! {
         #[bpaf(any("FOO", Some))]
@@ -738,7 +738,7 @@ fn any_field_2() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn any_field_3() {
     let input: UnnamedField = parse_quote! {
         #[bpaf(any("FOO", Some))]
@@ -751,7 +751,7 @@ fn any_field_3() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn any_field_4() {
     let input: UnnamedField = parse_quote! {
         #[bpaf(any("FOO", Some))]
@@ -764,7 +764,7 @@ fn any_field_4() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn any_field_custom_help() {
     let input: UnnamedField = parse_quote! {
         #[bpaf(any("FOO", Some), help(custom_help))]
@@ -777,7 +777,7 @@ fn any_field_custom_help() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn any_field_5() {
     let input: UnnamedField = parse_quote! {
         #[bpaf(any("FOO", check))]
@@ -790,7 +790,7 @@ fn any_field_5() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn any_field_many_custom_help() {
     let input: UnnamedField = parse_quote! {
         #[bpaf(any("FOO", check), help(custom_help))]
@@ -803,7 +803,7 @@ fn any_field_many_custom_help() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn any_field_6() {
     let input: UnnamedField = parse_quote! {
         #[bpaf(any("FOO", |x| (x == "--lit").then_some(())))]
@@ -816,7 +816,7 @@ fn any_field_6() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn unit_fields_are_required() {
     let input: NamedField = parse_quote! {
         /// help
@@ -828,7 +828,7 @@ fn unit_fields_are_required() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn ignore_rustdoc_without_help() {
     let input: NamedField = parse_quote! {
         /// help
@@ -841,7 +841,7 @@ fn ignore_rustdoc_without_help() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn ignore_rustdoc_with_help() {
     let input: NamedField = parse_quote! {
         /// help
@@ -854,7 +854,7 @@ fn ignore_rustdoc_with_help() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn unit_fields_are_required_custom_help() {
     let input: NamedField = parse_quote! {
         /// help
@@ -867,7 +867,7 @@ fn unit_fields_are_required_custom_help() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn hide_usage() {
     let input: NamedField = parse_quote! {
         #[bpaf(hide_usage)]
@@ -879,7 +879,7 @@ fn hide_usage() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn custom_usage() {
     let input: NamedField = parse_quote! {
         #[bpaf(custom_usage(usage()))]
@@ -891,7 +891,7 @@ fn custom_usage() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn argument_with_manual_parse() {
     let input: NamedField = parse_quote! {
         #[bpaf(argument::<String>("N"), parse(twice_the_num))]
@@ -905,7 +905,7 @@ fn argument_with_manual_parse() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn optional_external_strange() {
     let input: NamedField = parse_quote! {
         #[bpaf(optional, external(seed),)]
@@ -918,7 +918,7 @@ fn optional_external_strange() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn fallback_with_lambda() {
     let input: NamedField = parse_quote! {
         /// help
@@ -938,7 +938,7 @@ fn fallback_with_lambda() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn positional_bool() {
     let input: NamedField = parse_quote! {
         #[bpaf(positional::<bool>("O_O"))]
@@ -950,7 +950,7 @@ fn positional_bool() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn pure_optional_named() {
     let input: NamedField = parse_quote! {
         #[bpaf(pure(x))]
@@ -962,7 +962,7 @@ fn pure_optional_named() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn pure_vec_named() {
     let input: NamedField = parse_quote! {
         #[bpaf(pure(x))]
@@ -974,7 +974,7 @@ fn pure_vec_named() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn pure_optional_pos() {
     let input: UnnamedField = parse_quote! {
         #[bpaf(pure(x))]
@@ -986,7 +986,7 @@ fn pure_optional_pos() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn raw_literal() {
     let input: NamedField = parse_quote! {
         r#in: bool
@@ -997,7 +997,7 @@ fn raw_literal() {
     assert_eq!(input.to_token_stream().to_string(), output.to_string());
 }
 
-
+#[test]
 fn any_anywhere() {
     let input: NamedField = parse_quote! {
         #[bpaf(any::<isize>("LIMIT", isize_to_usize), anywhere)]

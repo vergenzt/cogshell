@@ -82,7 +82,7 @@ impl Runner {
     /// haystack/needle combination, then that test is skipped.
     pub(crate) fn forward_iter<F>(self, mut test: F)
     where
-        F: FnMut(&[u8], &[u8]) -> Option<Vec<usize>> + 'static,
+        F: FnMut(&str, &str) -> Option<Vec<usize>> + 'static,
     {
         for seed in SEEDS.iter() {
             if seed.needles.len() > self.needle_len {
@@ -114,7 +114,7 @@ impl Runner {
     /// haystack/needle combination, then that test is skipped.
     pub(crate) fn reverse_iter<F>(self, mut test: F)
     where
-        F: FnMut(&[u8], &[u8]) -> Option<Vec<usize>> + 'static,
+        F: FnMut(&str, &str) -> Option<Vec<usize>> + 'static,
     {
         for seed in SEEDS.iter() {
             if seed.needles.len() > self.needle_len {
@@ -147,7 +147,7 @@ impl Runner {
     /// not whether the offsets of each match are.
     pub(crate) fn count_iter<F>(self, mut test: F)
     where
-        F: FnMut(&[u8], &[u8]) -> Option<usize> + 'static,
+        F: FnMut(&str, &str) -> Option<usize> + 'static,
     {
         for seed in SEEDS.iter() {
             if seed.needles.len() > self.needle_len {
@@ -178,7 +178,7 @@ impl Runner {
     /// If the function returns `None`, then it is skipped.
     pub(crate) fn forward_oneshot<F>(self, mut test: F)
     where
-        F: FnMut(&[u8], &[u8]) -> Option<Option<usize>> + 'static,
+        F: FnMut(&str, &str) -> Option<Option<usize>> + 'static,
     {
         self.forward_iter(move |haystack, needles| {
             let mut start = 0;
@@ -197,7 +197,7 @@ impl Runner {
     /// If the function returns `None`, then it is skipped.
     pub(crate) fn reverse_oneshot<F>(self, mut test: F)
     where
-        F: FnMut(&[u8], &[u8]) -> Option<Option<usize>> + 'static,
+        F: FnMut(&str, &str) -> Option<Option<usize>> + 'static,
     {
         self.reverse_iter(move |haystack, needles| {
             let mut end = haystack.len();
@@ -236,7 +236,7 @@ impl Test {
 /// Data that can be expanded into many memchr tests by padding out the corpus.
 #[derive(Clone, Debug)]
 struct Seed {
-    /// The thing to search. We use `&str` instead of `&[u8]` because they
+    /// The thing to search. We use `&str` instead of `&str` because they
     /// are nicer to write in tests, and we don't miss much since memchr
     /// doesn't care about UTF-8.
     ///
@@ -251,7 +251,7 @@ struct Seed {
     /// However, a test with only 1 needle can be used to test all of `memchr`,
     /// `memchr2` and `memchr3`. We achieve this by filling in the needles with
     /// bytes that we never used in the corpus (such as '#').
-    needles: &'static [u8],
+    needles: &'static str,
     /// The positions expected to match for all of the needles.
     positions: &'static [usize],
 }

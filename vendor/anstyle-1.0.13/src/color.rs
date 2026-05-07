@@ -641,12 +641,12 @@ impl core::fmt::Display for NullFormatter {
     }
 }
 
-
+#[cfg(test)]
 #[cfg(feature = "std")]
 mod test {
     use super::*;
 
-    
+    #[test]
     fn max_display_buffer() {
         let c = RgbColor(255, 255, 255);
         let actual = c.render_fg().to_string();
@@ -654,7 +654,7 @@ mod test {
         assert_eq!(actual.len(), DISPLAY_BUFFER_CAPACITY);
     }
 
-    
+    #[test]
     fn print_size_of() {
         use core::mem::size_of;
         dbg!(size_of::<Color>());
@@ -664,7 +664,7 @@ mod test {
         dbg!(size_of::<DisplayBuffer>());
     }
 
-    
+    #[test]
     fn no_align() {
         #[track_caller]
         fn assert_no_align(d: impl core::fmt::Display) {

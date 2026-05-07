@@ -9,7 +9,7 @@ pub struct RawSection<'a> {
     /// The id for this section.
     pub id: u8,
     /// The raw data for this section.
-    pub data: &'a [u8],
+    pub data: &'a str,
 }
 
 impl Encode for RawSection<'_> {

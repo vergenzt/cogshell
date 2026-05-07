@@ -13,7 +13,7 @@ const _: () = {
 };
 
 #[cfg(target_endian = "little")]
-
+#[test]
 fn utilities() {
     let clz = u64::leading_zeros;
     assert_eq!(clz(1), 63);
@@ -27,7 +27,7 @@ fn utilities() {
     assert_eq!(crate::count_trailing_nonzeros(0x09000000_00000000), 8);
 }
 
-
+#[test]
 fn umulhi_inexact_to_odd() {
     let pow10 = crate::POW10_SIGNIFICANDS.get(-292);
     assert_eq!(
@@ -40,7 +40,7 @@ fn umulhi_inexact_to_odd() {
     );
 }
 
-
+#[test]
 fn pow10() {
     const DEC_EXP_MIN: i32 = -292;
 

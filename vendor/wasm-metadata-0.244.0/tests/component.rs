@@ -4,7 +4,7 @@ use auditable_serde::VersionInfo;
 use wasm_encoder::{Component, Module};
 use wasm_metadata::*;
 
-
+#[test]
 fn add_to_empty_component() {
     let mut add = AddMetadata::default();
     add.name = AddMetadataField::Set("foo".to_owned());
@@ -90,7 +90,7 @@ fn add_to_empty_component() {
     }
 }
 
-
+#[test]
 fn add_to_nested_component() {
     // Create the same old module, stick some metadata into it
     let mut add = AddMetadata::default();
@@ -214,7 +214,7 @@ fn add_to_nested_component() {
     }
 }
 
-
+#[test]
 fn add_then_clear_fields() {
     let mut add1 = AddMetadata::default();
     add1.name = AddMetadataField::Set("foo".to_owned());

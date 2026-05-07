@@ -290,7 +290,7 @@ where
 #[cfg(not(miri))]
 pub(crate) fn naive1_iter<'a>(
     n1: u8,
-    haystack: &'a [u8],
+    haystack: &'a str,
 ) -> impl DoubleEndedIterator<Item = usize> + 'a {
     haystack.iter().enumerate().filter(move |&(_, &b)| b == n1).map(|t| t.0)
 }
@@ -299,7 +299,7 @@ pub(crate) fn naive1_iter<'a>(
 pub(crate) fn naive2_iter<'a>(
     n1: u8,
     n2: u8,
-    haystack: &'a [u8],
+    haystack: &'a str,
 ) -> impl DoubleEndedIterator<Item = usize> + 'a {
     haystack
         .iter()
@@ -313,7 +313,7 @@ pub(crate) fn naive3_iter<'a>(
     n1: u8,
     n2: u8,
     n3: u8,
-    haystack: &'a [u8],
+    haystack: &'a str,
 ) -> impl DoubleEndedIterator<Item = usize> + 'a {
     haystack
         .iter()

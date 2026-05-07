@@ -190,4 +190,75 @@ pub trait TypeIdVisitor {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::{LiveTypes, Resolve};
 
+    fn live(wit: &str, ty: &str) -> Vec<String> {
+        let mut resolve = Resolve::default();
+        resolve.push_str("test.wit", wit).unwrap();
+        let (_, interface) = resolve.interfaces.iter().next_back().unwrap();
+        let ty = interface.types[ty];
+        let mut live = LiveTypes::default();
+        live.add_type_id(&resolve, ty);
+
+        live.iter()
+            .filter_map(|ty| resolve.types[ty].name.clone())
+            .collect()
+    }
+
+    #[test]
+    fn no_deps() {
+        let types = live(
+            "
+                package foo:bar;
+
+                interface foo {
+                    type t = u32;
+                }
+            ",
+            "t",
+        );
+        assert_eq!(types, ["t"]);
+    }
+
+    #[test]
+    fn one_dep() {
+        let types = live(
+            "
+                package foo:bar;
+
+                interface foo {
+                    type t = u32;
+                    type u = t;
+                }
+            ",
+            "u",
+        );
+        assert_eq!(types, ["t", "u"]);
+    }
+
+    #[test]
+    fn chain() {
+        let types = live(
+            "
+                package foo:bar;
+
+                interface foo {
+                    resource t1;
+                    record t2 {
+                        x: t1,
+                    }
+                    variant t3 {
+                        x(t2),
+                    }
+                    flags t4 { a }
+                    enum t5 { a }
+                    type t6 = tuple<t5, t4, t3>;
+                }
+            ",
+            "t6",
+        );
+        assert_eq!(types, ["t5", "t4", "t1", "t2", "t3", "t6"]);
+    }
+}

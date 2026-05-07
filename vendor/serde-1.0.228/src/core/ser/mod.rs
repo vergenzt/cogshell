@@ -737,7 +737,7 @@ pub trait Serializer: Sized {
     /// #     type Ok = ();
     /// #     type Error = Error;
     /// #
-    /// fn serialize_bytes(self, v: &[u8]) -> Result<Self::Ok, Self::Error> {
+    /// fn serialize_bytes(self, v: &str) -> Result<Self::Ok, Self::Error> {
     ///     let mut seq = self.serialize_seq(Some(v.len()))?;
     ///     for b in v {
     ///         seq.serialize_element(b)?;
@@ -752,7 +752,7 @@ pub trait Serializer: Sized {
     /// #     }
     /// # }
     /// ```
-    fn serialize_bytes(self, v: &[u8]) -> Result<Self::Ok, Self::Error>;
+    fn serialize_bytes(self, v: &str) -> Result<Self::Ok, Self::Error>;
 
     /// Serialize a [`None`] value.
     ///

@@ -55,7 +55,7 @@ use crate::{bytes::RegexBuilder, error::Error};
 /// fox   109    false
 /// ";
 /// let re = Regex::new(r"(?m)^\s*(\S+)\s+([0-9]+)\s+(true|false)\s*$").unwrap();
-/// let mut fields: Vec<(&[u8], i64, bool)> = vec![];
+/// let mut fields: Vec<(&str, i64, bool)> = vec![];
 /// for (_, [f1, f2, f3]) in re.captures_iter(hay).map(|caps| caps.extract()) {
 ///     // These unwraps are OK because our pattern is written in a way where
 ///     // all matches for f2 and f3 will be valid UTF-8.
@@ -74,7 +74,7 @@ use crate::{bytes::RegexBuilder, error::Error};
 ///
 /// # Example: matching invalid UTF-8
 ///
-/// One of the reasons for searching `&[u8]` haystacks is that the `&[u8]`
+/// One of the reasons for searching `&str` haystacks is that the `&str`
 /// might not be valid UTF-8. Indeed, with a `bytes::Regex`, patterns that
 /// match invalid UTF-8 are explicitly allowed. Here's one example that looks
 /// for valid UTF-8 fields that might be separated by invalid UTF-8. In this
@@ -199,7 +199,7 @@ impl Regex {
     /// assert!(re.is_match(hay));
     /// ```
     #[inline]
-    pub fn is_match(&self, haystack: &[u8]) -> bool {
+    pub fn is_match(&self, haystack: &str) -> bool {
         self.is_match_at(haystack, 0)
     }
 
@@ -227,7 +227,7 @@ impl Regex {
     /// assert_eq!(b"categorically", mat.as_bytes());
     /// ```
     #[inline]
-    pub fn find<'h>(&self, haystack: &'h [u8]) -> Option<Match<'h>> {
+    pub fn find<'h>(&self, haystack: &'h str) -> Option<Match<'h>> {
         self.find_at(haystack, 0)
     }
 
@@ -259,8 +259,11 @@ impl Regex {
     /// ]);
     /// ```
     #[inline]
-    pub fn find_iter<'r, 'h>(&'r self, haystack: &'h [u8]) -> Matches<'r, 'h> {
-        Matches { haystack, it: self.meta.find_iter(haystack) }
+    pub fn find_iter<'r, 'h>(&'r self, haystack: &'h str) -> Matches<'r, 'h> {
+        Matches {
+            haystack,
+            it: self.meta.find_iter(haystack),
+        }
     }
 
     /// This routine searches for the first match of this regex in the haystack
@@ -350,7 +353,7 @@ impl Regex {
     /// assert_eq!(year, b"1941");
     /// ```
     #[inline]
-    pub fn captures<'h>(&self, haystack: &'h [u8]) -> Option<Captures<'h>> {
+    pub fn captures<'h>(&self, haystack: &'h str) -> Option<Captures<'h>> {
         self.captures_at(haystack, 0)
     }
 
@@ -417,11 +420,11 @@ impl Regex {
     /// assert_eq!(&caps["year"], b"1931");
     /// ```
     #[inline]
-    pub fn captures_iter<'r, 'h>(
-        &'r self,
-        haystack: &'h [u8],
-    ) -> CaptureMatches<'r, 'h> {
-        CaptureMatches { haystack, it: self.meta.captures_iter(haystack) }
+    pub fn captures_iter<'r, 'h>(&'r self, haystack: &'h str) -> CaptureMatches<'r, 'h> {
+        CaptureMatches {
+            haystack,
+            it: self.meta.captures_iter(haystack),
+        }
     }
 
     /// Returns an iterator of substrings of the haystack given, delimited by a
@@ -444,7 +447,7 @@ impl Regex {
     ///
     /// let re = Regex::new(r"[ \t]+").unwrap();
     /// let hay = b"a b \t  c\td    e";
-    /// let fields: Vec<&[u8]> = re.split(hay).collect();
+    /// let fields: Vec<&str> = re.split(hay).collect();
     /// assert_eq!(fields, vec![
     ///     &b"a"[..], &b"b"[..], &b"c"[..], &b"d"[..], &b"e"[..],
     /// ]);
@@ -459,26 +462,26 @@ impl Regex {
     ///
     /// let re = Regex::new(r" ").unwrap();
     /// let hay = b"Mary had a little lamb";
-    /// let got: Vec<&[u8]> = re.split(hay).collect();
+    /// let got: Vec<&str> = re.split(hay).collect();
     /// assert_eq!(got, vec![
     ///     &b"Mary"[..], &b"had"[..], &b"a"[..], &b"little"[..], &b"lamb"[..],
     /// ]);
     ///
     /// let re = Regex::new(r"X").unwrap();
     /// let hay = b"";
-    /// let got: Vec<&[u8]> = re.split(hay).collect();
+    /// let got: Vec<&str> = re.split(hay).collect();
     /// assert_eq!(got, vec![&b""[..]]);
     ///
     /// let re = Regex::new(r"X").unwrap();
     /// let hay = b"lionXXtigerXleopard";
-    /// let got: Vec<&[u8]> = re.split(hay).collect();
+    /// let got: Vec<&str> = re.split(hay).collect();
     /// assert_eq!(got, vec![
     ///     &b"lion"[..], &b""[..], &b"tiger"[..], &b"leopard"[..],
     /// ]);
     ///
     /// let re = Regex::new(r"::").unwrap();
     /// let hay = b"lion::tiger::leopard";
-    /// let got: Vec<&[u8]> = re.split(hay).collect();
+    /// let got: Vec<&str> = re.split(hay).collect();
     /// assert_eq!(got, vec![&b"lion"[..], &b"tiger"[..], &b"leopard"[..]]);
     /// ```
     ///
@@ -490,7 +493,7 @@ impl Regex {
     ///
     /// let re = Regex::new(r"X").unwrap();
     /// let hay = b"XXXXaXXbXc";
-    /// let got: Vec<&[u8]> = re.split(hay).collect();
+    /// let got: Vec<&str> = re.split(hay).collect();
     /// assert_eq!(got, vec![
     ///     &b""[..], &b""[..], &b""[..], &b""[..],
     ///     &b"a"[..], &b""[..], &b"b"[..], &b"c"[..],
@@ -498,7 +501,7 @@ impl Regex {
     ///
     /// let re = Regex::new(r"/").unwrap();
     /// let hay = b"(///)";
-    /// let got: Vec<&[u8]> = re.split(hay).collect();
+    /// let got: Vec<&str> = re.split(hay).collect();
     /// assert_eq!(got, vec![&b"("[..], &b""[..], &b""[..], &b")"[..]]);
     /// ```
     ///
@@ -510,7 +513,7 @@ impl Regex {
     ///
     /// let re = Regex::new(r"0").unwrap();
     /// let hay = b"010";
-    /// let got: Vec<&[u8]> = re.split(hay).collect();
+    /// let got: Vec<&str> = re.split(hay).collect();
     /// assert_eq!(got, vec![&b""[..], &b"1"[..], &b""[..]]);
     /// ```
     ///
@@ -524,7 +527,7 @@ impl Regex {
     ///
     /// let re = Regex::new(r"").unwrap();
     /// let hay = "☃".as_bytes();
-    /// let got: Vec<&[u8]> = re.split(hay).collect();
+    /// let got: Vec<&str> = re.split(hay).collect();
     /// assert_eq!(got, vec![
     ///     &[][..], &[b'\xE2'][..], &[b'\x98'][..], &[b'\x83'][..], &[][..],
     /// ]);
@@ -538,7 +541,7 @@ impl Regex {
     ///
     /// let re = Regex::new(r" ").unwrap();
     /// let hay = b"    a  b c";
-    /// let got: Vec<&[u8]> = re.split(hay).collect();
+    /// let got: Vec<&str> = re.split(hay).collect();
     /// assert_eq!(got, vec![
     ///     &b""[..], &b""[..], &b""[..], &b""[..],
     ///     &b"a"[..], &b""[..], &b"b"[..], &b"c"[..],
@@ -553,14 +556,17 @@ impl Regex {
     ///
     /// let re = Regex::new(r" +").unwrap();
     /// let hay = b"    a  b c";
-    /// let got: Vec<&[u8]> = re.split(hay).collect();
+    /// let got: Vec<&str> = re.split(hay).collect();
     /// // N.B. This does still include a leading empty span because ' +'
     /// // matches at the beginning of the haystack.
     /// assert_eq!(got, vec![&b""[..], &b"a"[..], &b"b"[..], &b"c"[..]]);
     /// ```
     #[inline]
-    pub fn split<'r, 'h>(&'r self, haystack: &'h [u8]) -> Split<'r, 'h> {
-        Split { haystack, it: self.meta.split(haystack) }
+    pub fn split<'r, 'h>(&'r self, haystack: &'h str) -> Split<'r, 'h> {
+        Split {
+            haystack,
+            it: self.meta.split(haystack),
+        }
     }
 
     /// Returns an iterator of at most `limit` substrings of the haystack
@@ -589,7 +595,7 @@ impl Regex {
     ///
     /// let re = Regex::new(r"\W+").unwrap();
     /// let hay = b"Hey! How are you?";
-    /// let fields: Vec<&[u8]> = re.splitn(hay, 3).collect();
+    /// let fields: Vec<&str> = re.splitn(hay, 3).collect();
     /// assert_eq!(fields, vec![&b"Hey"[..], &b"How"[..], &b"are you?"[..]]);
     /// ```
     ///
@@ -600,46 +606,45 @@ impl Regex {
     ///
     /// let re = Regex::new(r" ").unwrap();
     /// let hay = b"Mary had a little lamb";
-    /// let got: Vec<&[u8]> = re.splitn(hay, 3).collect();
+    /// let got: Vec<&str> = re.splitn(hay, 3).collect();
     /// assert_eq!(got, vec![&b"Mary"[..], &b"had"[..], &b"a little lamb"[..]]);
     ///
     /// let re = Regex::new(r"X").unwrap();
     /// let hay = b"";
-    /// let got: Vec<&[u8]> = re.splitn(hay, 3).collect();
+    /// let got: Vec<&str> = re.splitn(hay, 3).collect();
     /// assert_eq!(got, vec![&b""[..]]);
     ///
     /// let re = Regex::new(r"X").unwrap();
     /// let hay = b"lionXXtigerXleopard";
-    /// let got: Vec<&[u8]> = re.splitn(hay, 3).collect();
+    /// let got: Vec<&str> = re.splitn(hay, 3).collect();
     /// assert_eq!(got, vec![&b"lion"[..], &b""[..], &b"tigerXleopard"[..]]);
     ///
     /// let re = Regex::new(r"::").unwrap();
     /// let hay = b"lion::tiger::leopard";
-    /// let got: Vec<&[u8]> = re.splitn(hay, 2).collect();
+    /// let got: Vec<&str> = re.splitn(hay, 2).collect();
     /// assert_eq!(got, vec![&b"lion"[..], &b"tiger::leopard"[..]]);
     ///
     /// let re = Regex::new(r"X").unwrap();
     /// let hay = b"abcXdef";
-    /// let got: Vec<&[u8]> = re.splitn(hay, 1).collect();
+    /// let got: Vec<&str> = re.splitn(hay, 1).collect();
     /// assert_eq!(got, vec![&b"abcXdef"[..]]);
     ///
     /// let re = Regex::new(r"X").unwrap();
     /// let hay = b"abcdef";
-    /// let got: Vec<&[u8]> = re.splitn(hay, 2).collect();
+    /// let got: Vec<&str> = re.splitn(hay, 2).collect();
     /// assert_eq!(got, vec![&b"abcdef"[..]]);
     ///
     /// let re = Regex::new(r"X").unwrap();
     /// let hay = b"abcXdef";
-    /// let got: Vec<&[u8]> = re.splitn(hay, 0).collect();
+    /// let got: Vec<&str> = re.splitn(hay, 0).collect();
     /// assert!(got.is_empty());
     /// ```
     #[inline]
-    pub fn splitn<'r, 'h>(
-        &'r self,
-        haystack: &'h [u8],
-        limit: usize,
-    ) -> SplitN<'r, 'h> {
-        SplitN { haystack, it: self.meta.splitn(haystack, limit) }
+    pub fn splitn<'r, 'h>(&'r self, haystack: &'h str, limit: usize) -> SplitN<'r, 'h> {
+        SplitN {
+            haystack,
+            it: self.meta.splitn(haystack, limit),
+        }
     }
 
     /// Replaces the leftmost-first match in the given haystack with the
@@ -752,11 +757,7 @@ impl Regex {
     /// Using `NoExpand` may also be faster, since the replacement string won't
     /// need to be parsed for the `$` syntax.
     #[inline]
-    pub fn replace<'h, R: Replacer>(
-        &self,
-        haystack: &'h [u8],
-        rep: R,
-    ) -> Cow<'h, [u8]> {
+    pub fn replace<'h, R: Replacer>(&self, haystack: &'h str, rep: R) -> Cow<'h, [u8]> {
         self.replacen(haystack, 1, rep)
     }
 
@@ -794,7 +795,7 @@ impl Regex {
     ///
     /// fn replace_all<E>(
     ///     re: &Regex,
-    ///     haystack: &[u8],
+    ///     haystack: &str,
     ///     replacement: impl Fn(&Captures) -> Result<Vec<u8>, E>,
     /// ) -> Result<Vec<u8>, E> {
     ///     let mut new = Vec::with_capacity(haystack.len());
@@ -852,11 +853,7 @@ impl Regex {
     /// "[..]);
     /// ```
     #[inline]
-    pub fn replace_all<'h, R: Replacer>(
-        &self,
-        haystack: &'h [u8],
-        rep: R,
-    ) -> Cow<'h, [u8]> {
+    pub fn replace_all<'h, R: Replacer>(&self, haystack: &'h str, rep: R) -> Cow<'h, [u8]> {
         self.replacen(haystack, 0, rep)
     }
 
@@ -919,7 +916,7 @@ impl Regex {
     #[inline]
     pub fn replacen<'h, R: Replacer>(
         &self,
-        haystack: &'h [u8],
+        haystack: &'h str,
         limit: usize,
         mut rep: R,
     ) -> Cow<'h, [u8]> {
@@ -1008,7 +1005,7 @@ impl Regex {
     /// assert_eq!(offset, 1);
     /// ```
     #[inline]
-    pub fn shortest_match(&self, haystack: &[u8]) -> Option<usize> {
+    pub fn shortest_match(&self, haystack: &str) -> Option<usize> {
         self.shortest_match_at(haystack, 0)
     }
 
@@ -1043,13 +1040,10 @@ impl Regex {
     /// assert_eq!(re.shortest_match_at(hay, 2), None);
     /// ```
     #[inline]
-    pub fn shortest_match_at(
-        &self,
-        haystack: &[u8],
-        start: usize,
-    ) -> Option<usize> {
-        let input =
-            Input::new(haystack).earliest(true).span(start..haystack.len());
+    pub fn shortest_match_at(&self, haystack: &str, start: usize) -> Option<usize> {
+        let input = Input::new(haystack)
+            .earliest(true)
+            .span(start..haystack.len());
         self.meta.search_half(&input).map(|hm| hm.offset())
     }
 
@@ -1081,8 +1075,9 @@ impl Regex {
     /// assert!(!re.is_match_at(hay, 2));
     /// ```
     #[inline]
-    pub fn is_match_at(&self, haystack: &[u8], start: usize) -> bool {
-        self.meta.is_match(Input::new(haystack).span(start..haystack.len()))
+    pub fn is_match_at(&self, haystack: &str, start: usize) -> bool {
+        self.meta
+            .is_match(Input::new(haystack).span(start..haystack.len()))
     }
 
     /// Returns the same as [`Regex::find`], but starts the search at the given
@@ -1113,13 +1108,11 @@ impl Regex {
     /// assert_eq!(re.find_at(hay, 2), None);
     /// ```
     #[inline]
-    pub fn find_at<'h>(
-        &self,
-        haystack: &'h [u8],
-        start: usize,
-    ) -> Option<Match<'h>> {
+    pub fn find_at<'h>(&self, haystack: &'h str, start: usize) -> Option<Match<'h>> {
         let input = Input::new(haystack).span(start..haystack.len());
-        self.meta.find(input).map(|m| Match::new(haystack, m.start(), m.end()))
+        self.meta
+            .find(input)
+            .map(|m| Match::new(haystack, m.start(), m.end()))
     }
 
     /// Returns the same as [`Regex::captures`], but starts the search at the
@@ -1150,17 +1143,17 @@ impl Regex {
     /// assert!(re.captures_at(hay, 2).is_none());
     /// ```
     #[inline]
-    pub fn captures_at<'h>(
-        &self,
-        haystack: &'h [u8],
-        start: usize,
-    ) -> Option<Captures<'h>> {
+    pub fn captures_at<'h>(&self, haystack: &'h str, start: usize) -> Option<Captures<'h>> {
         let input = Input::new(haystack).span(start..haystack.len());
         let mut caps = self.meta.create_captures();
         self.meta.captures(input, &mut caps);
         if caps.is_match() {
             let static_captures_len = self.static_captures_len();
-            Some(Captures { haystack, caps, static_captures_len })
+            Some(Captures {
+                haystack,
+                caps,
+                static_captures_len,
+            })
         } else {
             None
         }
@@ -1198,7 +1191,7 @@ impl Regex {
     pub fn captures_read<'h>(
         &self,
         locs: &mut CaptureLocations,
-        haystack: &'h [u8],
+        haystack: &'h str,
     ) -> Option<Match<'h>> {
         self.captures_read_at(locs, haystack, 0)
     }
@@ -1235,12 +1228,14 @@ impl Regex {
     pub fn captures_read_at<'h>(
         &self,
         locs: &mut CaptureLocations,
-        haystack: &'h [u8],
+        haystack: &'h str,
         start: usize,
     ) -> Option<Match<'h>> {
         let input = Input::new(haystack).span(start..haystack.len());
         self.meta.search_captures(&input, &mut locs.0);
-        locs.0.get_match().map(|m| Match::new(haystack, m.start(), m.end()))
+        locs.0
+            .get_match()
+            .map(|m| Match::new(haystack, m.start(), m.end()))
     }
 
     /// An undocumented alias for `captures_read_at`.
@@ -1253,7 +1248,7 @@ impl Regex {
     pub fn read_captures_at<'h>(
         &self,
         locs: &mut CaptureLocations,
-        haystack: &'h [u8],
+        haystack: &'h str,
         start: usize,
     ) -> Option<Match<'h>> {
         self.captures_read_at(locs, haystack, start)
@@ -1438,7 +1433,7 @@ impl Regex {
 /// guaranteed that `start <= end`. When `start == end`, the match is empty.
 ///
 /// Unlike the top-level `Match` type, this `Match` type is produced by APIs
-/// that search `&[u8]` haystacks. This means that the offsets in a `Match` can
+/// that search `&str` haystacks. This means that the offsets in a `Match` can
 /// point to anywhere in the haystack, including in a place that splits the
 /// UTF-8 encoding of a Unicode scalar value.
 ///
@@ -1481,7 +1476,7 @@ impl Regex {
 /// ```
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct Match<'h> {
-    haystack: &'h [u8],
+    haystack: &'h str,
     start: usize,
     end: usize,
 }
@@ -1542,14 +1537,18 @@ impl<'h> Match<'h> {
 
     /// Returns the substring of the haystack that matched.
     #[inline]
-    pub fn as_bytes(&self) -> &'h [u8] {
+    pub fn as_bytes(&self) -> &'h str {
         &self.haystack[self.range()]
     }
 
     /// Creates a new match from the given haystack and byte offsets.
     #[inline]
-    fn new(haystack: &'h [u8], start: usize, end: usize) -> Match<'h> {
-        Match { haystack, start, end }
+    fn new(haystack: &'h str, start: usize, end: usize) -> Match<'h> {
+        Match {
+            haystack,
+            start,
+            end,
+        }
     }
 }
 
@@ -1566,8 +1565,8 @@ impl<'h> core::fmt::Debug for Match<'h> {
     }
 }
 
-impl<'h> From<Match<'h>> for &'h [u8] {
-    fn from(m: Match<'h>) -> &'h [u8] {
+impl<'h> From<Match<'h>> for &'h str {
+    fn from(m: Match<'h>) -> &'h str {
         m.as_bytes()
     }
 }
@@ -1630,7 +1629,7 @@ impl<'h> From<Match<'h>> for core::ops::Range<usize> {
 /// assert_eq!(b"y", &caps["last"]);
 /// ```
 pub struct Captures<'h> {
-    haystack: &'h [u8],
+    haystack: &'h str,
     caps: captures::Captures,
     static_captures_len: Option<usize>,
 }
@@ -1773,7 +1772,7 @@ impl<'h> Captures<'h> {
     /// let re = Regex::new(r"([0-9]{4})-([0-9]{2})-([0-9]{2})").unwrap();
     /// let hay = b"1973-01-05, 1975-08-25 and 1980-10-18";
     ///
-    /// let mut dates: Vec<(&[u8], &[u8], &[u8])> = vec![];
+    /// let mut dates: Vec<(&str, &str, &str)> = vec![];
     /// for (_, [y, m, d]) in re.captures_iter(hay).map(|c| c.extract()) {
     ///     dates.push((y, m, d));
     /// }
@@ -1801,7 +1800,7 @@ impl<'h> Captures<'h> {
     /// }
     /// assert_eq!(ids, vec![b"foo", b"bar"]);
     /// ```
-    pub fn extract<const N: usize>(&self) -> (&'h [u8], [&'h [u8]; N]) {
+    pub fn extract<const N: usize>(&self) -> (&'h str, [&'h str; N]) {
         let len = self
             .static_captures_len
             .expect("number of capture groups can vary in a match")
@@ -1870,8 +1869,9 @@ impl<'h> Captures<'h> {
     /// assert_eq!(dst, b"year=2010, month=03, day=14");
     /// ```
     #[inline]
-    pub fn expand(&self, replacement: &[u8], dst: &mut Vec<u8>) {
-        self.caps.interpolate_bytes_into(self.haystack, replacement, dst);
+    pub fn expand(&self, replacement: &str, dst: &mut Vec<u8>) {
+        self.caps
+            .interpolate_bytes_into(self.haystack, replacement, dst);
     }
 
     /// Returns an iterator over all capture groups. This includes both
@@ -1901,7 +1901,10 @@ impl<'h> Captures<'h> {
     /// ```
     #[inline]
     pub fn iter<'c>(&'c self) -> SubCaptureMatches<'c, 'h> {
-        SubCaptureMatches { haystack: self.haystack, it: self.caps.iter() }
+        SubCaptureMatches {
+            haystack: self.haystack,
+            it: self.caps.iter(),
+        }
     }
 
     /// Returns the total number of capture groups. This includes both
@@ -1943,8 +1946,7 @@ impl<'h> core::fmt::Debug for Captures<'h> {
         impl<'a> core::fmt::Debug for CapturesDebugMap<'a> {
             fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
                 let mut map = f.debug_map();
-                let names =
-                    self.caps.caps.group_info().pattern_names(PatternID::ZERO);
+                let names = self.caps.caps.group_info().pattern_names(PatternID::ZERO);
                 for (group_index, maybe_name) in names.enumerate() {
                     let key = Key(group_index, maybe_name);
                     match self.caps.get(group_index) {
@@ -2009,7 +2011,7 @@ impl<'h> core::ops::Index<usize> for Captures<'h> {
 
     // The lifetime is written out to make it clear that the &str returned
     // does NOT have a lifetime equivalent to 'h.
-    fn index<'a>(&'a self, i: usize) -> &'a [u8] {
+    fn index<'a>(&'a self, i: usize) -> &'a str {
         self.get(i)
             .map(|m| m.as_bytes())
             .unwrap_or_else(|| panic!("no group at index '{i}'"))
@@ -2035,7 +2037,7 @@ impl<'h> core::ops::Index<usize> for Captures<'h> {
 impl<'h, 'n> core::ops::Index<&'n str> for Captures<'h> {
     type Output = [u8];
 
-    fn index<'a>(&'a self, name: &'n str) -> &'a [u8] {
+    fn index<'a>(&'a self, name: &'n str) -> &'a str {
         self.name(name)
             .map(|m| m.as_bytes())
             .unwrap_or_else(|| panic!("no group named '{name}'"))
@@ -2182,7 +2184,7 @@ impl CaptureLocations {
 /// overall worst case time complexity for iteration is `O(m * n^2)`.
 #[derive(Debug)]
 pub struct Matches<'r, 'h> {
-    haystack: &'h [u8],
+    haystack: &'h str,
     it: meta::FindMatches<'r, 'h>,
 }
 
@@ -2226,7 +2228,7 @@ impl<'r, 'h> core::iter::FusedIterator for Matches<'r, 'h> {}
 /// overall worst case time complexity for iteration is `O(m * n^2)`.
 #[derive(Debug)]
 pub struct CaptureMatches<'r, 'h> {
-    haystack: &'h [u8],
+    haystack: &'h str,
     it: meta::CapturesMatches<'r, 'h>,
 }
 
@@ -2270,15 +2272,15 @@ impl<'r, 'h> core::iter::FusedIterator for CaptureMatches<'r, 'h> {}
 /// overall worst case time complexity for iteration is `O(m * n^2)`.
 #[derive(Debug)]
 pub struct Split<'r, 'h> {
-    haystack: &'h [u8],
+    haystack: &'h str,
     it: meta::Split<'r, 'h>,
 }
 
 impl<'r, 'h> Iterator for Split<'r, 'h> {
-    type Item = &'h [u8];
+    type Item = &'h str;
 
     #[inline]
-    fn next(&mut self) -> Option<&'h [u8]> {
+    fn next(&mut self) -> Option<&'h str> {
         self.it.next().map(|span| &self.haystack[span])
     }
 }
@@ -2305,15 +2307,15 @@ impl<'r, 'h> core::iter::FusedIterator for Split<'r, 'h> {}
 /// by the `limit` parameter to [`Regex::splitn`].
 #[derive(Debug)]
 pub struct SplitN<'r, 'h> {
-    haystack: &'h [u8],
+    haystack: &'h str,
     it: meta::SplitN<'r, 'h>,
 }
 
 impl<'r, 'h> Iterator for SplitN<'r, 'h> {
-    type Item = &'h [u8];
+    type Item = &'h str;
 
     #[inline]
-    fn next(&mut self) -> Option<&'h [u8]> {
+    fn next(&mut self) -> Option<&'h str> {
         self.it.next().map(|span| &self.haystack[span])
     }
 
@@ -2379,7 +2381,7 @@ impl<'r> core::iter::FusedIterator for CaptureNames<'r> {}
 /// matched haystack.
 #[derive(Clone, Debug)]
 pub struct SubCaptureMatches<'c, 'h> {
-    haystack: &'h [u8],
+    haystack: &'h str,
     it: captures::CapturesPatternIter<'c>,
 }
 
@@ -2388,9 +2390,9 @@ impl<'c, 'h> Iterator for SubCaptureMatches<'c, 'h> {
 
     #[inline]
     fn next(&mut self) -> Option<Option<Match<'h>>> {
-        self.it.next().map(|group| {
-            group.map(|sp| Match::new(self.haystack, sp.start, sp.end))
-        })
+        self.it
+            .next()
+            .map(|group| group.map(|sp| Match::new(self.haystack, sp.start, sp.end)))
     }
 
     #[inline]
@@ -2411,7 +2413,7 @@ impl<'c, 'h> core::iter::FusedIterator for SubCaptureMatches<'c, 'h> {}
 /// A trait for types that can be used to replace matches in a haystack.
 ///
 /// In general, users of this crate shouldn't need to implement this trait,
-/// since implementations are already provided for `&[u8]` along with other
+/// since implementations are already provided for `&str` along with other
 /// variants of byte string types, as well as `FnMut(&Captures) -> Vec<u8>` (or
 /// any `FnMut(&Captures) -> T` where `T: AsRef<[u8]>`). Those cover most use
 /// cases, but callers can implement this trait directly if necessary.
@@ -2476,7 +2478,7 @@ pub trait Replacer {
     ///
     /// fn replace_all_twice<R: Replacer>(
     ///     re: Regex,
-    ///     src: &[u8],
+    ///     src: &str,
     ///     mut rep: R,
     /// ) -> Vec<u8> {
     ///     let dst = re.replace_all(src, rep.by_ref());
@@ -2509,7 +2511,7 @@ impl<const N: usize> Replacer for [u8; N] {
     }
 }
 
-impl<'a> Replacer for &'a [u8] {
+impl<'a> Replacer for &'a str {
     fn replace_append(&mut self, caps: &Captures<'_>, dst: &mut Vec<u8>) {
         caps.expand(*self, dst);
     }
@@ -2608,7 +2610,7 @@ impl<'a, R: Replacer + ?Sized + 'a> Replacer for ReplacerRef<'a, R> {
 /// assert_eq!(result, &b"$2 $last"[..]);
 /// ```
 #[derive(Clone, Debug)]
-pub struct NoExpand<'s>(pub &'s [u8]);
+pub struct NoExpand<'s>(pub &'s str);
 
 impl<'s> Replacer for NoExpand<'s> {
     fn replace_append(&mut self, _: &Captures<'_>, dst: &mut Vec<u8>) {
@@ -2636,4 +2638,83 @@ fn no_expansion<T: AsRef<[u8]>>(replacement: &T) -> Option<Cow<'_, [u8]>> {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use alloc::format;
 
+    #[test]
+    fn test_match_properties() {
+        let haystack = b"Hello, world!";
+        let m = Match::new(haystack, 7, 12);
+
+        assert_eq!(m.start(), 7);
+        assert_eq!(m.end(), 12);
+        assert_eq!(m.is_empty(), false);
+        assert_eq!(m.len(), 5);
+        assert_eq!(m.as_bytes(), b"world");
+    }
+
+    #[test]
+    fn test_empty_match() {
+        let haystack = b"";
+        let m = Match::new(haystack, 0, 0);
+
+        assert_eq!(m.is_empty(), true);
+        assert_eq!(m.len(), 0);
+    }
+
+    #[test]
+    fn test_debug_output_valid_utf8() {
+        let haystack = b"Hello, world!";
+        let m = Match::new(haystack, 7, 12);
+        let debug_str = format!("{m:?}");
+
+        assert_eq!(debug_str, r#"Match { start: 7, end: 12, bytes: "world" }"#);
+    }
+
+    #[test]
+    fn test_debug_output_invalid_utf8() {
+        let haystack = b"Hello, \xFFworld!";
+        let m = Match::new(haystack, 7, 13);
+        let debug_str = format!("{m:?}");
+
+        assert_eq!(
+            debug_str,
+            r#"Match { start: 7, end: 13, bytes: "\xffworld" }"#
+        );
+    }
+
+    #[test]
+    fn test_debug_output_various_unicode() {
+        let haystack = "Hello, 😊 world! 안녕하세요? مرحبا بالعالم!".as_bytes();
+        let m = Match::new(haystack, 0, haystack.len());
+        let debug_str = format!("{m:?}");
+
+        assert_eq!(
+            debug_str,
+            r#"Match { start: 0, end: 62, bytes: "Hello, 😊 world! 안녕하세요? مرحبا بالعالم!" }"#
+        );
+    }
+
+    #[test]
+    fn test_debug_output_ascii_escape() {
+        let haystack = b"Hello,\tworld!\nThis is a \x1b[31mtest\x1b[0m.";
+        let m = Match::new(haystack, 0, haystack.len());
+        let debug_str = format!("{m:?}");
+
+        assert_eq!(
+            debug_str,
+            r#"Match { start: 0, end: 38, bytes: "Hello,\tworld!\nThis is a \u{1b}[31mtest\u{1b}[0m." }"#
+        );
+    }
+
+    #[test]
+    fn test_debug_output_match_in_middle() {
+        let haystack = b"The quick brown fox jumps over the lazy dog.";
+        let m = Match::new(haystack, 16, 19);
+        let debug_str = format!("{m:?}");
+
+        assert_eq!(debug_str, r#"Match { start: 16, end: 19, bytes: "fox" }"#);
+    }
+}

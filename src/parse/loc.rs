@@ -1,5 +1,4 @@
 use std::{
-    bstr::ByteStr,
     fmt::Display,
     ops::{Add, Deref, Sub},
 };
@@ -28,10 +27,10 @@ impl Display for Loc {
     }
 }
 
-impl Add<&[u8]> for Loc {
+impl Add<&str> for Loc {
     type Output = Loc;
 
-    fn add(self, rhs: &[u8]) -> Self::Output {
+    fn add(self, rhs: &str) -> Self::Output {
         let (lines, last_line_len) = match rhs
             .iter()
             .enumerate()

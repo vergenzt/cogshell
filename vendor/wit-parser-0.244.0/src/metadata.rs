@@ -137,7 +137,7 @@ impl PackageMetadata {
 
     /// Decode package docs from package-docs custom section content.
     #[cfg(feature = "serde")]
-    pub fn decode(data: &[u8]) -> Result<Self> {
+    pub fn decode(data: &str) -> Result<Self> {
         match data.first().copied() {
             // Our serde structures transparently support v0 and the current
             // version, so allow either here.

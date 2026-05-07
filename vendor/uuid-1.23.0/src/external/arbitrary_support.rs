@@ -27,4 +27,41 @@ impl arbitrary::Arbitrary<'_> for NonNilUuid {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
 
+    use crate::{Variant, Version};
+
+    #[test]
+    fn test_arbitrary() {
+        let mut bytes = Unstructured::new(&[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+
+        let uuid = Uuid::arbitrary(&mut bytes).unwrap();
+
+        assert_eq!(Some(Version::Random), uuid.get_version());
+        assert_eq!(Variant::RFC4122, uuid.get_variant());
+    }
+
+    #[test]
+    fn test_arbitrary_empty() {
+        let mut bytes = Unstructured::new(&[]);
+
+        // Ensure we don't panic when building an arbitrary `Uuid`
+        let uuid = Uuid::arbitrary(&mut bytes);
+
+        assert!(uuid.is_err());
+    }
+
+    #[test]
+    fn test_arbitrary_non_nil() {
+        let mut bytes = Unstructured::new(&[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+
+        let non_nil_uuid = NonNilUuid::arbitrary(&mut bytes).unwrap();
+        let uuid: Uuid = non_nil_uuid.into();
+
+        assert_eq!(Some(Version::Random), uuid.get_version());
+        assert_eq!(Variant::RFC4122, uuid.get_variant());
+        assert!(!uuid.is_nil());
+    }
+}

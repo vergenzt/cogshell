@@ -4,7 +4,7 @@
 //! tools to operate on it. For typical usage you can check `typical_usage` function since
 //! abstractions used here are scary, not exposed to the end user and hidden from the doctest.
 
-
+#[test]
 fn typical_usage() {
     let mut m = FreeMonoid::<char>::default();
     m.push_str('a', "string ")

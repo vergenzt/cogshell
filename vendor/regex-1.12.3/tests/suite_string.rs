@@ -7,7 +7,7 @@ use {
 };
 
 /// Tests the default configuration of the hybrid NFA/DFA.
-
+#[test]
 fn default() -> Result<()> {
     let mut runner = TestRunner::new()?;
     runner

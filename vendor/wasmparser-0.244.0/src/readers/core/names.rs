@@ -113,7 +113,7 @@ pub enum Name<'a> {
         /// The identifier for this subsection.
         ty: u8,
         /// The contents of this subsection.
-        data: &'a [u8],
+        data: &'a str,
         /// The range of bytes, relative to the start of the original data
         /// stream, that the contents of this subsection reside in.
         range: Range<usize>,

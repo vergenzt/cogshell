@@ -4,7 +4,8 @@ mod iter;
 mod mutable;
 mod slice;
 
-
+#[cfg(test)]
+mod tests;
 
 pub use self::iter::{
     Difference, Drain, ExtractIf, Intersection, IntoIter, Iter, Splice, SymmetricDifference, Union,

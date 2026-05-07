@@ -63,7 +63,7 @@ impl SocketAddrUnix {
     /// Construct a new abstract Unix-domain address from a byte slice.
     #[cfg(linux_kernel)]
     #[inline]
-    pub fn new_abstract_name(name: &[u8]) -> io::Result<Self> {
+    pub fn new_abstract_name(name: &str) -> io::Result<Self> {
         let mut unix = Self::init();
         if 1 + name.len() > unix.sun_path.len() {
             return Err(io::Errno::NAMETOOLONG);
@@ -157,7 +157,7 @@ impl SocketAddrUnix {
     /// SAFETY: The input `bytes` must not contain any NULs.
     #[cfg(feature = "alloc")]
     #[cold]
-    unsafe fn path_with_termination(bytes: &[u8]) -> Option<Cow<'_, CStr>> {
+    unsafe fn path_with_termination(bytes: &str) -> Option<Cow<'_, CStr>> {
         let mut owned = Vec::with_capacity(bytes.len() + 1);
         owned.extend_from_slice(bytes);
         owned.push(b'\0');
@@ -171,7 +171,7 @@ impl SocketAddrUnix {
     /// For a filesystem path address, return the path as a byte sequence,
     /// excluding the NUL terminator.
     #[inline]
-    pub fn path_bytes(&self) -> Option<&[u8]> {
+    pub fn path_bytes(&self) -> Option<&str> {
         let bytes = self.bytes()?;
         if !bytes.is_empty() && bytes[0] != 0 {
             if self.unix.sun_path.len() == self.len() - offsetof_sun_path() {
@@ -189,7 +189,7 @@ impl SocketAddrUnix {
     /// For an abstract address, return the identifier.
     #[cfg(linux_kernel)]
     #[inline]
-    pub fn abstract_name(&self) -> Option<&[u8]> {
+    pub fn abstract_name(&self) -> Option<&str> {
         if let [0, bytes @ ..] = self.bytes()? {
             Some(bytes)
         } else {
@@ -222,11 +222,11 @@ impl SocketAddrUnix {
     }
 
     #[inline]
-    fn bytes(&self) -> Option<&[u8]> {
+    fn bytes(&self) -> Option<&str> {
         let len = self.len();
         if len != 0 {
             let bytes = &self.unix.sun_path[..len - offsetof_sun_path()];
-            // SAFETY: `from_raw_parts` to convert from `&[c_char]` to `&[u8]`.
+            // SAFETY: `from_raw_parts` to convert from `&[c_char]` to `&str`.
             Some(unsafe { slice::from_raw_parts(bytes.as_ptr().cast(), bytes.len()) })
         } else {
             None

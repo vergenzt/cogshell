@@ -168,8 +168,8 @@ where
 /// Uses the moderate path, if applicable, otherwise, uses the slow path
 /// as required.
 pub(crate) fn fallback_path<F>(
-    integer: &[u8],
-    fraction: &[u8],
+    integer: &str,
+    fraction: &str,
     mantissa: u64,
     exponent: i32,
     mantissa_exponent: i32,

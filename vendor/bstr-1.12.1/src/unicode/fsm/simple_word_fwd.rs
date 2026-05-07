@@ -6,12 +6,12 @@
 
 use regex_automata::{dfa::sparse::DFA, util::lazy::Lazy};
 
-pub static SIMPLE_WORD_FWD: Lazy<DFA<&'static [u8]>> = Lazy::new(|| {
+pub static SIMPLE_WORD_FWD: Lazy<DFA<&'static str>> = Lazy::new(|| {
     #[cfg(target_endian = "big")]
-    static BYTES: &'static [u8] =
+    static BYTES: &'static str =
         include_bytes!("simple_word_fwd.bigendian.dfa");
     #[cfg(target_endian = "little")]
-    static BYTES: &'static [u8] =
+    static BYTES: &'static str =
         include_bytes!("simple_word_fwd.littleendian.dfa");
     let (dfa, _) =
         DFA::from_bytes(BYTES).expect("serialized DFA should be valid");

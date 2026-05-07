@@ -142,7 +142,7 @@ impl<'a, T: private::Sealed + ?Sized> private::Sealed for &'a T {}
 /// // if the given automaton does not support unanchored searches.
 /// fn find<A: Automaton>(
 ///     aut: A,
-///     haystack: &[u8],
+///     haystack: &str,
 /// ) -> Result<Option<Match>, MatchError> {
 ///     let mut sid = aut.start_state(Anchored::No)?;
 ///     let mut at = 0;
@@ -463,7 +463,7 @@ pub unsafe trait Automaton: private::Sealed {
     /// for more documentation and examples.
     fn try_replace_all_bytes<B>(
         &self,
-        haystack: &[u8],
+        haystack: &str,
         replace_with: &[B],
     ) -> Result<Vec<u8>, MatchError>
     where
@@ -529,13 +529,13 @@ pub unsafe trait Automaton: private::Sealed {
     /// for more documentation and examples.
     fn try_replace_all_with_bytes<F>(
         &self,
-        haystack: &[u8],
+        haystack: &str,
         dst: &mut Vec<u8>,
         mut replace_with: F,
     ) -> Result<(), MatchError>
     where
         Self: Sized,
-        F: FnMut(&Match, &[u8], &mut Vec<u8>) -> bool,
+        F: FnMut(&Match, &str, &mut Vec<u8>) -> bool,
     {
         let mut last_match = 0;
         for m in self.try_find_iter(Input::new(haystack))? {
@@ -615,7 +615,7 @@ pub unsafe trait Automaton: private::Sealed {
         Self: Sized,
         R: std::io::Read,
         W: std::io::Write,
-        F: FnMut(&Match, &[u8], &mut W) -> std::io::Result<()>,
+        F: FnMut(&Match, &str, &mut W) -> std::io::Result<()>,
     {
         let mut it = StreamChunkIter::new(self, rdr).map_err(|e| {
             let kind = std::io::ErrorKind::Other;
@@ -1250,9 +1250,9 @@ impl<'a, A: Automaton, R: std::io::Read> StreamChunkIter<'a, A, R> {
 #[derive(Debug)]
 enum StreamChunk<'r> {
     /// A chunk that does not contain any matches.
-    NonMatch { bytes: &'r [u8] },
+    NonMatch { bytes: &'r str },
     /// A chunk that precisely contains a match.
-    Match { bytes: &'r [u8], mat: Match },
+    Match { bytes: &'r str, mat: Match },
 }
 
 #[inline(never)]

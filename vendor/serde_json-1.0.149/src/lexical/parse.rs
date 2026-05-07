@@ -46,7 +46,7 @@ where
 /// * `exponent`    - Parsed, 32-bit exponent.
 ///
 /// Precondition: The integer must not have leading zeros.
-pub fn parse_truncated_float<F>(integer: &[u8], mut fraction: &[u8], exponent: i32) -> F
+pub fn parse_truncated_float<F>(integer: &str, mut fraction: &str, exponent: i32) -> F
 where
     F: Float,
 {

@@ -569,4 +569,15 @@ pub(crate) const TFD_TIMER_ABSTIME: i32 = O_WRONLY;
 #[cfg(all(feature = "time", target_os = "netbsd"))]
 pub(crate) const TFD_TIMER_CANCEL_ON_SET: i32 = O_RDWR;
 
+#[cfg(test)]
+mod tests {
+    use super::*;
 
+    #[test]
+    #[cfg(linux_kernel)]
+    fn test_flags() {
+        // libc may publicly define `O_LARGEFILE` to 0, but we want the real
+        // non-zero value.
+        assert_ne!(O_LARGEFILE, 0);
+    }
+}

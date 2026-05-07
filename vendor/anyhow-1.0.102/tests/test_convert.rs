@@ -6,7 +6,7 @@ use self::drop::{DetectDrop, Flag};
 use anyhow::{Error, Result};
 use std::error::Error as StdError;
 
-
+#[test]
 fn test_convert() {
     let has_dropped = Flag::new();
     let error = Error::new(DetectDrop::new(&has_dropped));
@@ -16,7 +16,7 @@ fn test_convert() {
     assert!(has_dropped.get());
 }
 
-
+#[test]
 fn test_convert_send() {
     let has_dropped = Flag::new();
     let error = Error::new(DetectDrop::new(&has_dropped));
@@ -26,7 +26,7 @@ fn test_convert_send() {
     assert!(has_dropped.get());
 }
 
-
+#[test]
 fn test_convert_send_sync() {
     let has_dropped = Flag::new();
     let error = Error::new(DetectDrop::new(&has_dropped));
@@ -36,7 +36,7 @@ fn test_convert_send_sync() {
     assert!(has_dropped.get());
 }
 
-
+#[test]
 fn test_question_mark() -> Result<(), Box<dyn StdError>> {
     fn f() -> Result<()> {
         Ok(())

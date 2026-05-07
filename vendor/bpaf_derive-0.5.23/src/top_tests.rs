@@ -3,7 +3,7 @@ use pretty_assertions::assert_eq;
 use quote::{quote, ToTokens};
 use syn::parse_quote;
 
-
+#[test]
 fn cargo_command_helper() {
     let top: Top = parse_quote! {
         #[bpaf(options("asm"))]
@@ -27,7 +27,7 @@ fn cargo_command_helper() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn fallback_usage_top() {
     let top: Top = parse_quote! {
         #[bpaf(options, fallback_to_usage)]
@@ -52,7 +52,7 @@ fn fallback_usage_top() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn fallback_usage_subcommand() {
     let input: Top = parse_quote! {
         /// those are options
@@ -75,7 +75,7 @@ fn fallback_usage_subcommand() {
     assert_eq!(input.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn fallback_usage_lut_1() {
     let input: Top = parse_quote! {
         #[bpaf(options)]
@@ -102,7 +102,7 @@ fn fallback_usage_lut_1() {
     assert_eq!(input.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn fallback_usage_lut_2() {
     let input: Top = parse_quote! {
         #[bpaf(options)]
@@ -129,7 +129,7 @@ fn fallback_usage_lut_2() {
     assert_eq!(input.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn top_struct_construct() {
     let top: Top = parse_quote! {
         struct Opt { verbose: bool }
@@ -150,7 +150,7 @@ fn top_struct_construct() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn top_enum_construct() {
     let top: Top = parse_quote! {
         enum Opt { Foo { verbose_name: bool }}
@@ -171,7 +171,7 @@ fn top_enum_construct() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn top_struct_options1() {
     let top: Top = parse_quote! {
         /// those are options
@@ -201,7 +201,7 @@ fn top_struct_options1() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn options_with_custom_usage() {
     let top: Top = parse_quote! {
         #[bpaf(options, usage("App: usage"))]
@@ -222,7 +222,7 @@ fn options_with_custom_usage() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn struct_options2() {
     let input: Top = parse_quote! {
         #[bpaf(options)]
@@ -244,7 +244,7 @@ fn struct_options2() {
     assert_eq!(input.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn struct_command_no_decor() {
     let input: Top = parse_quote! {
         /// those are options
@@ -266,7 +266,7 @@ fn struct_command_no_decor() {
     assert_eq!(input.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn struct_command_decor() {
     let input: Top = parse_quote! {
         /// those are options
@@ -291,7 +291,7 @@ fn struct_command_decor() {
     assert_eq!(input.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn struct_command_short() {
     let input: Top = parse_quote! {
         /// those are options
@@ -326,7 +326,7 @@ fn empty_enum() {
 }
 */
 
-
+#[test]
 fn unnamed_command_enum() {
     let input: Top = parse_quote! {
         #[bpaf(command)]
@@ -356,7 +356,7 @@ fn unnamed_command_enum() {
     assert_eq!(input.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn enum_markdownish() {
     let input: Top = parse_quote! {
         enum Opt {
@@ -396,7 +396,7 @@ fn enum_markdownish() {
     assert_eq!(input.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn enum_command() {
     let input: Top = parse_quote! {
         // those are options
@@ -451,7 +451,7 @@ fn enum_command() {
     assert_eq!(input.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn unnamed_struct() {
     let top: Top = parse_quote! {
         #[bpaf(options)]
@@ -476,7 +476,7 @@ fn unnamed_struct() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn unnamed_enum() {
     let top: Top = parse_quote! {
         #[bpaf(options, version)]
@@ -502,7 +502,7 @@ fn unnamed_enum() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn enum_to_flag_and_switches() {
     let top: Top = parse_quote! {
         pub enum Opt {
@@ -546,7 +546,7 @@ fn enum_to_flag_and_switches() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn help_generation() {
     let top: Top = parse_quote! {
         /// descr
@@ -578,7 +578,7 @@ fn help_generation() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn version_with_commands() {
     let top: Top = parse_quote! {
         #[bpaf(options, version)]
@@ -604,7 +604,7 @@ fn version_with_commands() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn hidden_command() {
     let top: Top = parse_quote! {
         #[bpaf(options)]
@@ -642,7 +642,7 @@ fn hidden_command() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn req_flag_struct() {
     let top: Top = parse_quote! {
         struct Foo;
@@ -659,7 +659,7 @@ fn req_flag_struct() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn generate_parser() {
     let top: Top = parse_quote! {
             #[bpaf(generate(oof))]
@@ -676,7 +676,7 @@ fn generate_parser() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn generate_options() {
     let top: Top = parse_quote! {
             #[bpaf(options, generate(oof))]
@@ -693,7 +693,7 @@ fn generate_options() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn generate_command() {
     let top: Top = parse_quote! {
             #[bpaf(command, generate(oof))]
@@ -710,7 +710,7 @@ fn generate_command() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn command_with_aliases_struct() {
     let top: Top = parse_quote! {
         #[bpaf(command, short('c'), long("long"), long("long2"))]
@@ -740,7 +740,7 @@ fn command_with_aliases_struct() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn command_with_aliases_enum() {
     let top: Top = parse_quote! {
         enum Options {
@@ -772,7 +772,7 @@ fn command_with_aliases_enum() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn version_with_commands_with_cargo_helper() {
     let top: Top = parse_quote! {
         #[bpaf(options("subcargo"), version)]
@@ -801,7 +801,7 @@ fn version_with_commands_with_cargo_helper() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn named_to_positional_with_metavar() {
     let top: Top = parse_quote! {
         struct Options {
@@ -825,7 +825,7 @@ fn named_to_positional_with_metavar() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn named_to_positional_without_metavar() {
     let top: Top = parse_quote! {
         struct Options {
@@ -849,7 +849,7 @@ fn named_to_positional_without_metavar() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn private_visibility() {
     let top: Top = parse_quote! {
         #[bpaf(private)]
@@ -873,7 +873,7 @@ fn private_visibility() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn hidden_default_enum_singleton() {
     let top: Top = parse_quote! {
         #[bpaf(fallback(Decision::No))]
@@ -926,7 +926,7 @@ fn enum_singleton_unk() {
 }
 */
 
-
+#[test]
 fn explicit_external() {
     let top: Top = parse_quote! {
         #[bpaf(options)]
@@ -952,7 +952,7 @@ fn explicit_external() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn implicit_external() {
     let top: Top = parse_quote! {
         #[bpaf(options)]
@@ -978,7 +978,7 @@ fn implicit_external() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn fallback_for_options() {
     let top: Top = parse_quote! {
         #[bpaf(options, fallback(Opts::Dummy))]
@@ -1008,7 +1008,7 @@ fn fallback_for_options() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn implicitly_named_switch() {
     let top: Top = parse_quote! {
         #[bpaf(options, fallback(Opts::Dummy),)]
@@ -1032,7 +1032,7 @@ fn implicitly_named_switch() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn fallback_for_enum() {
     let top: Top = parse_quote! {
         #[bpaf(fallback(Decision::No),)]
@@ -1061,7 +1061,7 @@ fn fallback_for_enum() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn fallback_for_struct() {
     let top: Top = parse_quote! {
         #[bpaf(fallback(Value { count: 10 }))]
@@ -1085,7 +1085,7 @@ fn fallback_for_struct() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn adjacent_for_struct() {
     let top: Top = parse_quote! {
         #[bpaf(adjacent)]
@@ -1112,7 +1112,7 @@ fn adjacent_for_struct() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn box_for_struct() {
     let top: Top = parse_quote! {
         #[bpaf(boxed)]
@@ -1139,7 +1139,7 @@ fn box_for_struct() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn no_fields_declaration() {
     let top: Top = parse_quote! {
         struct Opts {}
@@ -1157,7 +1157,7 @@ fn no_fields_declaration() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn single_unit_command() {
     let top: Top = parse_quote! {
         #[bpaf(command)]
@@ -1176,7 +1176,7 @@ fn single_unit_command() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn single_unit_adjacent_command() {
     let top: Top = parse_quote! {
         #[bpaf(command, adjacent,)]
@@ -1195,7 +1195,7 @@ fn single_unit_adjacent_command() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn ingore_doc_comment_top_level_1() {
     let top: Top = parse_quote! {
         #[derive(Debug, Clone, Bpaf)]
@@ -1224,7 +1224,7 @@ fn ingore_doc_comment_top_level_1() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn ingore_doc_comment_top_level_2() {
     let top: Top = parse_quote! {
         #[derive(Debug, Clone, Bpaf)]
@@ -1254,7 +1254,7 @@ fn ingore_doc_comment_top_level_2() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn top_comment_is_group_help_enum() {
     let top: Top = parse_quote! {
         #[derive(Debug, Clone, Bpaf)]
@@ -1283,7 +1283,7 @@ fn top_comment_is_group_help_enum() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn top_comment_is_group_help_struct() {
     let top: Top = parse_quote! {
         #[derive(Debug, Clone, Bpaf)]
@@ -1312,7 +1312,7 @@ fn top_comment_is_group_help_struct() {
     assert_eq!(top.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn max_width() {
     let input: Top = parse_quote! {
         // those are options
@@ -1337,7 +1337,7 @@ fn max_width() {
     assert_eq!(input.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn custom_bpaf_path_options() {
     let input: Top = parse_quote! {
         #[bpaf(options, path(::indirector::bpaf))]
@@ -1361,7 +1361,7 @@ fn custom_bpaf_path_options() {
     assert_eq!(input.to_token_stream().to_string(), expected.to_string());
 }
 
-
+#[test]
 fn custom_bpaf_path_parser() {
     let input: Top = parse_quote! {
         #[bpaf(path(::indirector::bpaf))]

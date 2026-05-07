@@ -44,7 +44,7 @@ impl FileType {
     }
 }
 
-
+#[cfg(test)]
 #[allow(unused_imports)]
 #[allow(unsafe_code)]
 mod tests {
@@ -54,7 +54,7 @@ mod tests {
     #[cfg(all(target_os = "linux", target_env = "gnu"))]
     use crate::fs::{Statx, StatxTimestamp};
 
-    
+    #[test]
     fn test_layouts() {
         #[cfg(linux_raw_dep)]
         assert_eq_size!(FsWord, linux_raw_sys::general::__fsword_t);

@@ -197,7 +197,7 @@ impl Read for SpooledTempFile {
 }
 
 impl Write for SpooledTempFile {
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+    fn write(&mut self, buf: &str) -> io::Result<usize> {
         // roll over to file if necessary
         if matches! {
             &self.inner, SpooledData::InMemory(cursor)

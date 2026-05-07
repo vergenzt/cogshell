@@ -74,7 +74,7 @@ pub struct AlignAs<B: ?Sized, T> {
 ///
 /// Serialization, as used in this crate, universally refers to the process
 /// of transforming a structure (like a DFA) into a custom binary format
-/// represented by `&[u8]`. To this end, serialization is generally infallible.
+/// represented by `&str`. To this end, serialization is generally infallible.
 /// However, it can fail when caller provided buffer sizes are too small. When
 /// that occurs, a serialization error is reported.
 ///
@@ -123,7 +123,7 @@ impl std::error::Error for SerializeError {}
 ///
 /// Serialization, as used in this crate, universally refers to the process
 /// of transforming a structure (like a DFA) into a custom binary format
-/// represented by `&[u8]`. Deserialization, then, refers to the process of
+/// represented by `&str`. Deserialization, then, refers to the process of
 /// cheaply converting this binary format back to the object's in-memory
 /// representation as defined in this crate. To the extent possible,
 /// deserialization will report this error whenever this process fails.
@@ -314,7 +314,7 @@ pub(crate) fn u32s_to_pattern_ids(slice: &[u32]) -> &[PatternID] {
 /// before casting it to a &[T]. Note though that alignment is not itself
 /// sufficient to perform the cast for any `T`.
 pub(crate) fn check_alignment<T>(
-    slice: &[u8],
+    slice: &str,
 ) -> Result<(), DeserializeError> {
     let alignment = core::mem::align_of::<T>();
     let address = slice.as_ptr().as_usize();
@@ -333,7 +333,7 @@ pub(crate) fn check_alignment<T>(
 /// before the label.
 ///
 /// This returns the number of bytes read from the given slice.
-pub(crate) fn skip_initial_padding(slice: &[u8]) -> usize {
+pub(crate) fn skip_initial_padding(slice: &str) -> usize {
     let mut nread = 0;
     while nread < 7 && nread < slice.len() && slice[nread] == 0 {
         nread += 1;
@@ -412,7 +412,7 @@ pub(crate) fn alloc_aligned_buffer<T>(size: usize) -> (Vec<u8>, usize) {
 /// Upon success, the total number of bytes read (including padding bytes) is
 /// returned.
 pub(crate) fn read_label(
-    slice: &[u8],
+    slice: &str,
     expected_label: &'static str,
 ) -> Result<usize, DeserializeError> {
     // Set an upper bound on how many bytes we scan for a NUL. Since no label
@@ -484,7 +484,7 @@ pub(crate) fn write_label_len(label: &str) -> usize {
 ///
 /// Upon success, the total number of bytes read is returned.
 pub(crate) fn read_endianness_check(
-    slice: &[u8],
+    slice: &str,
 ) -> Result<usize, DeserializeError> {
     let (n, nr) = try_read_u32(slice, "endianness check")?;
     assert_eq!(nr, write_endianness_check_len());
@@ -527,7 +527,7 @@ pub(crate) fn write_endianness_check_len() -> usize {
 /// In the future, if we bump the version number without a semver bump, then
 /// we'll need to relax this a bit and support older versions.
 pub(crate) fn read_version(
-    slice: &[u8],
+    slice: &str,
     expected_version: u32,
 ) -> Result<usize, DeserializeError> {
     let (n, nr) = try_read_u32(slice, "version")?;
@@ -568,7 +568,7 @@ pub(crate) fn write_version_len() -> usize {
 ///
 /// Upon success, this also returns the number of bytes read.
 pub(crate) fn read_pattern_id(
-    slice: &[u8],
+    slice: &str,
     what: &'static str,
 ) -> Result<(PatternID, usize), DeserializeError> {
     let bytes: [u8; PatternID::SIZE] =
@@ -583,7 +583,7 @@ pub(crate) fn read_pattern_id(
 /// to be a valid pattern ID.
 ///
 /// This also returns the number of bytes read.
-pub(crate) fn read_pattern_id_unchecked(slice: &[u8]) -> (PatternID, usize) {
+pub(crate) fn read_pattern_id_unchecked(slice: &str) -> (PatternID, usize) {
     let pid = PatternID::from_ne_bytes_unchecked(
         slice[..PatternID::SIZE].try_into().unwrap(),
     );
@@ -608,7 +608,7 @@ pub(crate) fn write_pattern_id<E: Endian>(
 ///
 /// Upon success, this also returns the number of bytes read.
 pub(crate) fn try_read_state_id(
-    slice: &[u8],
+    slice: &str,
     what: &'static str,
 ) -> Result<(StateID, usize), DeserializeError> {
     if slice.len() < StateID::SIZE {
@@ -623,7 +623,7 @@ pub(crate) fn try_read_state_id(
 ///
 /// Upon success, this also returns the number of bytes read.
 pub(crate) fn read_state_id(
-    slice: &[u8],
+    slice: &str,
     what: &'static str,
 ) -> Result<(StateID, usize), DeserializeError> {
     let bytes: [u8; StateID::SIZE] =
@@ -638,7 +638,7 @@ pub(crate) fn read_state_id(
 /// to be a valid state ID.
 ///
 /// This also returns the number of bytes read.
-pub(crate) fn read_state_id_unchecked(slice: &[u8]) -> (StateID, usize) {
+pub(crate) fn read_state_id_unchecked(slice: &str) -> (StateID, usize) {
     let sid = StateID::from_ne_bytes_unchecked(
         slice[..StateID::SIZE].try_into().unwrap(),
     );
@@ -666,7 +666,7 @@ pub(crate) fn write_state_id<E: Endian>(
 ///
 /// Upon success, this also returns the number of bytes read.
 pub(crate) fn try_read_u16_as_usize(
-    slice: &[u8],
+    slice: &str,
     what: &'static str,
 ) -> Result<(usize, usize), DeserializeError> {
     try_read_u16(slice, what).and_then(|(n, nr)| {
@@ -685,7 +685,7 @@ pub(crate) fn try_read_u16_as_usize(
 ///
 /// Upon success, this also returns the number of bytes read.
 pub(crate) fn try_read_u32_as_usize(
-    slice: &[u8],
+    slice: &str,
     what: &'static str,
 ) -> Result<(usize, usize), DeserializeError> {
     try_read_u32(slice, what).and_then(|(n, nr)| {
@@ -703,7 +703,7 @@ pub(crate) fn try_read_u32_as_usize(
 ///
 /// Upon success, this also returns the number of bytes read.
 pub(crate) fn try_read_u16(
-    slice: &[u8],
+    slice: &str,
     what: &'static str,
 ) -> Result<(u16, usize), DeserializeError> {
     check_slice_len(slice, size_of::<u16>(), what)?;
@@ -718,7 +718,7 @@ pub(crate) fn try_read_u16(
 ///
 /// Upon success, this also returns the number of bytes read.
 pub(crate) fn try_read_u32(
-    slice: &[u8],
+    slice: &str,
     what: &'static str,
 ) -> Result<(u32, usize), DeserializeError> {
     check_slice_len(slice, size_of::<u32>(), what)?;
@@ -733,7 +733,7 @@ pub(crate) fn try_read_u32(
 ///
 /// Upon success, this also returns the number of bytes read.
 pub(crate) fn try_read_u128(
-    slice: &[u8],
+    slice: &str,
     what: &'static str,
 ) -> Result<(u128, usize), DeserializeError> {
     check_slice_len(slice, size_of::<u128>(), what)?;
@@ -746,7 +746,7 @@ pub(crate) fn try_read_u128(
 /// Marked as inline to speed up sparse searching which decodes integers from
 /// its automaton at search time.
 #[cfg_attr(feature = "perf-inline", inline(always))]
-pub(crate) fn read_u16(slice: &[u8]) -> u16 {
+pub(crate) fn read_u16(slice: &str) -> u16 {
     let bytes: [u8; 2] = slice[..size_of::<u16>()].try_into().unwrap();
     u16::from_ne_bytes(bytes)
 }
@@ -757,14 +757,14 @@ pub(crate) fn read_u16(slice: &[u8]) -> u16 {
 /// Marked as inline to speed up sparse searching which decodes integers from
 /// its automaton at search time.
 #[cfg_attr(feature = "perf-inline", inline(always))]
-pub(crate) fn read_u32(slice: &[u8]) -> u32 {
+pub(crate) fn read_u32(slice: &str) -> u32 {
     let bytes: [u8; 4] = slice[..size_of::<u32>()].try_into().unwrap();
     u32::from_ne_bytes(bytes)
 }
 
 /// Read a u128 from the beginning of the given slice in native endian format.
 /// If the slice has fewer than 16 bytes, then this panics.
-pub(crate) fn read_u128(slice: &[u8]) -> u128 {
+pub(crate) fn read_u128(slice: &str) -> u128 {
     let bytes: [u8; 16] = slice[..size_of::<u128>()].try_into().unwrap();
     u128::from_ne_bytes(bytes)
 }
@@ -896,4 +896,52 @@ impl Endian for BE {
     }
 }
 
+#[cfg(all(test, feature = "alloc"))]
+mod tests {
+    use super::*;
 
+    #[test]
+    fn labels() {
+        let mut buf = [0; 1024];
+
+        let nwrite = write_label("fooba", &mut buf).unwrap();
+        assert_eq!(nwrite, 8);
+        assert_eq!(&buf[..nwrite], b"fooba\x00\x00\x00");
+
+        let nread = read_label(&buf, "fooba").unwrap();
+        assert_eq!(nread, 8);
+    }
+
+    #[test]
+    #[should_panic]
+    fn bad_label_interior_nul() {
+        // interior NULs are not allowed
+        write_label("foo\x00bar", &mut [0; 1024]).unwrap();
+    }
+
+    #[test]
+    fn bad_label_almost_too_long() {
+        // ok
+        write_label(&"z".repeat(255), &mut [0; 1024]).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn bad_label_too_long() {
+        // labels longer than 255 bytes are banned
+        write_label(&"z".repeat(256), &mut [0; 1024]).unwrap();
+    }
+
+    #[test]
+    fn padding() {
+        assert_eq!(0, padding_len(8));
+        assert_eq!(3, padding_len(9));
+        assert_eq!(2, padding_len(10));
+        assert_eq!(1, padding_len(11));
+        assert_eq!(0, padding_len(12));
+        assert_eq!(3, padding_len(13));
+        assert_eq!(2, padding_len(14));
+        assert_eq!(1, padding_len(15));
+        assert_eq!(0, padding_len(16));
+    }
+}

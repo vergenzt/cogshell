@@ -4,7 +4,7 @@ use auditable_serde::VersionInfo;
 use wasm_encoder::Module;
 use wasm_metadata::*;
 
-
+#[test]
 fn add_to_empty_module() {
     let mut add = AddMetadata::default();
     add.name = AddMetadataField::Set("foo".to_owned());

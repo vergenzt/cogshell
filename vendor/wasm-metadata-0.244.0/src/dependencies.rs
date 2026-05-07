@@ -96,4 +96,47 @@ impl Encode for Dependencies {
     }
 }
 
+#[cfg(test)]
+mod test {
+    use super::*;
+    use auditable_serde::{Source, VersionInfo};
+    use std::str::FromStr;
+    use wasm_encoder::Component;
+    use wasmparser::Payload;
 
+    #[test]
+    fn roundtrip() {
+        let json_str = r#"{"packages":[{"name":"adler","version":"0.2.3","source":"registry"}]}"#;
+        let info = VersionInfo::from_str(json_str).unwrap();
+        assert_eq!(&info.packages[0].name, "adler");
+        let mut component = Component::new();
+        component.section(&Dependencies::new(info));
+        let component = component.finish();
+
+        let mut parsed = false;
+        for section in wasmparser::Parser::new(0).parse_all(&component) {
+            if let Payload::CustomSection(reader) = section.unwrap() {
+                let dependencies = Dependencies::parse_custom_section(&reader).unwrap();
+                assert_eq!(dependencies.to_string(), json_str);
+                parsed = true;
+            }
+        }
+        assert!(parsed);
+    }
+
+    #[test]
+    fn serialize() {
+        let json_str = r#"{"packages":[{"name":"adler","version":"0.2.3","source":"registry"}]}"#;
+        let info = VersionInfo::from_str(json_str).unwrap();
+        let dependencies = Dependencies::new(info);
+        assert_eq!(dependencies.version_info().packages[0].name, "adler");
+        assert_eq!(
+            dependencies.version_info().packages[0].version.to_string(),
+            "0.2.3"
+        );
+        assert_eq!(
+            dependencies.version_info().packages[0].source,
+            Source::Registry,
+        );
+    }
+}

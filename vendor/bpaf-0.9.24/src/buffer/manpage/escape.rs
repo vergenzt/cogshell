@@ -63,7 +63,7 @@ pub(crate) enum Escape {
     Unescaped,
 }
 
-
+#[cfg(test)]
 /// Escape a sequence of string slices according to escaping rules and store results to `String`
 ///
 /// See also [`escape`] if it is desired to reuse existing storage capacity
@@ -125,4 +125,19 @@ where
     }
 }
 
+#[cfg(test)]
+mod test {
+    use super::{escape_to_string, Apostrophes, Escape};
 
+    #[test]
+    fn sample() {
+        let ap = Apostrophes::Handle;
+        let items: &[(Escape, &str)] = &[
+            (Escape::Unescaped, "\\fI"),
+            (Escape::Special, "test"),
+            (Escape::Unescaped, "\\fP"),
+        ];
+        let output = escape_to_string(items.iter().map(|p| (&p.0, p.1)), ap);
+        assert_eq!("\\fItest\\fP", output);
+    }
+}

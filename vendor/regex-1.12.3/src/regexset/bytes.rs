@@ -26,7 +26,7 @@ use crate::{bytes::RegexSetBuilder, Error};
 /// then a regex set *can* realize huge performance gains.
 ///
 /// Unlike the top-level [`RegexSet`](crate::RegexSet), this `RegexSet`
-/// searches haystacks with type `&[u8]` instead of `&str`. Consequently, this
+/// searches haystacks with type `&str` instead of `&str`. Consequently, this
 /// `RegexSet` is permitted to match invalid UTF-8.
 ///
 /// # Limitations
@@ -64,7 +64,7 @@ use crate::{bytes::RegexSetBuilder, Error};
 ///
 /// // Match against the whole set first and identify the individual
 /// // matching patterns.
-/// let matches: Vec<&[u8]> = set
+/// let matches: Vec<&str> = set
 ///     .matches(hay)
 ///     .into_iter()
 ///     // Dereference the match index to get the corresponding
@@ -211,7 +211,7 @@ impl RegexSet {
     /// assert!(!set.is_match("☃".as_bytes()));
     /// ```
     #[inline]
-    pub fn is_match(&self, haystack: &[u8]) -> bool {
+    pub fn is_match(&self, haystack: &str) -> bool {
         self.is_match_at(haystack, 0)
     }
 
@@ -245,7 +245,7 @@ impl RegexSet {
     /// assert!(!set.is_match_at(hay, 3));
     /// ```
     #[inline]
-    pub fn is_match_at(&self, haystack: &[u8], start: usize) -> bool {
+    pub fn is_match_at(&self, haystack: &str, start: usize) -> bool {
         self.meta.is_match(Input::new(haystack).span(start..haystack.len()))
     }
 
@@ -288,7 +288,7 @@ impl RegexSet {
     /// assert!(matches.matched(6));
     /// ```
     #[inline]
-    pub fn matches(&self, haystack: &[u8]) -> SetMatches {
+    pub fn matches(&self, haystack: &str) -> SetMatches {
         self.matches_at(haystack, 0)
     }
 
@@ -326,7 +326,7 @@ impl RegexSet {
     /// assert_eq!(matches, vec![]);
     /// ```
     #[inline]
-    pub fn matches_at(&self, haystack: &[u8], start: usize) -> SetMatches {
+    pub fn matches_at(&self, haystack: &str, start: usize) -> SetMatches {
         let input = Input::new(haystack).span(start..haystack.len());
         let mut patset = PatternSet::new(self.meta.pattern_len());
         self.meta.which_overlapping_matches(&input, &mut patset);
@@ -350,7 +350,7 @@ impl RegexSet {
     pub fn matches_read_at(
         &self,
         matches: &mut [bool],
-        haystack: &[u8],
+        haystack: &str,
         start: usize,
     ) -> bool {
         // This is pretty dumb. We should try to fix this, but the
@@ -379,7 +379,7 @@ impl RegexSet {
     pub fn read_matches_at(
         &self,
         matches: &mut [bool],
-        haystack: &[u8],
+        haystack: &str,
         start: usize,
     ) -> bool {
         self.matches_read_at(matches, haystack, start)

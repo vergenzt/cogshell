@@ -17,7 +17,7 @@ use syn::{
     TypeParamBound, WhereClause, WherePredicate,
 };
 
-
+#[test]
 fn test_split_for_impl() {
     let input = quote! {
         struct S<'a, 'b: 'a, #[may_dangle] T: 'a = ()> where T: Debug;
@@ -132,7 +132,7 @@ fn test_split_for_impl() {
     assert_eq!(generated.to_string(), expected.to_string());
 }
 
-
+#[test]
 fn test_type_param_bound() {
     let tokens = quote!('a);
     snapshot!(tokens as TypeParamBound, @r#"
@@ -212,7 +212,7 @@ fn test_type_param_bound() {
     );
 }
 
-
+#[test]
 fn test_fn_precedence_in_where_clause() {
     // This should parse as two separate bounds, `FnOnce() -> i32` and `Send` - not
     // `FnOnce() -> (i32 + Send)`.
@@ -313,7 +313,7 @@ fn test_fn_precedence_in_where_clause() {
     assert_eq!(quote!(#second_bound).to_string(), "Send");
 }
 
-
+#[test]
 fn test_where_clause_at_end_of_input() {
     let input = quote! {
         where
@@ -325,7 +325,7 @@ fn test_where_clause_at_end_of_input() {
 }
 
 // Regression test for https://github.com/dtolnay/syn/issues/1718
-
+#[test]
 #[allow(clippy::map_unwrap_or)]
 fn no_opaque_drop() {
     let mut generics = Generics::default();
@@ -344,7 +344,7 @@ fn no_opaque_drop() {
         });
 }
 
-
+#[test]
 fn type_param_with_colon_and_no_bounds() {
     let tokens = quote!(T:);
     snapshot!(tokens as GenericParam, @r#"

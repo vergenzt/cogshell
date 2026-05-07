@@ -170,7 +170,7 @@ impl ComponentBuilder {
     }
 
     /// Encodes a core wasm `module` into this component, returning its index.
-    pub fn core_module_raw(&mut self, debug_name: Option<&str>, module: &[u8]) -> u32 {
+    pub fn core_module_raw(&mut self, debug_name: Option<&str>, module: &str) -> u32 {
         self.flush();
         self.component.section(&RawSection {
             id: ComponentSectionId::CoreModule.into(),
@@ -415,7 +415,7 @@ impl ComponentBuilder {
     }
 
     /// Defines a new subcomponent of this component.
-    pub fn component_raw(&mut self, debug_name: Option<&str>, data: &[u8]) -> u32 {
+    pub fn component_raw(&mut self, debug_name: Option<&str>, data: &str) -> u32 {
         let raw_section = RawSection {
             id: ComponentSectionId::Component.into(),
             data,
@@ -739,7 +739,7 @@ impl ComponentBuilder {
     }
 
     /// Adds a new custom section to this component.
-    pub fn raw_custom_section(&mut self, section: &[u8]) {
+    pub fn raw_custom_section(&mut self, section: &str) {
         self.flush();
         self.component.section(&RawCustomSection(section));
     }

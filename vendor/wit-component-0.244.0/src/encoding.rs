@@ -2914,7 +2914,7 @@ impl ComponentEncoder {
     /// inside the module and add them as the interface, imports, and exports.
     /// It will also add any producers information inside the component type information to the
     /// core module.
-    pub fn module(mut self, module: &[u8]) -> Result<Self> {
+    pub fn module(mut self, module: &str) -> Result<Self> {
         let (wasm, metadata) = self.decode(module.as_ref())?;
         let (wasm, module_import_map) = ModuleImportMap::new(wasm)?;
         let exports = self
@@ -2930,7 +2930,7 @@ impl ComponentEncoder {
         Ok(self)
     }
 
-    fn decode<'a>(&self, wasm: &'a [u8]) -> Result<(Cow<'a, [u8]>, Bindgen)> {
+    fn decode<'a>(&self, wasm: &'a str) -> Result<(Cow<'a, [u8]>, Bindgen)> {
         let (bytes, metadata) = metadata::decode(wasm)?;
         match bytes {
             Some(wasm) => Ok((Cow::Owned(wasm), metadata)),
@@ -2996,7 +2996,7 @@ impl ComponentEncoder {
     /// wasm module specified by `bytes` imports. The `bytes` will then import
     /// `interface` and export functions to get imported from the module `name`
     /// in the core wasm that's being wrapped.
-    pub fn adapter(self, name: &str, bytes: &[u8]) -> Result<Self> {
+    pub fn adapter(self, name: &str, bytes: &str) -> Result<Self> {
         self.library_or_adapter(name, bytes, None)
     }
 
@@ -3012,14 +3012,14 @@ impl ComponentEncoder {
     /// Libraries are treated similarly to adapters, except that they are not
     /// "minified" the way adapters are, and instantiation is controlled
     /// declaratively via the `library_info` parameter.
-    pub fn library(self, name: &str, bytes: &[u8], library_info: LibraryInfo) -> Result<Self> {
+    pub fn library(self, name: &str, bytes: &str, library_info: LibraryInfo) -> Result<Self> {
         self.library_or_adapter(name, bytes, Some(library_info))
     }
 
     fn library_or_adapter(
         mut self,
         name: &str,
-        bytes: &[u8],
+        bytes: &str,
         library_info: Option<LibraryInfo>,
     ) -> Result<Self> {
         let (wasm, mut metadata) = self.decode(bytes)?;
@@ -3173,4 +3173,59 @@ impl ComponentWorld<'_> {
     }
 }
 
+#[cfg(all(test, feature = "dummy-module"))]
+mod test {
+    use super::*;
+    use crate::{dummy_module, embed_component_metadata};
+    use wit_parser::ManglingAndAbi;
 
+    #[test]
+    fn it_renames_imports() {
+        let mut resolve = Resolve::new();
+        let pkg = resolve
+            .push_str(
+                "test.wit",
+                r#"
+package test:wit;
+
+interface i {
+    f: func();
+}
+
+world test {
+    import i;
+    import foo: interface {
+        f: func();
+    }
+}
+"#,
+            )
+            .unwrap();
+        let world = resolve.select_world(&[pkg], None).unwrap();
+
+        let mut module = dummy_module(&resolve, world, ManglingAndAbi::Standard32);
+
+        embed_component_metadata(&mut module, &resolve, world, StringEncoding::UTF8).unwrap();
+
+        let encoded = ComponentEncoder::default()
+            .import_name_map(HashMap::from([
+                (
+                    "foo".to_string(),
+                    "unlocked-dep=<foo:bar/foo@{>=1.0.0 <1.1.0}>".to_string(),
+                ),
+                (
+                    "test:wit/i".to_string(),
+                    "locked-dep=<foo:bar/i@1.2.3>".to_string(),
+                ),
+            ]))
+            .module(&module)
+            .unwrap()
+            .validate(true)
+            .encode()
+            .unwrap();
+
+        let wat = wasmprinter::print_bytes(encoded).unwrap();
+        assert!(wat.contains("unlocked-dep=<foo:bar/foo@{>=1.0.0 <1.1.0}>"));
+        assert!(wat.contains("locked-dep=<foo:bar/i@1.2.3>"));
+    }
+}

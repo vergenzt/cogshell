@@ -7,12 +7,12 @@
 /// [`ByteSlice::escape_bytes`](crate::ByteSlice::escape_bytes) method.
 #[derive(Clone, Debug)]
 pub struct EscapeBytes<'a> {
-    remaining: &'a [u8],
+    remaining: &'a str,
     state: EscapeState,
 }
 
 impl<'a> EscapeBytes<'a> {
-    pub(crate) fn new(bytes: &'a [u8]) -> EscapeBytes<'a> {
+    pub(crate) fn new(bytes: &'a str) -> EscapeBytes<'a> {
         EscapeBytes { remaining: bytes, state: EscapeState::Start }
     }
 }
@@ -294,7 +294,7 @@ impl UnescapeState {
     /// # Panics
     ///
     /// Panics if `bytes.len() > 11`.
-    fn bytes_raw(bytes: &[u8]) -> UnescapeState {
+    fn bytes_raw(bytes: &str) -> UnescapeState {
         // This can be increased, you just need to make sure 'buf' in the
         // 'Bytes' state has enough room.
         assert!(bytes.len() <= 11, "no more than 11 bytes allowed");
@@ -309,7 +309,7 @@ impl UnescapeState {
     /// # Panics
     ///
     /// Panics if `prefix.len() > 3`.
-    fn bytes(prefix: &[u8], ch: char) -> UnescapeState {
+    fn bytes(prefix: &str, ch: char) -> UnescapeState {
         // This can be increased, you just need to make sure 'buf' in the
         // 'Bytes' state has enough room.
         assert!(prefix.len() <= 3, "no more than 3 bytes allowed");
@@ -325,7 +325,7 @@ impl UnescapeState {
     /// # Panics
     ///
     /// Panics if `prefix.len() > 3`.
-    fn bytes2(prefix: &[u8], ch1: char, ch2: char) -> UnescapeState {
+    fn bytes2(prefix: &str, ch1: char, ch2: char) -> UnescapeState {
         // This can be increased, you just need to make sure 'buf' in the
         // 'Bytes' state has enough room.
         assert!(prefix.len() <= 3, "no more than 3 bytes allowed");
@@ -356,4 +356,98 @@ fn hexdigit_to_char(digit: u8) -> char {
     char::from_digit(u32::from(digit), 16).unwrap().to_ascii_uppercase()
 }
 
+#[cfg(all(test, feature = "std"))]
+mod tests {
+    use alloc::string::{String, ToString};
 
+    use crate::BString;
+
+    use super::*;
+
+    #[allow(non_snake_case)]
+    fn B<B: AsRef<[u8]>>(bytes: B) -> BString {
+        BString::from(bytes.as_ref())
+    }
+
+    fn e<B: AsRef<[u8]>>(bytes: B) -> String {
+        EscapeBytes::new(bytes.as_ref()).to_string()
+    }
+
+    fn u(string: &str) -> BString {
+        UnescapeBytes::new(string.chars()).collect()
+    }
+
+    #[test]
+    fn escape() {
+        assert_eq!(r"a", e(br"a"));
+        assert_eq!(r"\\x61", e(br"\x61"));
+        assert_eq!(r"a", e(b"\x61"));
+        assert_eq!(r"~", e(b"\x7E"));
+        assert_eq!(r"\x7F", e(b"\x7F"));
+
+        assert_eq!(r"\n", e(b"\n"));
+        assert_eq!(r"\r", e(b"\r"));
+        assert_eq!(r"\t", e(b"\t"));
+        assert_eq!(r"\\", e(b"\\"));
+        assert_eq!(r"\0", e(b"\0"));
+        assert_eq!(r"\0", e(b"\x00"));
+
+        assert_eq!(r"\x88", e(b"\x88"));
+        assert_eq!(r"\x8F", e(b"\x8F"));
+        assert_eq!(r"\xF8", e(b"\xF8"));
+        assert_eq!(r"\xFF", e(b"\xFF"));
+
+        assert_eq!(r"\xE2", e(b"\xE2"));
+        assert_eq!(r"\xE2\x98", e(b"\xE2\x98"));
+        assert_eq!(r"☃", e(b"\xE2\x98\x83"));
+
+        assert_eq!(r"\xF0", e(b"\xF0"));
+        assert_eq!(r"\xF0\x9F", e(b"\xF0\x9F"));
+        assert_eq!(r"\xF0\x9F\x92", e(b"\xF0\x9F\x92"));
+        assert_eq!(r"💩", e(b"\xF0\x9F\x92\xA9"));
+    }
+
+    #[test]
+    fn unescape() {
+        assert_eq!(B(r"a"), u(r"a"));
+        assert_eq!(B(r"\x61"), u(r"\\x61"));
+        assert_eq!(B(r"a"), u(r"\x61"));
+        assert_eq!(B(r"~"), u(r"\x7E"));
+        assert_eq!(B(b"\x7F"), u(r"\x7F"));
+
+        assert_eq!(B(b"\n"), u(r"\n"));
+        assert_eq!(B(b"\r"), u(r"\r"));
+        assert_eq!(B(b"\t"), u(r"\t"));
+        assert_eq!(B(b"\\"), u(r"\\"));
+        assert_eq!(B(b"\0"), u(r"\0"));
+        assert_eq!(B(b"\0"), u(r"\x00"));
+
+        assert_eq!(B(b"\x88"), u(r"\x88"));
+        assert_eq!(B(b"\x8F"), u(r"\x8F"));
+        assert_eq!(B(b"\xF8"), u(r"\xF8"));
+        assert_eq!(B(b"\xFF"), u(r"\xFF"));
+
+        assert_eq!(B(b"\xE2"), u(r"\xE2"));
+        assert_eq!(B(b"\xE2\x98"), u(r"\xE2\x98"));
+        assert_eq!(B("☃"), u(r"\xE2\x98\x83"));
+
+        assert_eq!(B(b"\xF0"), u(r"\xf0"));
+        assert_eq!(B(b"\xF0\x9F"), u(r"\xf0\x9f"));
+        assert_eq!(B(b"\xF0\x9F\x92"), u(r"\xf0\x9f\x92"));
+        assert_eq!(B("💩"), u(r"\xf0\x9f\x92\xa9"));
+    }
+
+    #[test]
+    fn unescape_weird() {
+        assert_eq!(B(b"\\"), u(r"\"));
+        assert_eq!(B(b"\\"), u(r"\\"));
+        assert_eq!(B(b"\\x"), u(r"\x"));
+        assert_eq!(B(b"\\xA"), u(r"\xA"));
+
+        assert_eq!(B(b"\\xZ"), u(r"\xZ"));
+        assert_eq!(B(b"\\xZZ"), u(r"\xZZ"));
+        assert_eq!(B(b"\\i"), u(r"\i"));
+        assert_eq!(B(b"\\u"), u(r"\u"));
+        assert_eq!(B(b"\\u{2603}"), u(r"\u{2603}"));
+    }
+}

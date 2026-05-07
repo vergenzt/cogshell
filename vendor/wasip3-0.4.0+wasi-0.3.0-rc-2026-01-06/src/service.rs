@@ -15,25 +15,25 @@
 //   * export-macro-name: _export_service
 //   * pub-export-macro
 #[allow(unfulfilled_lint_expectations, unused_imports)]
-use crate::cli::types as __with_name0;
-#[allow(unfulfilled_lint_expectations, unused_imports)]
-use crate::cli::stdout as __with_name1;
-#[allow(unfulfilled_lint_expectations, unused_imports)]
 use crate::cli::stderr as __with_name2;
 #[allow(unfulfilled_lint_expectations, unused_imports)]
 use crate::cli::stdin as __with_name3;
 #[allow(unfulfilled_lint_expectations, unused_imports)]
-use crate::clocks::types as __with_name4;
+use crate::cli::stdout as __with_name1;
+#[allow(unfulfilled_lint_expectations, unused_imports)]
+use crate::cli::types as __with_name0;
 #[allow(unfulfilled_lint_expectations, unused_imports)]
 use crate::clocks::monotonic_clock as __with_name5;
 #[allow(unfulfilled_lint_expectations, unused_imports)]
 use crate::clocks::system_clock as __with_name6;
 #[allow(unfulfilled_lint_expectations, unused_imports)]
-use crate::random::random as __with_name7;
+use crate::clocks::types as __with_name4;
 #[allow(unfulfilled_lint_expectations, unused_imports)]
 use crate::random::insecure as __with_name8;
 #[allow(unfulfilled_lint_expectations, unused_imports)]
 use crate::random::insecure_seed as __with_name9;
+#[allow(unfulfilled_lint_expectations, unused_imports)]
+use crate::random::random as __with_name7;
 #[rustfmt::skip]
 #[allow(dead_code, clippy::all)]
 pub mod wasi {
@@ -1163,7 +1163,7 @@ pub mod wasi {
                 pub fn append(
                     &self,
                     name: &str,
-                    value: &[u8],
+                    value: &str,
                 ) -> Result<(), HeaderError> {
                     unsafe {
                         #[repr(align(1))]
@@ -4423,8 +4423,7 @@ pub mod wit_future {
                                     let e65 = {
                                         let l4 = i32::from(*ptr.add(16).cast::<u8>());
                                         let l8 = i32::from(
-                                            *ptr
-                                                .add(16 + 3 * ::core::mem::size_of::<*const u8>())
+                                            *ptr.add(16 + 3 * ::core::mem::size_of::<*const u8>())
                                                 .cast::<u8>(),
                                         );
                                         super::super::wasi::http::types::DnsErrorPayload {
@@ -4433,17 +4432,28 @@ pub mod wit_future {
                                                 1 => {
                                                     let e = {
                                                         let l5 = *ptr
-                                                            .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                                            .add(
+                                                                16 + 1 * ::core::mem::size_of::<
+                                                                    *const u8,
+                                                                >(
+                                                                ),
+                                                            )
                                                             .cast::<*mut u8>();
                                                         let l6 = *ptr
-                                                            .add(16 + 2 * ::core::mem::size_of::<*const u8>())
+                                                            .add(
+                                                                16 + 2 * ::core::mem::size_of::<
+                                                                    *const u8,
+                                                                >(
+                                                                ),
+                                                            )
                                                             .cast::<usize>();
                                                         let len7 = l6;
-                                                        let bytes7 = super::super::_rt::Vec::from_raw_parts(
-                                                            l5.cast(),
-                                                            len7,
-                                                            len7,
-                                                        );
+                                                        let bytes7 =
+                                                            super::super::_rt::Vec::from_raw_parts(
+                                                                l5.cast(),
+                                                                len7,
+                                                                len7,
+                                                            );
                                                         super::super::_rt::string_lift(bytes7)
                                                     };
                                                     Some(e)
@@ -4455,9 +4465,13 @@ pub mod wit_future {
                                                 1 => {
                                                     let e = {
                                                         let l9 = i32::from(
-                                                            *ptr
-                                                                .add(18 + 3 * ::core::mem::size_of::<*const u8>())
-                                                                .cast::<u16>(),
+                                                            *ptr.add(
+                                                                18 + 3 * ::core::mem::size_of::<
+                                                                    *const u8,
+                                                                >(
+                                                                ),
+                                                            )
+                                                            .cast::<u16>(),
                                                         );
                                                         l9 as u16
                                                     };
@@ -4485,8 +4499,7 @@ pub mod wit_future {
                                     let e65 = {
                                         let l10 = i32::from(*ptr.add(16).cast::<u8>());
                                         let l12 = i32::from(
-                                            *ptr
-                                                .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                            *ptr.add(16 + 1 * ::core::mem::size_of::<*const u8>())
                                                 .cast::<u8>(),
                                         );
                                         super::super::wasi::http::types::TlsAlertReceivedPayload {
@@ -4494,7 +4507,8 @@ pub mod wit_future {
                                                 0 => None,
                                                 1 => {
                                                     let e = {
-                                                        let l11 = i32::from(*ptr.add(17).cast::<u8>());
+                                                        let l11 =
+                                                            i32::from(*ptr.add(17).cast::<u8>());
                                                         l11 as u8
                                                     };
                                                     Some(e)
@@ -4506,17 +4520,28 @@ pub mod wit_future {
                                                 1 => {
                                                     let e = {
                                                         let l13 = *ptr
-                                                            .add(16 + 2 * ::core::mem::size_of::<*const u8>())
+                                                            .add(
+                                                                16 + 2 * ::core::mem::size_of::<
+                                                                    *const u8,
+                                                                >(
+                                                                ),
+                                                            )
                                                             .cast::<*mut u8>();
                                                         let l14 = *ptr
-                                                            .add(16 + 3 * ::core::mem::size_of::<*const u8>())
+                                                            .add(
+                                                                16 + 3 * ::core::mem::size_of::<
+                                                                    *const u8,
+                                                                >(
+                                                                ),
+                                                            )
                                                             .cast::<usize>();
                                                         let len15 = l14;
-                                                        let bytes15 = super::super::_rt::Vec::from_raw_parts(
-                                                            l13.cast(),
-                                                            len15,
-                                                            len15,
-                                                        );
+                                                        let bytes15 =
+                                                            super::super::_rt::Vec::from_raw_parts(
+                                                                l13.cast(),
+                                                                len15,
+                                                                len15,
+                                                            );
                                                         super::super::_rt::string_lift(bytes15)
                                                     };
                                                     Some(e)
@@ -4574,14 +4599,22 @@ pub mod wit_future {
                                             1 => {
                                                 let e = {
                                                     let l21 = i32::from(
-                                                        *ptr
-                                                            .add(16 + 1 * ::core::mem::size_of::<*const u8>())
-                                                            .cast::<u8>(),
+                                                        *ptr.add(
+                                                            16 + 1 * ::core::mem::size_of::<
+                                                                *const u8,
+                                                            >(
+                                                            ),
+                                                        )
+                                                        .cast::<u8>(),
                                                     );
                                                     let l25 = i32::from(
-                                                        *ptr
-                                                            .add(16 + 4 * ::core::mem::size_of::<*const u8>())
-                                                            .cast::<u8>(),
+                                                        *ptr.add(
+                                                            16 + 4 * ::core::mem::size_of::<
+                                                                *const u8,
+                                                            >(
+                                                            ),
+                                                        )
+                                                        .cast::<u8>(),
                                                     );
                                                     super::super::wasi::http::types::FieldSizePayload {
                                                         field_name: match l21 {
@@ -4649,8 +4682,7 @@ pub mod wit_future {
                                     let e65 = {
                                         let l29 = i32::from(*ptr.add(16).cast::<u8>());
                                         let l33 = i32::from(
-                                            *ptr
-                                                .add(16 + 3 * ::core::mem::size_of::<*const u8>())
+                                            *ptr.add(16 + 3 * ::core::mem::size_of::<*const u8>())
                                                 .cast::<u8>(),
                                         );
                                         super::super::wasi::http::types::FieldSizePayload {
@@ -4659,17 +4691,28 @@ pub mod wit_future {
                                                 1 => {
                                                     let e = {
                                                         let l30 = *ptr
-                                                            .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                                            .add(
+                                                                16 + 1 * ::core::mem::size_of::<
+                                                                    *const u8,
+                                                                >(
+                                                                ),
+                                                            )
                                                             .cast::<*mut u8>();
                                                         let l31 = *ptr
-                                                            .add(16 + 2 * ::core::mem::size_of::<*const u8>())
+                                                            .add(
+                                                                16 + 2 * ::core::mem::size_of::<
+                                                                    *const u8,
+                                                                >(
+                                                                ),
+                                                            )
                                                             .cast::<usize>();
                                                         let len32 = l31;
-                                                        let bytes32 = super::super::_rt::Vec::from_raw_parts(
-                                                            l30.cast(),
-                                                            len32,
-                                                            len32,
-                                                        );
+                                                        let bytes32 =
+                                                            super::super::_rt::Vec::from_raw_parts(
+                                                                l30.cast(),
+                                                                len32,
+                                                                len32,
+                                                            );
                                                         super::super::_rt::string_lift(bytes32)
                                                     };
                                                     Some(e)
@@ -4681,7 +4724,12 @@ pub mod wit_future {
                                                 1 => {
                                                     let e = {
                                                         let l34 = *ptr
-                                                            .add(20 + 3 * ::core::mem::size_of::<*const u8>())
+                                                            .add(
+                                                                20 + 3 * ::core::mem::size_of::<
+                                                                    *const u8,
+                                                                >(
+                                                                ),
+                                                            )
                                                             .cast::<i32>();
                                                         l34 as u32
                                                     };
@@ -4715,8 +4763,7 @@ pub mod wit_future {
                                     let e65 = {
                                         let l37 = i32::from(*ptr.add(16).cast::<u8>());
                                         let l41 = i32::from(
-                                            *ptr
-                                                .add(16 + 3 * ::core::mem::size_of::<*const u8>())
+                                            *ptr.add(16 + 3 * ::core::mem::size_of::<*const u8>())
                                                 .cast::<u8>(),
                                         );
                                         super::super::wasi::http::types::FieldSizePayload {
@@ -4725,17 +4772,28 @@ pub mod wit_future {
                                                 1 => {
                                                     let e = {
                                                         let l38 = *ptr
-                                                            .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                                            .add(
+                                                                16 + 1 * ::core::mem::size_of::<
+                                                                    *const u8,
+                                                                >(
+                                                                ),
+                                                            )
                                                             .cast::<*mut u8>();
                                                         let l39 = *ptr
-                                                            .add(16 + 2 * ::core::mem::size_of::<*const u8>())
+                                                            .add(
+                                                                16 + 2 * ::core::mem::size_of::<
+                                                                    *const u8,
+                                                                >(
+                                                                ),
+                                                            )
                                                             .cast::<usize>();
                                                         let len40 = l39;
-                                                        let bytes40 = super::super::_rt::Vec::from_raw_parts(
-                                                            l38.cast(),
-                                                            len40,
-                                                            len40,
-                                                        );
+                                                        let bytes40 =
+                                                            super::super::_rt::Vec::from_raw_parts(
+                                                                l38.cast(),
+                                                                len40,
+                                                                len40,
+                                                            );
                                                         super::super::_rt::string_lift(bytes40)
                                                     };
                                                     Some(e)
@@ -4747,7 +4805,12 @@ pub mod wit_future {
                                                 1 => {
                                                     let e = {
                                                         let l42 = *ptr
-                                                            .add(20 + 3 * ::core::mem::size_of::<*const u8>())
+                                                            .add(
+                                                                20 + 3 * ::core::mem::size_of::<
+                                                                    *const u8,
+                                                                >(
+                                                                ),
+                                                            )
                                                             .cast::<i32>();
                                                         l42 as u32
                                                     };
@@ -4797,8 +4860,7 @@ pub mod wit_future {
                                     let e65 = {
                                         let l47 = i32::from(*ptr.add(16).cast::<u8>());
                                         let l51 = i32::from(
-                                            *ptr
-                                                .add(16 + 3 * ::core::mem::size_of::<*const u8>())
+                                            *ptr.add(16 + 3 * ::core::mem::size_of::<*const u8>())
                                                 .cast::<u8>(),
                                         );
                                         super::super::wasi::http::types::FieldSizePayload {
@@ -4807,17 +4869,28 @@ pub mod wit_future {
                                                 1 => {
                                                     let e = {
                                                         let l48 = *ptr
-                                                            .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                                            .add(
+                                                                16 + 1 * ::core::mem::size_of::<
+                                                                    *const u8,
+                                                                >(
+                                                                ),
+                                                            )
                                                             .cast::<*mut u8>();
                                                         let l49 = *ptr
-                                                            .add(16 + 2 * ::core::mem::size_of::<*const u8>())
+                                                            .add(
+                                                                16 + 2 * ::core::mem::size_of::<
+                                                                    *const u8,
+                                                                >(
+                                                                ),
+                                                            )
                                                             .cast::<usize>();
                                                         let len50 = l49;
-                                                        let bytes50 = super::super::_rt::Vec::from_raw_parts(
-                                                            l48.cast(),
-                                                            len50,
-                                                            len50,
-                                                        );
+                                                        let bytes50 =
+                                                            super::super::_rt::Vec::from_raw_parts(
+                                                                l48.cast(),
+                                                                len50,
+                                                                len50,
+                                                            );
                                                         super::super::_rt::string_lift(bytes50)
                                                     };
                                                     Some(e)
@@ -4829,7 +4902,12 @@ pub mod wit_future {
                                                 1 => {
                                                     let e = {
                                                         let l52 = *ptr
-                                                            .add(20 + 3 * ::core::mem::size_of::<*const u8>())
+                                                            .add(
+                                                                20 + 3 * ::core::mem::size_of::<
+                                                                    *const u8,
+                                                                >(
+                                                                ),
+                                                            )
                                                             .cast::<i32>();
                                                         l52 as u32
                                                     };
@@ -4849,17 +4927,28 @@ pub mod wit_future {
                                             1 => {
                                                 let e = {
                                                     let l54 = *ptr
-                                                        .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                                        .add(
+                                                            16 + 1 * ::core::mem::size_of::<
+                                                                *const u8,
+                                                            >(
+                                                            ),
+                                                        )
                                                         .cast::<*mut u8>();
                                                     let l55 = *ptr
-                                                        .add(16 + 2 * ::core::mem::size_of::<*const u8>())
+                                                        .add(
+                                                            16 + 2 * ::core::mem::size_of::<
+                                                                *const u8,
+                                                            >(
+                                                            ),
+                                                        )
                                                         .cast::<usize>();
                                                     let len56 = l55;
-                                                    let bytes56 = super::super::_rt::Vec::from_raw_parts(
-                                                        l54.cast(),
-                                                        len56,
-                                                        len56,
-                                                    );
+                                                    let bytes56 =
+                                                        super::super::_rt::Vec::from_raw_parts(
+                                                            l54.cast(),
+                                                            len56,
+                                                            len56,
+                                                        );
                                                     super::super::_rt::string_lift(bytes56)
                                                 };
                                                 Some(e)
@@ -4877,17 +4966,28 @@ pub mod wit_future {
                                             1 => {
                                                 let e = {
                                                     let l58 = *ptr
-                                                        .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                                        .add(
+                                                            16 + 1 * ::core::mem::size_of::<
+                                                                *const u8,
+                                                            >(
+                                                            ),
+                                                        )
                                                         .cast::<*mut u8>();
                                                     let l59 = *ptr
-                                                        .add(16 + 2 * ::core::mem::size_of::<*const u8>())
+                                                        .add(
+                                                            16 + 2 * ::core::mem::size_of::<
+                                                                *const u8,
+                                                            >(
+                                                            ),
+                                                        )
                                                         .cast::<usize>();
                                                     let len60 = l59;
-                                                    let bytes60 = super::super::_rt::Vec::from_raw_parts(
-                                                        l58.cast(),
-                                                        len60,
-                                                        len60,
-                                                    );
+                                                    let bytes60 =
+                                                        super::super::_rt::Vec::from_raw_parts(
+                                                            l58.cast(),
+                                                            len60,
+                                                            len60,
+                                                        );
                                                     super::super::_rt::string_lift(bytes60)
                                                 };
                                                 Some(e)
@@ -4911,17 +5011,28 @@ pub mod wit_future {
                                             1 => {
                                                 let e = {
                                                     let l62 = *ptr
-                                                        .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                                        .add(
+                                                            16 + 1 * ::core::mem::size_of::<
+                                                                *const u8,
+                                                            >(
+                                                            ),
+                                                        )
                                                         .cast::<*mut u8>();
                                                     let l63 = *ptr
-                                                        .add(16 + 2 * ::core::mem::size_of::<*const u8>())
+                                                        .add(
+                                                            16 + 2 * ::core::mem::size_of::<
+                                                                *const u8,
+                                                            >(
+                                                            ),
+                                                        )
                                                         .cast::<usize>();
                                                     let len64 = l63;
-                                                    let bytes64 = super::super::_rt::Vec::from_raw_parts(
-                                                        l62.cast(),
-                                                        len64,
-                                                        len64,
-                                                    );
+                                                    let bytes64 =
+                                                        super::super::_rt::Vec::from_raw_parts(
+                                                            l62.cast(),
+                                                            len64,
+                                                            len64,
+                                                        );
                                                     super::super::_rt::string_lift(bytes64)
                                                 };
                                                 Some(e)
@@ -4981,11 +5092,9 @@ pub mod wit_future {
                                         let ptr1 = vec1.as_ptr().cast::<u8>();
                                         let len1 = vec1.len();
                                         ::core::mem::forget(vec1);
-                                        *ptr
-                                            .add(16 + 2 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 2 * ::core::mem::size_of::<*const u8>())
                                             .cast::<usize>() = len1;
-                                        *ptr
-                                            .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 1 * ::core::mem::size_of::<*const u8>())
                                             .cast::<*mut u8>() = ptr1.cast_mut();
                                     }
                                     None => {
@@ -4994,16 +5103,13 @@ pub mod wit_future {
                                 };
                                 match info_code0 {
                                     Some(e) => {
-                                        *ptr
-                                            .add(16 + 3 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 3 * ::core::mem::size_of::<*const u8>())
                                             .cast::<u8>() = (1i32) as u8;
-                                        *ptr
-                                            .add(18 + 3 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(18 + 3 * ::core::mem::size_of::<*const u8>())
                                             .cast::<u16>() = (super::super::_rt::as_i32(e)) as u16;
                                     }
                                     None => {
-                                        *ptr
-                                            .add(16 + 3 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 3 * ::core::mem::size_of::<*const u8>())
                                             .cast::<u8>() = (0i32) as u8;
                                     }
                                 };
@@ -5053,8 +5159,8 @@ pub mod wit_future {
                                 match alert_id2 {
                                     Some(e) => {
                                         *ptr.add(16).cast::<u8>() = (1i32) as u8;
-                                        *ptr.add(17).cast::<u8>() = (super::super::_rt::as_i32(e))
-                                            as u8;
+                                        *ptr.add(17).cast::<u8>() =
+                                            (super::super::_rt::as_i32(e)) as u8;
                                     }
                                     None => {
                                         *ptr.add(16).cast::<u8>() = (0i32) as u8;
@@ -5062,23 +5168,19 @@ pub mod wit_future {
                                 };
                                 match alert_message2 {
                                     Some(e) => {
-                                        *ptr
-                                            .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 1 * ::core::mem::size_of::<*const u8>())
                                             .cast::<u8>() = (1i32) as u8;
                                         let vec3 = (e.into_bytes()).into_boxed_slice();
                                         let ptr3 = vec3.as_ptr().cast::<u8>();
                                         let len3 = vec3.len();
                                         ::core::mem::forget(vec3);
-                                        *ptr
-                                            .add(16 + 3 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 3 * ::core::mem::size_of::<*const u8>())
                                             .cast::<usize>() = len3;
-                                        *ptr
-                                            .add(16 + 2 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 2 * ::core::mem::size_of::<*const u8>())
                                             .cast::<*mut u8>() = ptr3.cast_mut();
                                     }
                                     None => {
-                                        *ptr
-                                            .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 1 * ::core::mem::size_of::<*const u8>())
                                             .cast::<u8>() = (0i32) as u8;
                                     }
                                 };
@@ -5133,39 +5235,46 @@ pub mod wit_future {
                                         } = e;
                                         match field_name4 {
                                             Some(e) => {
-                                                *ptr
-                                                    .add(16 + 1 * ::core::mem::size_of::<*const u8>())
-                                                    .cast::<u8>() = (1i32) as u8;
+                                                *ptr.add(
+                                                    16 + 1 * ::core::mem::size_of::<*const u8>(),
+                                                )
+                                                .cast::<u8>() = (1i32) as u8;
                                                 let vec5 = (e.into_bytes()).into_boxed_slice();
                                                 let ptr5 = vec5.as_ptr().cast::<u8>();
                                                 let len5 = vec5.len();
                                                 ::core::mem::forget(vec5);
-                                                *ptr
-                                                    .add(16 + 3 * ::core::mem::size_of::<*const u8>())
-                                                    .cast::<usize>() = len5;
-                                                *ptr
-                                                    .add(16 + 2 * ::core::mem::size_of::<*const u8>())
-                                                    .cast::<*mut u8>() = ptr5.cast_mut();
+                                                *ptr.add(
+                                                    16 + 3 * ::core::mem::size_of::<*const u8>(),
+                                                )
+                                                .cast::<usize>() = len5;
+                                                *ptr.add(
+                                                    16 + 2 * ::core::mem::size_of::<*const u8>(),
+                                                )
+                                                .cast::<*mut u8>() = ptr5.cast_mut();
                                             }
                                             None => {
-                                                *ptr
-                                                    .add(16 + 1 * ::core::mem::size_of::<*const u8>())
-                                                    .cast::<u8>() = (0i32) as u8;
+                                                *ptr.add(
+                                                    16 + 1 * ::core::mem::size_of::<*const u8>(),
+                                                )
+                                                .cast::<u8>() = (0i32) as u8;
                                             }
                                         };
                                         match field_size4 {
                                             Some(e) => {
-                                                *ptr
-                                                    .add(16 + 4 * ::core::mem::size_of::<*const u8>())
-                                                    .cast::<u8>() = (1i32) as u8;
-                                                *ptr
-                                                    .add(20 + 4 * ::core::mem::size_of::<*const u8>())
-                                                    .cast::<i32>() = super::super::_rt::as_i32(e);
+                                                *ptr.add(
+                                                    16 + 4 * ::core::mem::size_of::<*const u8>(),
+                                                )
+                                                .cast::<u8>() = (1i32) as u8;
+                                                *ptr.add(
+                                                    20 + 4 * ::core::mem::size_of::<*const u8>(),
+                                                )
+                                                .cast::<i32>() = super::super::_rt::as_i32(e);
                                             }
                                             None => {
-                                                *ptr
-                                                    .add(16 + 4 * ::core::mem::size_of::<*const u8>())
-                                                    .cast::<u8>() = (0i32) as u8;
+                                                *ptr.add(
+                                                    16 + 4 * ::core::mem::size_of::<*const u8>(),
+                                                )
+                                                .cast::<u8>() = (0i32) as u8;
                                             }
                                         };
                                     }
@@ -5199,11 +5308,9 @@ pub mod wit_future {
                                         let ptr7 = vec7.as_ptr().cast::<u8>();
                                         let len7 = vec7.len();
                                         ::core::mem::forget(vec7);
-                                        *ptr
-                                            .add(16 + 2 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 2 * ::core::mem::size_of::<*const u8>())
                                             .cast::<usize>() = len7;
-                                        *ptr
-                                            .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 1 * ::core::mem::size_of::<*const u8>())
                                             .cast::<*mut u8>() = ptr7.cast_mut();
                                     }
                                     None => {
@@ -5212,16 +5319,13 @@ pub mod wit_future {
                                 };
                                 match field_size6 {
                                     Some(e) => {
-                                        *ptr
-                                            .add(16 + 3 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 3 * ::core::mem::size_of::<*const u8>())
                                             .cast::<u8>() = (1i32) as u8;
-                                        *ptr
-                                            .add(20 + 3 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(20 + 3 * ::core::mem::size_of::<*const u8>())
                                             .cast::<i32>() = super::super::_rt::as_i32(e);
                                     }
                                     None => {
-                                        *ptr
-                                            .add(16 + 3 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 3 * ::core::mem::size_of::<*const u8>())
                                             .cast::<u8>() = (0i32) as u8;
                                     }
                                 };
@@ -5254,11 +5358,9 @@ pub mod wit_future {
                                         let ptr9 = vec9.as_ptr().cast::<u8>();
                                         let len9 = vec9.len();
                                         ::core::mem::forget(vec9);
-                                        *ptr
-                                            .add(16 + 2 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 2 * ::core::mem::size_of::<*const u8>())
                                             .cast::<usize>() = len9;
-                                        *ptr
-                                            .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 1 * ::core::mem::size_of::<*const u8>())
                                             .cast::<*mut u8>() = ptr9.cast_mut();
                                     }
                                     None => {
@@ -5267,16 +5369,13 @@ pub mod wit_future {
                                 };
                                 match field_size8 {
                                     Some(e) => {
-                                        *ptr
-                                            .add(16 + 3 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 3 * ::core::mem::size_of::<*const u8>())
                                             .cast::<u8>() = (1i32) as u8;
-                                        *ptr
-                                            .add(20 + 3 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(20 + 3 * ::core::mem::size_of::<*const u8>())
                                             .cast::<i32>() = super::super::_rt::as_i32(e);
                                     }
                                     None => {
-                                        *ptr
-                                            .add(16 + 3 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 3 * ::core::mem::size_of::<*const u8>())
                                             .cast::<u8>() = (0i32) as u8;
                                     }
                                 };
@@ -5318,11 +5417,9 @@ pub mod wit_future {
                                         let ptr11 = vec11.as_ptr().cast::<u8>();
                                         let len11 = vec11.len();
                                         ::core::mem::forget(vec11);
-                                        *ptr
-                                            .add(16 + 2 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 2 * ::core::mem::size_of::<*const u8>())
                                             .cast::<usize>() = len11;
-                                        *ptr
-                                            .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 1 * ::core::mem::size_of::<*const u8>())
                                             .cast::<*mut u8>() = ptr11.cast_mut();
                                     }
                                     None => {
@@ -5331,16 +5428,13 @@ pub mod wit_future {
                                 };
                                 match field_size10 {
                                     Some(e) => {
-                                        *ptr
-                                            .add(16 + 3 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 3 * ::core::mem::size_of::<*const u8>())
                                             .cast::<u8>() = (1i32) as u8;
-                                        *ptr
-                                            .add(20 + 3 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(20 + 3 * ::core::mem::size_of::<*const u8>())
                                             .cast::<i32>() = super::super::_rt::as_i32(e);
                                     }
                                     None => {
-                                        *ptr
-                                            .add(16 + 3 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 3 * ::core::mem::size_of::<*const u8>())
                                             .cast::<u8>() = (0i32) as u8;
                                     }
                                 };
@@ -5354,11 +5448,9 @@ pub mod wit_future {
                                         let ptr12 = vec12.as_ptr().cast::<u8>();
                                         let len12 = vec12.len();
                                         ::core::mem::forget(vec12);
-                                        *ptr
-                                            .add(16 + 2 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 2 * ::core::mem::size_of::<*const u8>())
                                             .cast::<usize>() = len12;
-                                        *ptr
-                                            .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 1 * ::core::mem::size_of::<*const u8>())
                                             .cast::<*mut u8>() = ptr12.cast_mut();
                                     }
                                     None => {
@@ -5375,11 +5467,9 @@ pub mod wit_future {
                                         let ptr13 = vec13.as_ptr().cast::<u8>();
                                         let len13 = vec13.len();
                                         ::core::mem::forget(vec13);
-                                        *ptr
-                                            .add(16 + 2 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 2 * ::core::mem::size_of::<*const u8>())
                                             .cast::<usize>() = len13;
-                                        *ptr
-                                            .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 1 * ::core::mem::size_of::<*const u8>())
                                             .cast::<*mut u8>() = ptr13.cast_mut();
                                     }
                                     None => {
@@ -5411,11 +5501,9 @@ pub mod wit_future {
                                         let ptr14 = vec14.as_ptr().cast::<u8>();
                                         let len14 = vec14.len();
                                         ::core::mem::forget(vec14);
-                                        *ptr
-                                            .add(16 + 2 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 2 * ::core::mem::size_of::<*const u8>())
                                             .cast::<usize>() = len14;
-                                        *ptr
-                                            .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 1 * ::core::mem::size_of::<*const u8>())
                                             .cast::<*mut u8>() = ptr14.cast_mut();
                                     }
                                     None => {
@@ -5466,8 +5554,7 @@ pub mod wit_future {
                             13 => {}
                             14 => {
                                 let l5 = i32::from(
-                                    *ptr
-                                        .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                    *ptr.add(16 + 1 * ::core::mem::size_of::<*const u8>())
                                         .cast::<u8>(),
                                 );
                                 match l5 {
@@ -5496,18 +5583,23 @@ pub mod wit_future {
                                     0 => {}
                                     _ => {
                                         let l9 = i32::from(
-                                            *ptr
-                                                .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                            *ptr.add(16 + 1 * ::core::mem::size_of::<*const u8>())
                                                 .cast::<u8>(),
                                         );
                                         match l9 {
                                             0 => {}
                                             _ => {
                                                 let l10 = *ptr
-                                                    .add(16 + 2 * ::core::mem::size_of::<*const u8>())
+                                                    .add(
+                                                        16 + 2 * ::core::mem::size_of::<*const u8>(
+                                                        ),
+                                                    )
                                                     .cast::<*mut u8>();
                                                 let l11 = *ptr
-                                                    .add(16 + 3 * ::core::mem::size_of::<*const u8>())
+                                                    .add(
+                                                        16 + 3 * ::core::mem::size_of::<*const u8>(
+                                                        ),
+                                                    )
                                                     .cast::<usize>();
                                                 super::super::_rt::cabi_dealloc(l10, l11, 1);
                                             }
@@ -5644,10 +5736,11 @@ pub mod wit_future {
             start_write,
         };
         impl super::FuturePayload
-        for Result<
-            Option<super::super::wasi::http::types::Trailers>,
-            super::super::wasi::http::types::ErrorCode,
-        > {
+            for Result<
+                Option<super::super::wasi::http::types::Trailers>,
+                super::super::wasi::http::types::ErrorCode,
+            >
+        {
             const VTABLE: &'static wit_bindgen::rt::async_support::FutureVtable<Self> = &VTABLE;
         }
     }
@@ -5700,9 +5793,7 @@ pub mod wit_future {
             #[link_name = "[async-lower][future-write-2][static]request.new"]
             fn start_write(_: u32, _: *const u8) -> u32;
         }
-        unsafe fn lift(
-            ptr: *mut u8,
-        ) -> Result<(), super::super::wasi::http::types::ErrorCode> {
+        unsafe fn lift(ptr: *mut u8) -> Result<(), super::super::wasi::http::types::ErrorCode> {
             unsafe {
                 let l0 = i32::from(*ptr.add(0).cast::<u8>());
                 match l0 {
@@ -5720,8 +5811,7 @@ pub mod wit_future {
                                     let e63 = {
                                         let l2 = i32::from(*ptr.add(16).cast::<u8>());
                                         let l6 = i32::from(
-                                            *ptr
-                                                .add(16 + 3 * ::core::mem::size_of::<*const u8>())
+                                            *ptr.add(16 + 3 * ::core::mem::size_of::<*const u8>())
                                                 .cast::<u8>(),
                                         );
                                         super::super::wasi::http::types::DnsErrorPayload {
@@ -5730,17 +5820,28 @@ pub mod wit_future {
                                                 1 => {
                                                     let e = {
                                                         let l3 = *ptr
-                                                            .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                                            .add(
+                                                                16 + 1 * ::core::mem::size_of::<
+                                                                    *const u8,
+                                                                >(
+                                                                ),
+                                                            )
                                                             .cast::<*mut u8>();
                                                         let l4 = *ptr
-                                                            .add(16 + 2 * ::core::mem::size_of::<*const u8>())
+                                                            .add(
+                                                                16 + 2 * ::core::mem::size_of::<
+                                                                    *const u8,
+                                                                >(
+                                                                ),
+                                                            )
                                                             .cast::<usize>();
                                                         let len5 = l4;
-                                                        let bytes5 = super::super::_rt::Vec::from_raw_parts(
-                                                            l3.cast(),
-                                                            len5,
-                                                            len5,
-                                                        );
+                                                        let bytes5 =
+                                                            super::super::_rt::Vec::from_raw_parts(
+                                                                l3.cast(),
+                                                                len5,
+                                                                len5,
+                                                            );
                                                         super::super::_rt::string_lift(bytes5)
                                                     };
                                                     Some(e)
@@ -5752,9 +5853,13 @@ pub mod wit_future {
                                                 1 => {
                                                     let e = {
                                                         let l7 = i32::from(
-                                                            *ptr
-                                                                .add(18 + 3 * ::core::mem::size_of::<*const u8>())
-                                                                .cast::<u16>(),
+                                                            *ptr.add(
+                                                                18 + 3 * ::core::mem::size_of::<
+                                                                    *const u8,
+                                                                >(
+                                                                ),
+                                                            )
+                                                            .cast::<u16>(),
                                                         );
                                                         l7 as u16
                                                     };
@@ -5782,8 +5887,7 @@ pub mod wit_future {
                                     let e63 = {
                                         let l8 = i32::from(*ptr.add(16).cast::<u8>());
                                         let l10 = i32::from(
-                                            *ptr
-                                                .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                            *ptr.add(16 + 1 * ::core::mem::size_of::<*const u8>())
                                                 .cast::<u8>(),
                                         );
                                         super::super::wasi::http::types::TlsAlertReceivedPayload {
@@ -5791,7 +5895,8 @@ pub mod wit_future {
                                                 0 => None,
                                                 1 => {
                                                     let e = {
-                                                        let l9 = i32::from(*ptr.add(17).cast::<u8>());
+                                                        let l9 =
+                                                            i32::from(*ptr.add(17).cast::<u8>());
                                                         l9 as u8
                                                     };
                                                     Some(e)
@@ -5803,17 +5908,28 @@ pub mod wit_future {
                                                 1 => {
                                                     let e = {
                                                         let l11 = *ptr
-                                                            .add(16 + 2 * ::core::mem::size_of::<*const u8>())
+                                                            .add(
+                                                                16 + 2 * ::core::mem::size_of::<
+                                                                    *const u8,
+                                                                >(
+                                                                ),
+                                                            )
                                                             .cast::<*mut u8>();
                                                         let l12 = *ptr
-                                                            .add(16 + 3 * ::core::mem::size_of::<*const u8>())
+                                                            .add(
+                                                                16 + 3 * ::core::mem::size_of::<
+                                                                    *const u8,
+                                                                >(
+                                                                ),
+                                                            )
                                                             .cast::<usize>();
                                                         let len13 = l12;
-                                                        let bytes13 = super::super::_rt::Vec::from_raw_parts(
-                                                            l11.cast(),
-                                                            len13,
-                                                            len13,
-                                                        );
+                                                        let bytes13 =
+                                                            super::super::_rt::Vec::from_raw_parts(
+                                                                l11.cast(),
+                                                                len13,
+                                                                len13,
+                                                            );
                                                         super::super::_rt::string_lift(bytes13)
                                                     };
                                                     Some(e)
@@ -5871,14 +5987,22 @@ pub mod wit_future {
                                             1 => {
                                                 let e = {
                                                     let l19 = i32::from(
-                                                        *ptr
-                                                            .add(16 + 1 * ::core::mem::size_of::<*const u8>())
-                                                            .cast::<u8>(),
+                                                        *ptr.add(
+                                                            16 + 1 * ::core::mem::size_of::<
+                                                                *const u8,
+                                                            >(
+                                                            ),
+                                                        )
+                                                        .cast::<u8>(),
                                                     );
                                                     let l23 = i32::from(
-                                                        *ptr
-                                                            .add(16 + 4 * ::core::mem::size_of::<*const u8>())
-                                                            .cast::<u8>(),
+                                                        *ptr.add(
+                                                            16 + 4 * ::core::mem::size_of::<
+                                                                *const u8,
+                                                            >(
+                                                            ),
+                                                        )
+                                                        .cast::<u8>(),
                                                     );
                                                     super::super::wasi::http::types::FieldSizePayload {
                                                         field_name: match l19 {
@@ -5946,8 +6070,7 @@ pub mod wit_future {
                                     let e63 = {
                                         let l27 = i32::from(*ptr.add(16).cast::<u8>());
                                         let l31 = i32::from(
-                                            *ptr
-                                                .add(16 + 3 * ::core::mem::size_of::<*const u8>())
+                                            *ptr.add(16 + 3 * ::core::mem::size_of::<*const u8>())
                                                 .cast::<u8>(),
                                         );
                                         super::super::wasi::http::types::FieldSizePayload {
@@ -5956,17 +6079,28 @@ pub mod wit_future {
                                                 1 => {
                                                     let e = {
                                                         let l28 = *ptr
-                                                            .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                                            .add(
+                                                                16 + 1 * ::core::mem::size_of::<
+                                                                    *const u8,
+                                                                >(
+                                                                ),
+                                                            )
                                                             .cast::<*mut u8>();
                                                         let l29 = *ptr
-                                                            .add(16 + 2 * ::core::mem::size_of::<*const u8>())
+                                                            .add(
+                                                                16 + 2 * ::core::mem::size_of::<
+                                                                    *const u8,
+                                                                >(
+                                                                ),
+                                                            )
                                                             .cast::<usize>();
                                                         let len30 = l29;
-                                                        let bytes30 = super::super::_rt::Vec::from_raw_parts(
-                                                            l28.cast(),
-                                                            len30,
-                                                            len30,
-                                                        );
+                                                        let bytes30 =
+                                                            super::super::_rt::Vec::from_raw_parts(
+                                                                l28.cast(),
+                                                                len30,
+                                                                len30,
+                                                            );
                                                         super::super::_rt::string_lift(bytes30)
                                                     };
                                                     Some(e)
@@ -5978,7 +6112,12 @@ pub mod wit_future {
                                                 1 => {
                                                     let e = {
                                                         let l32 = *ptr
-                                                            .add(20 + 3 * ::core::mem::size_of::<*const u8>())
+                                                            .add(
+                                                                20 + 3 * ::core::mem::size_of::<
+                                                                    *const u8,
+                                                                >(
+                                                                ),
+                                                            )
                                                             .cast::<i32>();
                                                         l32 as u32
                                                     };
@@ -6012,8 +6151,7 @@ pub mod wit_future {
                                     let e63 = {
                                         let l35 = i32::from(*ptr.add(16).cast::<u8>());
                                         let l39 = i32::from(
-                                            *ptr
-                                                .add(16 + 3 * ::core::mem::size_of::<*const u8>())
+                                            *ptr.add(16 + 3 * ::core::mem::size_of::<*const u8>())
                                                 .cast::<u8>(),
                                         );
                                         super::super::wasi::http::types::FieldSizePayload {
@@ -6022,17 +6160,28 @@ pub mod wit_future {
                                                 1 => {
                                                     let e = {
                                                         let l36 = *ptr
-                                                            .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                                            .add(
+                                                                16 + 1 * ::core::mem::size_of::<
+                                                                    *const u8,
+                                                                >(
+                                                                ),
+                                                            )
                                                             .cast::<*mut u8>();
                                                         let l37 = *ptr
-                                                            .add(16 + 2 * ::core::mem::size_of::<*const u8>())
+                                                            .add(
+                                                                16 + 2 * ::core::mem::size_of::<
+                                                                    *const u8,
+                                                                >(
+                                                                ),
+                                                            )
                                                             .cast::<usize>();
                                                         let len38 = l37;
-                                                        let bytes38 = super::super::_rt::Vec::from_raw_parts(
-                                                            l36.cast(),
-                                                            len38,
-                                                            len38,
-                                                        );
+                                                        let bytes38 =
+                                                            super::super::_rt::Vec::from_raw_parts(
+                                                                l36.cast(),
+                                                                len38,
+                                                                len38,
+                                                            );
                                                         super::super::_rt::string_lift(bytes38)
                                                     };
                                                     Some(e)
@@ -6044,7 +6193,12 @@ pub mod wit_future {
                                                 1 => {
                                                     let e = {
                                                         let l40 = *ptr
-                                                            .add(20 + 3 * ::core::mem::size_of::<*const u8>())
+                                                            .add(
+                                                                20 + 3 * ::core::mem::size_of::<
+                                                                    *const u8,
+                                                                >(
+                                                                ),
+                                                            )
                                                             .cast::<i32>();
                                                         l40 as u32
                                                     };
@@ -6094,8 +6248,7 @@ pub mod wit_future {
                                     let e63 = {
                                         let l45 = i32::from(*ptr.add(16).cast::<u8>());
                                         let l49 = i32::from(
-                                            *ptr
-                                                .add(16 + 3 * ::core::mem::size_of::<*const u8>())
+                                            *ptr.add(16 + 3 * ::core::mem::size_of::<*const u8>())
                                                 .cast::<u8>(),
                                         );
                                         super::super::wasi::http::types::FieldSizePayload {
@@ -6104,17 +6257,28 @@ pub mod wit_future {
                                                 1 => {
                                                     let e = {
                                                         let l46 = *ptr
-                                                            .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                                            .add(
+                                                                16 + 1 * ::core::mem::size_of::<
+                                                                    *const u8,
+                                                                >(
+                                                                ),
+                                                            )
                                                             .cast::<*mut u8>();
                                                         let l47 = *ptr
-                                                            .add(16 + 2 * ::core::mem::size_of::<*const u8>())
+                                                            .add(
+                                                                16 + 2 * ::core::mem::size_of::<
+                                                                    *const u8,
+                                                                >(
+                                                                ),
+                                                            )
                                                             .cast::<usize>();
                                                         let len48 = l47;
-                                                        let bytes48 = super::super::_rt::Vec::from_raw_parts(
-                                                            l46.cast(),
-                                                            len48,
-                                                            len48,
-                                                        );
+                                                        let bytes48 =
+                                                            super::super::_rt::Vec::from_raw_parts(
+                                                                l46.cast(),
+                                                                len48,
+                                                                len48,
+                                                            );
                                                         super::super::_rt::string_lift(bytes48)
                                                     };
                                                     Some(e)
@@ -6126,7 +6290,12 @@ pub mod wit_future {
                                                 1 => {
                                                     let e = {
                                                         let l50 = *ptr
-                                                            .add(20 + 3 * ::core::mem::size_of::<*const u8>())
+                                                            .add(
+                                                                20 + 3 * ::core::mem::size_of::<
+                                                                    *const u8,
+                                                                >(
+                                                                ),
+                                                            )
                                                             .cast::<i32>();
                                                         l50 as u32
                                                     };
@@ -6146,17 +6315,28 @@ pub mod wit_future {
                                             1 => {
                                                 let e = {
                                                     let l52 = *ptr
-                                                        .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                                        .add(
+                                                            16 + 1 * ::core::mem::size_of::<
+                                                                *const u8,
+                                                            >(
+                                                            ),
+                                                        )
                                                         .cast::<*mut u8>();
                                                     let l53 = *ptr
-                                                        .add(16 + 2 * ::core::mem::size_of::<*const u8>())
+                                                        .add(
+                                                            16 + 2 * ::core::mem::size_of::<
+                                                                *const u8,
+                                                            >(
+                                                            ),
+                                                        )
                                                         .cast::<usize>();
                                                     let len54 = l53;
-                                                    let bytes54 = super::super::_rt::Vec::from_raw_parts(
-                                                        l52.cast(),
-                                                        len54,
-                                                        len54,
-                                                    );
+                                                    let bytes54 =
+                                                        super::super::_rt::Vec::from_raw_parts(
+                                                            l52.cast(),
+                                                            len54,
+                                                            len54,
+                                                        );
                                                     super::super::_rt::string_lift(bytes54)
                                                 };
                                                 Some(e)
@@ -6174,17 +6354,28 @@ pub mod wit_future {
                                             1 => {
                                                 let e = {
                                                     let l56 = *ptr
-                                                        .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                                        .add(
+                                                            16 + 1 * ::core::mem::size_of::<
+                                                                *const u8,
+                                                            >(
+                                                            ),
+                                                        )
                                                         .cast::<*mut u8>();
                                                     let l57 = *ptr
-                                                        .add(16 + 2 * ::core::mem::size_of::<*const u8>())
+                                                        .add(
+                                                            16 + 2 * ::core::mem::size_of::<
+                                                                *const u8,
+                                                            >(
+                                                            ),
+                                                        )
                                                         .cast::<usize>();
                                                     let len58 = l57;
-                                                    let bytes58 = super::super::_rt::Vec::from_raw_parts(
-                                                        l56.cast(),
-                                                        len58,
-                                                        len58,
-                                                    );
+                                                    let bytes58 =
+                                                        super::super::_rt::Vec::from_raw_parts(
+                                                            l56.cast(),
+                                                            len58,
+                                                            len58,
+                                                        );
                                                     super::super::_rt::string_lift(bytes58)
                                                 };
                                                 Some(e)
@@ -6208,17 +6399,28 @@ pub mod wit_future {
                                             1 => {
                                                 let e = {
                                                     let l60 = *ptr
-                                                        .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                                        .add(
+                                                            16 + 1 * ::core::mem::size_of::<
+                                                                *const u8,
+                                                            >(
+                                                            ),
+                                                        )
                                                         .cast::<*mut u8>();
                                                     let l61 = *ptr
-                                                        .add(16 + 2 * ::core::mem::size_of::<*const u8>())
+                                                        .add(
+                                                            16 + 2 * ::core::mem::size_of::<
+                                                                *const u8,
+                                                            >(
+                                                            ),
+                                                        )
                                                         .cast::<usize>();
                                                     let len62 = l61;
-                                                    let bytes62 = super::super::_rt::Vec::from_raw_parts(
-                                                        l60.cast(),
-                                                        len62,
-                                                        len62,
-                                                    );
+                                                    let bytes62 =
+                                                        super::super::_rt::Vec::from_raw_parts(
+                                                            l60.cast(),
+                                                            len62,
+                                                            len62,
+                                                        );
                                                     super::super::_rt::string_lift(bytes62)
                                                 };
                                                 Some(e)
@@ -6266,11 +6468,9 @@ pub mod wit_future {
                                         let ptr1 = vec1.as_ptr().cast::<u8>();
                                         let len1 = vec1.len();
                                         ::core::mem::forget(vec1);
-                                        *ptr
-                                            .add(16 + 2 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 2 * ::core::mem::size_of::<*const u8>())
                                             .cast::<usize>() = len1;
-                                        *ptr
-                                            .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 1 * ::core::mem::size_of::<*const u8>())
                                             .cast::<*mut u8>() = ptr1.cast_mut();
                                     }
                                     None => {
@@ -6279,16 +6479,13 @@ pub mod wit_future {
                                 };
                                 match info_code0 {
                                     Some(e) => {
-                                        *ptr
-                                            .add(16 + 3 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 3 * ::core::mem::size_of::<*const u8>())
                                             .cast::<u8>() = (1i32) as u8;
-                                        *ptr
-                                            .add(18 + 3 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(18 + 3 * ::core::mem::size_of::<*const u8>())
                                             .cast::<u16>() = (super::super::_rt::as_i32(e)) as u16;
                                     }
                                     None => {
-                                        *ptr
-                                            .add(16 + 3 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 3 * ::core::mem::size_of::<*const u8>())
                                             .cast::<u8>() = (0i32) as u8;
                                     }
                                 };
@@ -6338,8 +6535,8 @@ pub mod wit_future {
                                 match alert_id2 {
                                     Some(e) => {
                                         *ptr.add(16).cast::<u8>() = (1i32) as u8;
-                                        *ptr.add(17).cast::<u8>() = (super::super::_rt::as_i32(e))
-                                            as u8;
+                                        *ptr.add(17).cast::<u8>() =
+                                            (super::super::_rt::as_i32(e)) as u8;
                                     }
                                     None => {
                                         *ptr.add(16).cast::<u8>() = (0i32) as u8;
@@ -6347,23 +6544,19 @@ pub mod wit_future {
                                 };
                                 match alert_message2 {
                                     Some(e) => {
-                                        *ptr
-                                            .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 1 * ::core::mem::size_of::<*const u8>())
                                             .cast::<u8>() = (1i32) as u8;
                                         let vec3 = (e.into_bytes()).into_boxed_slice();
                                         let ptr3 = vec3.as_ptr().cast::<u8>();
                                         let len3 = vec3.len();
                                         ::core::mem::forget(vec3);
-                                        *ptr
-                                            .add(16 + 3 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 3 * ::core::mem::size_of::<*const u8>())
                                             .cast::<usize>() = len3;
-                                        *ptr
-                                            .add(16 + 2 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 2 * ::core::mem::size_of::<*const u8>())
                                             .cast::<*mut u8>() = ptr3.cast_mut();
                                     }
                                     None => {
-                                        *ptr
-                                            .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 1 * ::core::mem::size_of::<*const u8>())
                                             .cast::<u8>() = (0i32) as u8;
                                     }
                                 };
@@ -6418,39 +6611,46 @@ pub mod wit_future {
                                         } = e;
                                         match field_name4 {
                                             Some(e) => {
-                                                *ptr
-                                                    .add(16 + 1 * ::core::mem::size_of::<*const u8>())
-                                                    .cast::<u8>() = (1i32) as u8;
+                                                *ptr.add(
+                                                    16 + 1 * ::core::mem::size_of::<*const u8>(),
+                                                )
+                                                .cast::<u8>() = (1i32) as u8;
                                                 let vec5 = (e.into_bytes()).into_boxed_slice();
                                                 let ptr5 = vec5.as_ptr().cast::<u8>();
                                                 let len5 = vec5.len();
                                                 ::core::mem::forget(vec5);
-                                                *ptr
-                                                    .add(16 + 3 * ::core::mem::size_of::<*const u8>())
-                                                    .cast::<usize>() = len5;
-                                                *ptr
-                                                    .add(16 + 2 * ::core::mem::size_of::<*const u8>())
-                                                    .cast::<*mut u8>() = ptr5.cast_mut();
+                                                *ptr.add(
+                                                    16 + 3 * ::core::mem::size_of::<*const u8>(),
+                                                )
+                                                .cast::<usize>() = len5;
+                                                *ptr.add(
+                                                    16 + 2 * ::core::mem::size_of::<*const u8>(),
+                                                )
+                                                .cast::<*mut u8>() = ptr5.cast_mut();
                                             }
                                             None => {
-                                                *ptr
-                                                    .add(16 + 1 * ::core::mem::size_of::<*const u8>())
-                                                    .cast::<u8>() = (0i32) as u8;
+                                                *ptr.add(
+                                                    16 + 1 * ::core::mem::size_of::<*const u8>(),
+                                                )
+                                                .cast::<u8>() = (0i32) as u8;
                                             }
                                         };
                                         match field_size4 {
                                             Some(e) => {
-                                                *ptr
-                                                    .add(16 + 4 * ::core::mem::size_of::<*const u8>())
-                                                    .cast::<u8>() = (1i32) as u8;
-                                                *ptr
-                                                    .add(20 + 4 * ::core::mem::size_of::<*const u8>())
-                                                    .cast::<i32>() = super::super::_rt::as_i32(e);
+                                                *ptr.add(
+                                                    16 + 4 * ::core::mem::size_of::<*const u8>(),
+                                                )
+                                                .cast::<u8>() = (1i32) as u8;
+                                                *ptr.add(
+                                                    20 + 4 * ::core::mem::size_of::<*const u8>(),
+                                                )
+                                                .cast::<i32>() = super::super::_rt::as_i32(e);
                                             }
                                             None => {
-                                                *ptr
-                                                    .add(16 + 4 * ::core::mem::size_of::<*const u8>())
-                                                    .cast::<u8>() = (0i32) as u8;
+                                                *ptr.add(
+                                                    16 + 4 * ::core::mem::size_of::<*const u8>(),
+                                                )
+                                                .cast::<u8>() = (0i32) as u8;
                                             }
                                         };
                                     }
@@ -6484,11 +6684,9 @@ pub mod wit_future {
                                         let ptr7 = vec7.as_ptr().cast::<u8>();
                                         let len7 = vec7.len();
                                         ::core::mem::forget(vec7);
-                                        *ptr
-                                            .add(16 + 2 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 2 * ::core::mem::size_of::<*const u8>())
                                             .cast::<usize>() = len7;
-                                        *ptr
-                                            .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 1 * ::core::mem::size_of::<*const u8>())
                                             .cast::<*mut u8>() = ptr7.cast_mut();
                                     }
                                     None => {
@@ -6497,16 +6695,13 @@ pub mod wit_future {
                                 };
                                 match field_size6 {
                                     Some(e) => {
-                                        *ptr
-                                            .add(16 + 3 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 3 * ::core::mem::size_of::<*const u8>())
                                             .cast::<u8>() = (1i32) as u8;
-                                        *ptr
-                                            .add(20 + 3 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(20 + 3 * ::core::mem::size_of::<*const u8>())
                                             .cast::<i32>() = super::super::_rt::as_i32(e);
                                     }
                                     None => {
-                                        *ptr
-                                            .add(16 + 3 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 3 * ::core::mem::size_of::<*const u8>())
                                             .cast::<u8>() = (0i32) as u8;
                                     }
                                 };
@@ -6539,11 +6734,9 @@ pub mod wit_future {
                                         let ptr9 = vec9.as_ptr().cast::<u8>();
                                         let len9 = vec9.len();
                                         ::core::mem::forget(vec9);
-                                        *ptr
-                                            .add(16 + 2 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 2 * ::core::mem::size_of::<*const u8>())
                                             .cast::<usize>() = len9;
-                                        *ptr
-                                            .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 1 * ::core::mem::size_of::<*const u8>())
                                             .cast::<*mut u8>() = ptr9.cast_mut();
                                     }
                                     None => {
@@ -6552,16 +6745,13 @@ pub mod wit_future {
                                 };
                                 match field_size8 {
                                     Some(e) => {
-                                        *ptr
-                                            .add(16 + 3 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 3 * ::core::mem::size_of::<*const u8>())
                                             .cast::<u8>() = (1i32) as u8;
-                                        *ptr
-                                            .add(20 + 3 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(20 + 3 * ::core::mem::size_of::<*const u8>())
                                             .cast::<i32>() = super::super::_rt::as_i32(e);
                                     }
                                     None => {
-                                        *ptr
-                                            .add(16 + 3 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 3 * ::core::mem::size_of::<*const u8>())
                                             .cast::<u8>() = (0i32) as u8;
                                     }
                                 };
@@ -6603,11 +6793,9 @@ pub mod wit_future {
                                         let ptr11 = vec11.as_ptr().cast::<u8>();
                                         let len11 = vec11.len();
                                         ::core::mem::forget(vec11);
-                                        *ptr
-                                            .add(16 + 2 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 2 * ::core::mem::size_of::<*const u8>())
                                             .cast::<usize>() = len11;
-                                        *ptr
-                                            .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 1 * ::core::mem::size_of::<*const u8>())
                                             .cast::<*mut u8>() = ptr11.cast_mut();
                                     }
                                     None => {
@@ -6616,16 +6804,13 @@ pub mod wit_future {
                                 };
                                 match field_size10 {
                                     Some(e) => {
-                                        *ptr
-                                            .add(16 + 3 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 3 * ::core::mem::size_of::<*const u8>())
                                             .cast::<u8>() = (1i32) as u8;
-                                        *ptr
-                                            .add(20 + 3 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(20 + 3 * ::core::mem::size_of::<*const u8>())
                                             .cast::<i32>() = super::super::_rt::as_i32(e);
                                     }
                                     None => {
-                                        *ptr
-                                            .add(16 + 3 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 3 * ::core::mem::size_of::<*const u8>())
                                             .cast::<u8>() = (0i32) as u8;
                                     }
                                 };
@@ -6639,11 +6824,9 @@ pub mod wit_future {
                                         let ptr12 = vec12.as_ptr().cast::<u8>();
                                         let len12 = vec12.len();
                                         ::core::mem::forget(vec12);
-                                        *ptr
-                                            .add(16 + 2 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 2 * ::core::mem::size_of::<*const u8>())
                                             .cast::<usize>() = len12;
-                                        *ptr
-                                            .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 1 * ::core::mem::size_of::<*const u8>())
                                             .cast::<*mut u8>() = ptr12.cast_mut();
                                     }
                                     None => {
@@ -6660,11 +6843,9 @@ pub mod wit_future {
                                         let ptr13 = vec13.as_ptr().cast::<u8>();
                                         let len13 = vec13.len();
                                         ::core::mem::forget(vec13);
-                                        *ptr
-                                            .add(16 + 2 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 2 * ::core::mem::size_of::<*const u8>())
                                             .cast::<usize>() = len13;
-                                        *ptr
-                                            .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 1 * ::core::mem::size_of::<*const u8>())
                                             .cast::<*mut u8>() = ptr13.cast_mut();
                                     }
                                     None => {
@@ -6696,11 +6877,9 @@ pub mod wit_future {
                                         let ptr14 = vec14.as_ptr().cast::<u8>();
                                         let len14 = vec14.len();
                                         ::core::mem::forget(vec14);
-                                        *ptr
-                                            .add(16 + 2 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 2 * ::core::mem::size_of::<*const u8>())
                                             .cast::<usize>() = len14;
-                                        *ptr
-                                            .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                        *ptr.add(16 + 1 * ::core::mem::size_of::<*const u8>())
                                             .cast::<*mut u8>() = ptr14.cast_mut();
                                     }
                                     None => {
@@ -6751,8 +6930,7 @@ pub mod wit_future {
                             13 => {}
                             14 => {
                                 let l5 = i32::from(
-                                    *ptr
-                                        .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                    *ptr.add(16 + 1 * ::core::mem::size_of::<*const u8>())
                                         .cast::<u8>(),
                                 );
                                 match l5 {
@@ -6781,18 +6959,23 @@ pub mod wit_future {
                                     0 => {}
                                     _ => {
                                         let l9 = i32::from(
-                                            *ptr
-                                                .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                                            *ptr.add(16 + 1 * ::core::mem::size_of::<*const u8>())
                                                 .cast::<u8>(),
                                         );
                                         match l9 {
                                             0 => {}
                                             _ => {
                                                 let l10 = *ptr
-                                                    .add(16 + 2 * ::core::mem::size_of::<*const u8>())
+                                                    .add(
+                                                        16 + 2 * ::core::mem::size_of::<*const u8>(
+                                                        ),
+                                                    )
                                                     .cast::<*mut u8>();
                                                 let l11 = *ptr
-                                                    .add(16 + 3 * ::core::mem::size_of::<*const u8>())
+                                                    .add(
+                                                        16 + 3 * ::core::mem::size_of::<*const u8>(
+                                                        ),
+                                                    )
                                                     .cast::<usize>();
                                                 super::super::_rt::cabi_dealloc(l10, l11, 1);
                                             }
@@ -6922,8 +7105,7 @@ pub mod wit_future {
             start_read,
             start_write,
         };
-        impl super::FuturePayload
-        for Result<(), super::super::wasi::http::types::ErrorCode> {
+        impl super::FuturePayload for Result<(), super::super::wasi::http::types::ErrorCode> {
             const VTABLE: &'static wit_bindgen::rt::async_support::FutureVtable<Self> = &VTABLE;
         }
     }
@@ -6994,21 +7176,20 @@ pub mod wit_stream {
             #[link_name = "[async-lower][stream-write-0][static]request.new"]
             fn start_write(_: u32, _: *const u8, _: usize) -> u32;
         }
-        pub static VTABLE: wit_bindgen::rt::async_support::StreamVtable<u8> = wit_bindgen::rt::async_support::StreamVtable::<
-            u8,
-        > {
-            cancel_write,
-            cancel_read,
-            drop_writable,
-            drop_readable,
-            dealloc_lists: None,
-            layout: unsafe { ::std::alloc::Layout::from_size_align_unchecked(1, 1) },
-            lift: None,
-            lower: None,
-            new,
-            start_read,
-            start_write,
-        };
+        pub static VTABLE: wit_bindgen::rt::async_support::StreamVtable<u8> =
+            wit_bindgen::rt::async_support::StreamVtable::<u8> {
+                cancel_write,
+                cancel_read,
+                drop_writable,
+                drop_readable,
+                dealloc_lists: None,
+                layout: unsafe { ::std::alloc::Layout::from_size_align_unchecked(1, 1) },
+                lift: None,
+                lower: None,
+                new,
+                start_read,
+                start_write,
+            };
         impl super::StreamPayload for u8 {
             const VTABLE: &'static wit_bindgen::rt::async_support::StreamVtable<Self> = &VTABLE;
         }

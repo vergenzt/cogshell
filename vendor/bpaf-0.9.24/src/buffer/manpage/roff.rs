@@ -195,4 +195,137 @@ impl<'a> Extend<&'a Roff> for Roff {
     }
 }
 
+#[cfg(test)]
+mod test {
+    use super::{Apostrophes, Font, Roff};
+    const NO_AP: Apostrophes = Apostrophes::DontHandle;
 
+    #[test]
+    fn escape_dash_in_plaintext() {
+        let text = Roff::default().plaintext("-").render(NO_AP);
+        assert_eq!(r"\-", text);
+    }
+
+    #[test]
+    fn escape_backslash_in_plaintext() {
+        let text = Roff::default().plaintext(r"\x").render(NO_AP);
+        assert_eq!(r"\\x", text);
+    }
+
+    #[test]
+    fn escape_backslash_and_dash_in_plaintext() {
+        let text = Roff::default().plaintext(r"\-").render(NO_AP);
+        assert_eq!(r"\\\-", text);
+    }
+
+    #[test]
+    fn escapes_leading_control_chars_and_space_in_plaintext() {
+        let text = Roff::default()
+            .plaintext("foo\n.bar\n'yo\n hmm")
+            .render(NO_AP);
+        assert_eq!("foo\n\\&.bar\n\\&'yo\n hmm", text);
+    }
+
+    #[test]
+    fn escape_plain_in_plaintext() {
+        let text = Roff::default().plaintext("abc").render(NO_AP);
+        assert_eq!("abc", text);
+    }
+
+    #[test]
+    fn render_dash_in_plaintext() {
+        let text = Roff::default().plaintext("foo-bar").render(NO_AP);
+        assert_eq!("foo\\-bar", text);
+    }
+
+    #[test]
+    fn render_dash_in_font() {
+        let text = Roff::default()
+            .text(&[(Font::Roman, "foo-bar")])
+            .render(NO_AP);
+        assert_eq!(text, "\\fRfoo\\-bar\\fP");
+    }
+
+    #[test]
+    fn render_roman() {
+        let text = Roff::default().text(&[(Font::Roman, "foo")]).render(NO_AP);
+        assert_eq!("\\fRfoo\\fP", text);
+    }
+
+    #[test]
+    fn render_italic() {
+        let text = Roff::default().text(&[(Font::Italic, "foo")]).render(NO_AP);
+        assert_eq!("\\fIfoo\\fP", text);
+    }
+
+    #[test]
+    fn render_bold() {
+        let text = Roff::default().text(&[(Font::Bold, "foo")]).render(NO_AP);
+        assert_eq!("\\fBfoo\\fP", text);
+    }
+
+    #[test]
+    fn render_text_roman() {
+        let text = Roff::default()
+            .text(&[(Font::Roman, "roman")])
+            .render(NO_AP);
+        assert_eq!("\\fRroman\\fP", text);
+    }
+
+    #[test]
+    fn render_text_with_leading_period() {
+        let text = Roff::default()
+            .text(&[(Font::Roman, ".roman")])
+            .render(NO_AP);
+        assert_eq!("\\fR.roman\\fP", text);
+    }
+
+    #[test]
+    fn render_text_with_newline_period() {
+        let text = Roff::default()
+            .text(&[(Font::Roman, "foo\n.roman")])
+            .render(NO_AP);
+        assert_eq!(text, "\\fRfoo\n\\&.roman\\fP");
+    }
+
+    #[test]
+    fn render_line_break() {
+        let text = Roff::default()
+            .text(&[(Font::Roman, "roman\n")])
+            .control("br", None::<&str>)
+            .text(&[(Font::Roman, "more\n")])
+            .render(NO_AP);
+        assert_eq!(text, "\\fRroman\n\\fP\n.br\n\\fRmore\n\\fP");
+    }
+
+    #[test]
+    fn render_control() {
+        let text = Roff::default()
+            .control("foo", ["bar", "foo and bar"])
+            .render(NO_AP);
+        assert_eq!(".foo bar foo\\ and\\ bar\n", text);
+    }
+
+    #[test]
+    fn twice_bold() {
+        let text = Roff::default()
+            .text(&[
+                (Font::Bold, "bold,"),
+                (Font::Roman, " more bold"),
+                (Font::Bold, " and more bold"),
+            ])
+            .render(NO_AP);
+
+        assert_eq!(text, "\\fBbold,\\fR more bold\\fB and more bold\\fP");
+    }
+
+    #[test]
+    fn multiple_controls() {
+        let text = Roff::default()
+            .control("br", None::<&str>)
+            .control0("br")
+            .control("br", None::<&str>)
+            .render(NO_AP);
+        assert_eq!(".br\n.br\n.br\n", text);
+    }
+}

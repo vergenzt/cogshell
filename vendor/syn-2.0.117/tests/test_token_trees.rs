@@ -13,7 +13,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::Lit;
 
-
+#[test]
 fn test_struct() {
     let input = "
         #[derive(Debug, Clone)]
@@ -30,7 +30,7 @@ fn test_struct() {
     "##);
 }
 
-
+#[test]
 fn test_literal_mangling() {
     let code = "0_4";
     let parsed: Lit = syn::parse_str(code).unwrap();

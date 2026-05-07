@@ -2,7 +2,7 @@ use regex_automata::{Input, Match};
 
 mod multi_pattern_v2;
 
-
+#[test]
 fn multi_pattern_v2() {
     use multi_pattern_v2::MULTI_PATTERN_V2 as RE;
 

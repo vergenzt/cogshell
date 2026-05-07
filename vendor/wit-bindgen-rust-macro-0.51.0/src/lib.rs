@@ -278,7 +278,7 @@ impl Config {
         for file in self.files.iter() {
             contents.extend(
                 format!(
-                    "const _: &[u8] = include_bytes!(r#\"{}\"#);\n",
+                    "const _: &str = include_bytes!(r#\"{}\"#);\n",
                     file.display()
                 )
                 .parse::<TokenStream>()

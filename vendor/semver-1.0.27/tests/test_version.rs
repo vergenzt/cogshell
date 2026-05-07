@@ -10,7 +10,7 @@ mod util;
 use crate::util::*;
 use semver::{BuildMetadata, Prerelease, Version};
 
-
+#[test]
 fn test_parse() {
     let err = version_err("");
     assert_to_string(err, "empty string, expected a semver version");
@@ -154,7 +154,7 @@ fn test_parse() {
     assert_eq!(parsed, expected);
 }
 
-
+#[test]
 fn test_eq() {
     assert_eq!(version("1.2.3"), version("1.2.3"));
     assert_eq!(version("1.2.3-alpha1"), version("1.2.3-alpha1"));
@@ -162,7 +162,7 @@ fn test_eq() {
     assert_eq!(version("1.2.3-alpha1+42"), version("1.2.3-alpha1+42"));
 }
 
-
+#[test]
 fn test_ne() {
     assert_ne!(version("0.0.0"), version("0.0.1"));
     assert_ne!(version("0.0.0"), version("0.1.0"));
@@ -171,7 +171,7 @@ fn test_ne() {
     assert_ne!(version("1.2.3+23"), version("1.2.3+42"));
 }
 
-
+#[test]
 fn test_display() {
     assert_to_string(version("1.2.3"), "1.2.3");
     assert_to_string(version("1.2.3-alpha1"), "1.2.3-alpha1");
@@ -179,7 +179,7 @@ fn test_display() {
     assert_to_string(version("1.2.3-alpha1+42"), "1.2.3-alpha1+42");
 }
 
-
+#[test]
 fn test_lt() {
     assert!(version("0.0.0") < version("1.2.3-alpha2"));
     assert!(version("1.0.0") < version("1.2.3-alpha2"));
@@ -190,7 +190,7 @@ fn test_lt() {
     assert!(version("1.2.3+23") < version("1.2.3+42"));
 }
 
-
+#[test]
 fn test_le() {
     assert!(version("0.0.0") <= version("1.2.3-alpha2"));
     assert!(version("1.0.0") <= version("1.2.3-alpha2"));
@@ -200,7 +200,7 @@ fn test_le() {
     assert!(version("1.2.3+23") <= version("1.2.3+42"));
 }
 
-
+#[test]
 fn test_gt() {
     assert!(version("1.2.3-alpha2") > version("0.0.0"));
     assert!(version("1.2.3-alpha2") > version("1.0.0"));
@@ -211,7 +211,7 @@ fn test_gt() {
     assert!(!(version("1.2.3+23") > version("1.2.3+42")));
 }
 
-
+#[test]
 fn test_ge() {
     assert!(version("1.2.3-alpha2") >= version("0.0.0"));
     assert!(version("1.2.3-alpha2") >= version("1.0.0"));
@@ -221,7 +221,7 @@ fn test_ge() {
     assert!(!(version("1.2.3+23") >= version("1.2.3+42")));
 }
 
-
+#[test]
 fn test_spec_order() {
     let vs = [
         "1.0.0-alpha",
@@ -242,7 +242,7 @@ fn test_spec_order() {
     }
 }
 
-
+#[test]
 fn test_align() {
     let version = version("1.2.3-rc1");
     assert_eq!("1.2.3-rc1           ", format!("{:20}", version));

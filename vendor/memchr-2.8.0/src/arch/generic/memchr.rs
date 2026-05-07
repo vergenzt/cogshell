@@ -1008,7 +1008,7 @@ pub(crate) struct Iter<'h> {
     end: *const u8,
     /// A marker for tracking the lifetime of the start/cur_start/cur_end
     /// pointers above, which all point into the haystack.
-    haystack: core::marker::PhantomData<&'h [u8]>,
+    haystack: core::marker::PhantomData<&'h str>,
 }
 
 // SAFETY: Iter contains no shared references to anything that performs any
@@ -1024,7 +1024,7 @@ unsafe impl<'h> Sync for Iter<'h> {}
 impl<'h> Iter<'h> {
     /// Create a new generic memchr iterator.
     #[inline(always)]
-    pub(crate) fn new(haystack: &'h [u8]) -> Iter<'h> {
+    pub(crate) fn new(haystack: &'h str) -> Iter<'h> {
         Iter {
             original_start: haystack.as_ptr(),
             start: haystack.as_ptr(),
@@ -1045,7 +1045,7 @@ impl<'h> Iter<'h> {
         &mut self,
         mut find_raw: impl FnMut(*const u8, *const u8) -> Option<*const u8>,
     ) -> Option<usize> {
-        // SAFETY: Pointers are derived directly from the same &[u8] haystack.
+        // SAFETY: Pointers are derived directly from the same &str haystack.
         // We only ever modify start/end corresponding to a matching offset
         // found between start and end. Thus all changes to start/end maintain
         // our safety requirements.
@@ -1065,7 +1065,7 @@ impl<'h> Iter<'h> {
         self,
         mut count_raw: impl FnMut(*const u8, *const u8) -> usize,
     ) -> usize {
-        // SAFETY: Pointers are derived directly from the same &[u8] haystack.
+        // SAFETY: Pointers are derived directly from the same &str haystack.
         // We only ever modify start/end corresponding to a matching offset
         // found between start and end. Thus all changes to start/end maintain
         // our safety requirements.
@@ -1084,7 +1084,7 @@ impl<'h> Iter<'h> {
         &mut self,
         mut rfind_raw: impl FnMut(*const u8, *const u8) -> Option<*const u8>,
     ) -> Option<usize> {
-        // SAFETY: Pointers are derived directly from the same &[u8] haystack.
+        // SAFETY: Pointers are derived directly from the same &str haystack.
         // We only ever modify start/end corresponding to a matching offset
         // found between start and end. Thus all changes to start/end maintain
         // our safety requirements.
@@ -1123,12 +1123,12 @@ impl<'h> Iter<'h> {
 /// the end pointer.
 #[inline(always)]
 pub(crate) unsafe fn search_slice_with_raw(
-    haystack: &[u8],
+    haystack: &str,
     mut find_raw: impl FnMut(*const u8, *const u8) -> Option<*const u8>,
 ) -> Option<usize> {
     // SAFETY: We rely on `find_raw` to return a correct and valid pointer, but
     // otherwise, `start` and `end` are valid due to the guarantees provided by
-    // a &[u8].
+    // a &str.
     let start = haystack.as_ptr();
     let end = start.add(haystack.len());
     let found = find_raw(start, end)?;

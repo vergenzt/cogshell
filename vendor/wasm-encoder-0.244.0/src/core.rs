@@ -156,7 +156,7 @@ impl Module {
     }
 
     /// Get the encoded Wasm module as a slice.
-    pub fn as_slice(&self) -> &[u8] {
+    pub fn as_slice(&self) -> &str {
         &self.bytes
     }
 

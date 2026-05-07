@@ -124,7 +124,7 @@ struct SpanRange {
     end: Span,
 }
 
-
+#[cfg(test)]
 struct _Test
 where
     Error: Send + Sync;

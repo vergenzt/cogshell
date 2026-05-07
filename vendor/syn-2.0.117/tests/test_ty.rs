@@ -14,7 +14,7 @@ use quote::{quote, ToTokens as _};
 use syn::punctuated::Punctuated;
 use syn::{parse_quote, token, Token, Type, TypeTuple};
 
-
+#[test]
 fn test_mut_self() {
     syn::parse_str::<Type>("fn(mut self)").unwrap();
     syn::parse_str::<Type>("fn(mut self,)").unwrap();
@@ -24,7 +24,7 @@ fn test_mut_self() {
     syn::parse_str::<Type>("fn(mut self::T)").unwrap_err();
 }
 
-
+#[test]
 fn test_macro_variable_type() {
     // mimics the token stream corresponding to `$ty<T>`
     let tokens = TokenStream::from_iter([
@@ -96,7 +96,7 @@ fn test_macro_variable_type() {
     "#);
 }
 
-
+#[test]
 fn test_group_angle_brackets() {
     // mimics the token stream corresponding to `Option<$ty>`
     let tokens = TokenStream::from_iter([
@@ -147,7 +147,7 @@ fn test_group_angle_brackets() {
     "#);
 }
 
-
+#[test]
 fn test_group_colons() {
     // mimics the token stream corresponding to `$ty::Item`
     let tokens = TokenStream::from_iter([
@@ -221,7 +221,7 @@ fn test_group_colons() {
     "#);
 }
 
-
+#[test]
 fn test_trait_object() {
     let tokens = quote!(dyn for<'a> Trait<'a> + 'static);
     snapshot!(tokens as Type, @r#"
@@ -288,7 +288,7 @@ fn test_trait_object() {
     syn::parse_str::<Type>("dyn for<'a> 'a + Trait").unwrap_err();
 }
 
-
+#[test]
 fn test_trailing_plus() {
     #[rustfmt::skip]
     let tokens = quote!(impl Trait +);
@@ -349,7 +349,7 @@ fn test_trailing_plus() {
     "#);
 }
 
-
+#[test]
 fn test_tuple_comma() {
     let mut expr = TypeTuple {
         paren_token: token::Paren::default(),
@@ -402,7 +402,7 @@ fn test_tuple_comma() {
     "#);
 }
 
-
+#[test]
 fn test_impl_trait_use() {
     let tokens = quote! {
         impl Sized + use<'_, 'a, A, Test>

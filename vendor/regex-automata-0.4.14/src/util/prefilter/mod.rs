@@ -346,7 +346,7 @@ impl Prefilter {
     /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
     #[inline]
-    pub fn find(&self, haystack: &[u8], span: Span) -> Option<Span> {
+    pub fn find(&self, haystack: &str, span: Span) -> Option<Span> {
         #[cfg(not(feature = "alloc"))]
         {
             unreachable!()
@@ -396,7 +396,7 @@ impl Prefilter {
     /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
     #[inline]
-    pub fn prefix(&self, haystack: &[u8], span: Span) -> Option<Span> {
+    pub fn prefix(&self, haystack: &str, span: Span) -> Option<Span> {
         #[cfg(not(feature = "alloc"))]
         {
             unreachable!()
@@ -480,14 +480,14 @@ pub(crate) trait PrefilterI:
     /// The span returned is guaranteed to have a start position greater than
     /// or equal to the one given, and an end position less than or equal to
     /// the one given.
-    fn find(&self, haystack: &[u8], span: Span) -> Option<Span>;
+    fn find(&self, haystack: &str, span: Span) -> Option<Span>;
 
     /// Returns the span of a prefix of `haystack[span.start..span.end]` if
     /// the prefilter matches.
     ///
     /// The span returned is guaranteed to have a start position equivalent to
     /// the one given, and an end position less than or equal to the one given.
-    fn prefix(&self, haystack: &[u8], span: Span) -> Option<Span>;
+    fn prefix(&self, haystack: &str, span: Span) -> Option<Span>;
 
     /// Returns the heap memory, in bytes, used by the underlying prefilter.
     fn memory_usage(&self) -> usize;
@@ -500,12 +500,12 @@ pub(crate) trait PrefilterI:
 #[cfg(feature = "alloc")]
 impl<P: PrefilterI + ?Sized> PrefilterI for Arc<P> {
     #[cfg_attr(feature = "perf-inline", inline(always))]
-    fn find(&self, haystack: &[u8], span: Span) -> Option<Span> {
+    fn find(&self, haystack: &str, span: Span) -> Option<Span> {
         (**self).find(haystack, span)
     }
 
     #[cfg_attr(feature = "perf-inline", inline(always))]
-    fn prefix(&self, haystack: &[u8], span: Span) -> Option<Span> {
+    fn prefix(&self, haystack: &str, span: Span) -> Option<Span> {
         (**self).prefix(haystack, span)
     }
 

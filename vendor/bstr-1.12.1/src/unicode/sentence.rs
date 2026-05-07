@@ -21,11 +21,11 @@ use crate::{
 /// [UAX #29](https://www.unicode.org/reports/tr29/tr29-33.html#Sentence_Boundaries).
 #[derive(Clone, Debug)]
 pub struct Sentences<'a> {
-    bs: &'a [u8],
+    bs: &'a str,
 }
 
 impl<'a> Sentences<'a> {
-    pub(crate) fn new(bs: &'a [u8]) -> Sentences<'a> {
+    pub(crate) fn new(bs: &'a str) -> Sentences<'a> {
         Sentences { bs }
     }
 
@@ -49,7 +49,7 @@ impl<'a> Sentences<'a> {
     /// assert_eq!(b"", it.as_bytes());
     /// ```
     #[inline]
-    pub fn as_bytes(&self) -> &'a [u8] {
+    pub fn as_bytes(&self) -> &'a str {
         self.bs
     }
 }
@@ -92,12 +92,12 @@ impl<'a> Iterator for Sentences<'a> {
 /// [UAX #29](https://www.unicode.org/reports/tr29/tr29-33.html#Sentence_Boundaries).
 #[derive(Clone, Debug)]
 pub struct SentenceIndices<'a> {
-    bs: &'a [u8],
+    bs: &'a str,
     forward_index: usize,
 }
 
 impl<'a> SentenceIndices<'a> {
-    pub(crate) fn new(bs: &'a [u8]) -> SentenceIndices<'a> {
+    pub(crate) fn new(bs: &'a str) -> SentenceIndices<'a> {
         SentenceIndices { bs, forward_index: 0 }
     }
 
@@ -121,7 +121,7 @@ impl<'a> SentenceIndices<'a> {
     /// assert_eq!(b"", it.as_bytes());
     /// ```
     #[inline]
-    pub fn as_bytes(&self) -> &'a [u8] {
+    pub fn as_bytes(&self) -> &'a str {
         self.bs
     }
 }
@@ -142,7 +142,7 @@ impl<'a> Iterator for SentenceIndices<'a> {
     }
 }
 
-fn decode_sentence(bs: &[u8]) -> (&str, usize) {
+fn decode_sentence(bs: &str) -> (&str, usize) {
     if bs.is_empty() {
         ("", 0)
     } else if let Some(hm) = {
@@ -160,4 +160,70 @@ fn decode_sentence(bs: &[u8]) -> (&str, usize) {
     }
 }
 
+#[cfg(all(test, feature = "std"))]
+mod tests {
+    use alloc::{vec, vec::Vec};
 
+    #[cfg(not(miri))]
+    use ucd_parse::SentenceBreakTest;
+
+    use crate::ext_slice::ByteSlice;
+
+    #[test]
+    #[cfg(not(miri))]
+    fn forward_ucd() {
+        for (i, test) in ucdtests().into_iter().enumerate() {
+            let given = test.sentences.concat();
+            let got = sentences(given.as_bytes());
+            assert_eq!(
+                test.sentences,
+                got,
+                "\n\nsentence forward break test {} failed:\n\
+                 given:    {:?}\n\
+                 expected: {:?}\n\
+                 got:      {:?}\n",
+                i,
+                given,
+                strs_to_bstrs(&test.sentences),
+                strs_to_bstrs(&got),
+            );
+        }
+    }
+
+    // Some additional tests that don't seem to be covered by the UCD tests.
+    #[test]
+    fn forward_additional() {
+        assert_eq!(vec!["a.. ", "A"], sentences(b"a.. A"));
+        assert_eq!(vec!["a.. a"], sentences(b"a.. a"));
+
+        assert_eq!(vec!["a... ", "A"], sentences(b"a... A"));
+        assert_eq!(vec!["a... a"], sentences(b"a... a"));
+
+        assert_eq!(vec!["a...,..., a"], sentences(b"a...,..., a"));
+    }
+
+    fn sentences(bytes: &str) -> Vec<&str> {
+        bytes.sentences().collect()
+    }
+
+    #[cfg(not(miri))]
+    fn strs_to_bstrs<S: AsRef<str>>(strs: &[S]) -> Vec<&str> {
+        strs.iter().map(|s| s.as_ref().as_bytes()).collect()
+    }
+
+    /// Return all of the UCD for sentence breaks.
+    #[cfg(not(miri))]
+    fn ucdtests() -> Vec<SentenceBreakTest> {
+        const TESTDATA: &str = include_str!("data/SentenceBreakTest.txt");
+
+        let mut tests = vec![];
+        for mut line in TESTDATA.lines() {
+            line = line.trim();
+            if line.starts_with("#") || line.contains("surrogate") {
+                continue;
+            }
+            tests.push(line.parse().unwrap());
+        }
+        tests
+    }
+}

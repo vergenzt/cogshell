@@ -174,8 +174,8 @@ let re1 = Regex::new(r"[0-9]{4}-[0-9]{2}-[0-9]{2}").unwrap();
 let fwd_bytes = re1.forward().to_sparse()?.to_bytes_native_endian();
 let rev_bytes = re1.reverse().to_sparse()?.to_bytes_native_endian();
 // now deserialize both---we need to specify the correct type!
-let fwd: sparse::DFA<&[u8]> = sparse::DFA::from_bytes(&fwd_bytes)?.0;
-let rev: sparse::DFA<&[u8]> = sparse::DFA::from_bytes(&rev_bytes)?.0;
+let fwd: sparse::DFA<&str> = sparse::DFA::from_bytes(&fwd_bytes)?.0;
+let rev: sparse::DFA<&str> = sparse::DFA::from_bytes(&rev_bytes)?.0;
 // finally, reconstruct our regex
 let re2 = Regex::builder().build_from_dfas(fwd, rev);
 
@@ -283,7 +283,7 @@ optimizations means that searches may run much slower than what you're
 accustomed to, although, it does provide more predictable and consistent
 performance.
 * There is no `&str` API like in the regex crate. In this module, all APIs
-operate on `&[u8]`. By default, match indices are
+operate on `&str`. By default, match indices are
 guaranteed to fall on UTF-8 boundaries, unless either of
 [`syntax::Config::utf8`](crate::util::syntax::Config::utf8) or
 [`thompson::Config::utf8`](crate::nfa::thompson::Config::utf8) are disabled.

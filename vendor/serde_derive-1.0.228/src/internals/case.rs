@@ -136,7 +136,7 @@ impl<'a> Display for ParseError<'a> {
     }
 }
 
-
+#[test]
 fn rename_variants() {
     for &(original, lower, upper, camel, snake, screaming, kebab, screaming_kebab) in &[
         (
@@ -170,7 +170,7 @@ fn rename_variants() {
     }
 }
 
-
+#[test]
 fn rename_fields() {
     for &(original, upper, pascal, camel, screaming, kebab, screaming_kebab) in &[
         (

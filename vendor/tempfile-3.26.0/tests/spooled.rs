@@ -12,7 +12,7 @@ fn configure_wasi_temp_dir() {
     }
 }
 
-
+#[test]
 fn test_automatic_rollover() {
     configure_wasi_temp_dir();
 
@@ -38,7 +38,7 @@ fn test_automatic_rollover() {
     assert!(t.is_rolled());
 }
 
-
+#[test]
 fn test_custom_dir() {
     configure_wasi_temp_dir();
 
@@ -55,7 +55,7 @@ fn test_custom_dir() {
     }
 }
 
-
+#[test]
 fn test_explicit_rollover() {
     configure_wasi_temp_dir();
 
@@ -112,7 +112,7 @@ fn test_seek(t: &mut SpooledTempFile) {
     assert_eq!(t.seek(SeekFrom::End(1)).unwrap(), 27);
 }
 
-
+#[test]
 fn test_seek_buffer() {
     configure_wasi_temp_dir();
 
@@ -120,7 +120,7 @@ fn test_seek_buffer() {
     test_seek(&mut t);
 }
 
-
+#[test]
 fn test_seek_file() {
     configure_wasi_temp_dir();
 
@@ -172,7 +172,7 @@ fn test_seek_read(t: &mut SpooledTempFile) {
     assert!(t.read_exact(&mut buf).is_err());
 }
 
-
+#[test]
 fn test_seek_read_buffer() {
     configure_wasi_temp_dir();
 
@@ -180,7 +180,7 @@ fn test_seek_read_buffer() {
     test_seek_read(&mut t);
 }
 
-
+#[test]
 fn test_seek_read_file() {
     configure_wasi_temp_dir();
 
@@ -202,19 +202,19 @@ fn test_overwrite_middle(t: &mut SpooledTempFile) {
     assert_eq!(buf.as_slice(), b"abcdefghij0123456789uvwxyz");
 }
 
-
+#[test]
 fn test_overwrite_middle_of_buffer() {
     let mut t = spooled_tempfile(100);
     test_overwrite_middle(&mut t);
 }
 
-
+#[test]
 fn test_overwrite_middle_of_file() {
     let mut t = SpooledTempFile::new(10);
     test_overwrite_middle(&mut t);
 }
 
-
+#[test]
 fn test_overwrite_and_extend_buffer() {
     let mut t = spooled_tempfile(100);
     assert_eq!(t.write(b"abcdefghijklmnopqrstuvwxyz").unwrap(), 26);
@@ -227,7 +227,7 @@ fn test_overwrite_and_extend_buffer() {
     assert!(!t.is_rolled());
 }
 
-
+#[test]
 fn test_overwrite_and_extend_rollover() {
     configure_wasi_temp_dir();
 
@@ -256,13 +256,13 @@ fn test_sparse(t: &mut SpooledTempFile) {
     assert_eq!(buf.as_slice(), b"abcde\0\0\0\0\0klmno");
 }
 
-
+#[test]
 fn test_sparse_buffer() {
     let mut t = spooled_tempfile(100);
     test_sparse(&mut t);
 }
 
-
+#[test]
 fn test_sparse_file() {
     configure_wasi_temp_dir();
 
@@ -270,7 +270,7 @@ fn test_sparse_file() {
     test_sparse(&mut t);
 }
 
-
+#[test]
 fn test_sparse_write_rollover() {
     configure_wasi_temp_dir();
 
@@ -320,19 +320,19 @@ fn test_set_len(t: &mut SpooledTempFile) {
     );
 }
 
-
+#[test]
 fn test_set_len_buffer() {
     let mut t = spooled_tempfile(100);
     test_set_len(&mut t);
 }
 
-
+#[test]
 fn test_set_len_file() {
     let mut t = spooled_tempfile(100);
     test_set_len(&mut t);
 }
 
-
+#[test]
 fn test_set_len_rollover() {
     configure_wasi_temp_dir();
 
@@ -357,7 +357,7 @@ fn test_set_len_rollover() {
     assert_eq!(buf.as_slice(), b"abcde\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0");
 }
 
-
+#[test]
 fn test_write_overflow() {
     configure_wasi_temp_dir();
 
@@ -367,7 +367,7 @@ fn test_write_overflow() {
 }
 
 #[cfg(target_pointer_width = "32")]
-
+#[test]
 fn test_set_len_truncation() {
     configure_wasi_temp_dir();
 

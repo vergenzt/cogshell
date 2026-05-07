@@ -1,6 +1,6 @@
 use serde_json::{from_str, Map, Value};
 
-
+#[test]
 fn test_preserve_order() {
     // Sorted order
     #[cfg(not(feature = "preserve_order"))]
@@ -15,7 +15,7 @@ fn test_preserve_order() {
     assert_eq!(keys, EXPECTED);
 }
 
-
+#[test]
 #[cfg(feature = "preserve_order")]
 fn test_shift_insert() {
     let mut v: Value = from_str(r#"{"b":null,"a":null,"c":null}"#).unwrap();
@@ -26,7 +26,7 @@ fn test_shift_insert() {
     assert_eq!(keys, &["d", "b", "a", "c"]);
 }
 
-
+#[test]
 fn test_append() {
     // Sorted order
     #[cfg(not(feature = "preserve_order"))]
@@ -46,7 +46,7 @@ fn test_append() {
     assert!(val.is_empty());
 }
 
-
+#[test]
 fn test_retain() {
     let mut v: Value = from_str(r#"{"b":null,"a":null,"c":null}"#).unwrap();
     let val = v.as_object_mut().unwrap();

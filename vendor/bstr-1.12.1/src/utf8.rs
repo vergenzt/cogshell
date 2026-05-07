@@ -52,7 +52,7 @@ const CLASSES: [u8; 256] = [
 /// SAFETY: The decode below function relies on the correctness of this state
 /// machine.
 #[rustfmt::skip]
-const STATES_FORWARD: &[u8] = &[
+const STATES_FORWARD: &str = &[
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   12, 0, 24, 36, 60, 96, 84, 0, 0, 0, 48, 72,
   0, 12, 0, 0, 0, 0, 0, 12, 0, 12, 0, 0,
@@ -72,14 +72,14 @@ const STATES_FORWARD: &[u8] = &[
 ///
 /// This iterator is created by the
 /// [`chars`](trait.ByteSlice.html#method.chars) method provided by the
-/// [`ByteSlice`](trait.ByteSlice.html) extension trait for `&[u8]`.
+/// [`ByteSlice`](trait.ByteSlice.html) extension trait for `&str`.
 #[derive(Clone, Debug)]
 pub struct Chars<'a> {
-    bs: &'a [u8],
+    bs: &'a str,
 }
 
 impl<'a> Chars<'a> {
-    pub(crate) fn new(bs: &'a [u8]) -> Chars<'a> {
+    pub(crate) fn new(bs: &'a str) -> Chars<'a> {
         Chars { bs }
     }
 
@@ -103,7 +103,7 @@ impl<'a> Chars<'a> {
     /// assert_eq!(b"", chars.as_bytes());
     /// ```
     #[inline]
-    pub fn as_bytes(&self) -> &'a [u8] {
+    pub fn as_bytes(&self) -> &'a str {
         self.bs
     }
 }
@@ -151,16 +151,16 @@ impl<'a> DoubleEndedIterator for Chars<'a> {
 ///
 /// This iterator is created by the
 /// [`char_indices`](trait.ByteSlice.html#method.char_indices) method provided
-/// by the [`ByteSlice`](trait.ByteSlice.html) extension trait for `&[u8]`.
+/// by the [`ByteSlice`](trait.ByteSlice.html) extension trait for `&str`.
 #[derive(Clone, Debug)]
 pub struct CharIndices<'a> {
-    bs: &'a [u8],
+    bs: &'a str,
     forward_index: usize,
     reverse_index: usize,
 }
 
 impl<'a> CharIndices<'a> {
-    pub(crate) fn new(bs: &'a [u8]) -> CharIndices<'a> {
+    pub(crate) fn new(bs: &'a str) -> CharIndices<'a> {
         CharIndices { bs, forward_index: 0, reverse_index: bs.len() }
     }
 
@@ -184,7 +184,7 @@ impl<'a> CharIndices<'a> {
     /// assert_eq!(b"", it.as_bytes());
     /// ```
     #[inline]
-    pub fn as_bytes(&self) -> &'a [u8] {
+    pub fn as_bytes(&self) -> &'a str {
         self.bs
     }
 }
@@ -225,7 +225,7 @@ impl<'a> ::core::iter::FusedIterator for CharIndices<'a> {}
 /// See [`utf8_chunks`](trait.ByteSlice.html#method.utf8_chunks).
 #[derive(Clone, Debug)]
 pub struct Utf8Chunks<'a> {
-    pub(super) bytes: &'a [u8],
+    pub(super) bytes: &'a str,
 }
 
 /// A chunk of valid UTF-8, possibly followed by invalid UTF-8 bytes.
@@ -282,7 +282,7 @@ impl<'a> Utf8Chunk<'a> {
     /// [`ByteSlice::to_str_lossy`](trait.ByteSlice.html#method.to_str_lossy)
     /// method.
     #[inline]
-    pub fn invalid(&self) -> &'a [u8] {
+    pub fn invalid(&self) -> &'a str {
         self.invalid.as_bytes()
     }
 
@@ -461,12 +461,12 @@ impl fmt::Display for Utf8Error {
 ///
 /// If the slice isn't valid UTF-8, then an error is returned that explains
 /// the first location at which invalid UTF-8 was detected.
-pub fn validate(slice: &[u8]) -> Result<(), Utf8Error> {
+pub fn validate(slice: &str) -> Result<(), Utf8Error> {
     // The fast path for validating UTF-8. It steps through a UTF-8 automaton
     // and uses a SIMD accelerated ASCII fast path on x86_64. If an error is
     // detected, it backs up and runs the slower version of the UTF-8 automaton
     // to determine correct error information.
-    fn fast(slice: &[u8]) -> Result<(), Utf8Error> {
+    fn fast(slice: &str) -> Result<(), Utf8Error> {
         let mut state = ACCEPT;
         let mut i = 0;
 
@@ -500,7 +500,7 @@ pub fn validate(slice: &[u8]) -> Result<(), Utf8Error> {
     // invalid, return an error that correctly reports the position at which
     // the last complete UTF-8 sequence ends.
     #[inline(never)]
-    fn find_valid_up_to(slice: &[u8], rejected_at: usize) -> Utf8Error {
+    fn find_valid_up_to(slice: &str, rejected_at: usize) -> Utf8Error {
         // In order to find the last valid byte, we need to back up an amount
         // that guarantees every preceding byte is part of a valid UTF-8
         // code unit sequence. To do this, we simply locate the last leading
@@ -521,7 +521,7 @@ pub fn validate(slice: &[u8]) -> Result<(), Utf8Error> {
     // last valid UTF-8 byte. In particular, tracking this requires checking
     // for an ACCEPT state on each byte, which degrades throughput pretty
     // badly.
-    fn slow(slice: &[u8]) -> Result<(), Utf8Error> {
+    fn slow(slice: &str) -> Result<(), Utf8Error> {
         let mut state = ACCEPT;
         let mut valid_up_to = 0;
         for (i, &b) in slice.iter().enumerate() {
@@ -848,4 +848,522 @@ fn is_leading_or_invalid_utf8_byte(b: u8) -> bool {
     (b & 0b1100_0000) != 0b1000_0000
 }
 
+#[cfg(all(test, feature = "std"))]
+mod tests {
+    use core::char;
 
+    use alloc::{string::String, vec, vec::Vec};
+
+    use crate::{
+        ext_slice::{ByteSlice, B},
+        tests::LOSSY_TESTS,
+        utf8::{self, Utf8Error},
+    };
+
+    fn utf8e(valid_up_to: usize) -> Utf8Error {
+        Utf8Error { valid_up_to, error_len: None }
+    }
+
+    fn utf8e2(valid_up_to: usize, error_len: usize) -> Utf8Error {
+        Utf8Error { valid_up_to, error_len: Some(error_len) }
+    }
+
+    #[test]
+    #[cfg(not(miri))]
+    fn validate_all_codepoints() {
+        for i in 0..(0x10FFFF + 1) {
+            let cp = match char::from_u32(i) {
+                None => continue,
+                Some(cp) => cp,
+            };
+            let mut buf = [0; 4];
+            let s = cp.encode_utf8(&mut buf);
+            assert_eq!(Ok(()), utf8::validate(s.as_bytes()));
+        }
+    }
+
+    #[test]
+    fn validate_multiple_codepoints() {
+        assert_eq!(Ok(()), utf8::validate(b"abc"));
+        assert_eq!(Ok(()), utf8::validate(b"a\xE2\x98\x83a"));
+        assert_eq!(Ok(()), utf8::validate(b"a\xF0\x9D\x9C\xB7a"));
+        assert_eq!(Ok(()), utf8::validate(b"\xE2\x98\x83\xF0\x9D\x9C\xB7",));
+        assert_eq!(
+            Ok(()),
+            utf8::validate(b"a\xE2\x98\x83a\xF0\x9D\x9C\xB7a",)
+        );
+        assert_eq!(
+            Ok(()),
+            utf8::validate(b"\xEF\xBF\xBD\xE2\x98\x83\xEF\xBF\xBD",)
+        );
+    }
+
+    #[test]
+    fn validate_errors() {
+        // single invalid byte
+        assert_eq!(Err(utf8e2(0, 1)), utf8::validate(b"\xFF"));
+        // single invalid byte after ASCII
+        assert_eq!(Err(utf8e2(1, 1)), utf8::validate(b"a\xFF"));
+        // single invalid byte after 2 byte sequence
+        assert_eq!(Err(utf8e2(2, 1)), utf8::validate(b"\xCE\xB2\xFF"));
+        // single invalid byte after 3 byte sequence
+        assert_eq!(Err(utf8e2(3, 1)), utf8::validate(b"\xE2\x98\x83\xFF"));
+        // single invalid byte after 4 byte sequence
+        assert_eq!(Err(utf8e2(4, 1)), utf8::validate(b"\xF0\x9D\x9D\xB1\xFF"));
+
+        // An invalid 2-byte sequence with a valid 1-byte prefix.
+        assert_eq!(Err(utf8e2(0, 1)), utf8::validate(b"\xCE\xF0"));
+        // An invalid 3-byte sequence with a valid 2-byte prefix.
+        assert_eq!(Err(utf8e2(0, 2)), utf8::validate(b"\xE2\x98\xF0"));
+        // An invalid 4-byte sequence with a valid 3-byte prefix.
+        assert_eq!(Err(utf8e2(0, 3)), utf8::validate(b"\xF0\x9D\x9D\xF0"));
+
+        // An overlong sequence. Should be \xE2\x82\xAC, but we encode the
+        // same codepoint value in 4 bytes. This not only tests that we reject
+        // overlong sequences, but that we get valid_up_to correct.
+        assert_eq!(Err(utf8e2(0, 1)), utf8::validate(b"\xF0\x82\x82\xAC"));
+        assert_eq!(Err(utf8e2(1, 1)), utf8::validate(b"a\xF0\x82\x82\xAC"));
+        assert_eq!(
+            Err(utf8e2(3, 1)),
+            utf8::validate(b"\xE2\x98\x83\xF0\x82\x82\xAC",)
+        );
+
+        // Check that encoding a surrogate codepoint using the UTF-8 scheme
+        // fails validation.
+        assert_eq!(Err(utf8e2(0, 1)), utf8::validate(b"\xED\xA0\x80"));
+        assert_eq!(Err(utf8e2(1, 1)), utf8::validate(b"a\xED\xA0\x80"));
+        assert_eq!(
+            Err(utf8e2(3, 1)),
+            utf8::validate(b"\xE2\x98\x83\xED\xA0\x80",)
+        );
+
+        // Check that an incomplete 2-byte sequence fails.
+        assert_eq!(Err(utf8e2(0, 1)), utf8::validate(b"\xCEa"));
+        assert_eq!(Err(utf8e2(1, 1)), utf8::validate(b"a\xCEa"));
+        assert_eq!(
+            Err(utf8e2(3, 1)),
+            utf8::validate(b"\xE2\x98\x83\xCE\xE2\x98\x83",)
+        );
+        // Check that an incomplete 3-byte sequence fails.
+        assert_eq!(Err(utf8e2(0, 2)), utf8::validate(b"\xE2\x98a"));
+        assert_eq!(Err(utf8e2(1, 2)), utf8::validate(b"a\xE2\x98a"));
+        assert_eq!(
+            Err(utf8e2(3, 2)),
+            utf8::validate(b"\xE2\x98\x83\xE2\x98\xE2\x98\x83",)
+        );
+        // Check that an incomplete 4-byte sequence fails.
+        assert_eq!(Err(utf8e2(0, 3)), utf8::validate(b"\xF0\x9D\x9Ca"));
+        assert_eq!(Err(utf8e2(1, 3)), utf8::validate(b"a\xF0\x9D\x9Ca"));
+        assert_eq!(
+            Err(utf8e2(4, 3)),
+            utf8::validate(b"\xF0\x9D\x9C\xB1\xF0\x9D\x9C\xE2\x98\x83",)
+        );
+        assert_eq!(
+            Err(utf8e2(6, 3)),
+            utf8::validate(b"foobar\xF1\x80\x80quux",)
+        );
+
+        // Check that an incomplete (EOF) 2-byte sequence fails.
+        assert_eq!(Err(utf8e(0)), utf8::validate(b"\xCE"));
+        assert_eq!(Err(utf8e(1)), utf8::validate(b"a\xCE"));
+        assert_eq!(Err(utf8e(3)), utf8::validate(b"\xE2\x98\x83\xCE"));
+        // Check that an incomplete (EOF) 3-byte sequence fails.
+        assert_eq!(Err(utf8e(0)), utf8::validate(b"\xE2\x98"));
+        assert_eq!(Err(utf8e(1)), utf8::validate(b"a\xE2\x98"));
+        assert_eq!(Err(utf8e(3)), utf8::validate(b"\xE2\x98\x83\xE2\x98"));
+        // Check that an incomplete (EOF) 4-byte sequence fails.
+        assert_eq!(Err(utf8e(0)), utf8::validate(b"\xF0\x9D\x9C"));
+        assert_eq!(Err(utf8e(1)), utf8::validate(b"a\xF0\x9D\x9C"));
+        assert_eq!(
+            Err(utf8e(4)),
+            utf8::validate(b"\xF0\x9D\x9C\xB1\xF0\x9D\x9C",)
+        );
+
+        // Test that we errors correct even after long valid sequences. This
+        // checks that our "backup" logic for detecting errors is correct.
+        assert_eq!(
+            Err(utf8e2(8, 1)),
+            utf8::validate(b"\xe2\x98\x83\xce\xb2\xe3\x83\x84\xFF",)
+        );
+    }
+
+    #[test]
+    fn decode_valid() {
+        fn d(mut s: &str) -> Vec<char> {
+            let mut chars = vec![];
+            while !s.is_empty() {
+                let (ch, size) = utf8::decode(s.as_bytes());
+                s = &s[size..];
+                chars.push(ch.unwrap());
+            }
+            chars
+        }
+
+        assert_eq!(vec!['☃'], d("☃"));
+        assert_eq!(vec!['☃', '☃'], d("☃☃"));
+        assert_eq!(vec!['α', 'β', 'γ', 'δ', 'ε'], d("αβγδε"));
+        assert_eq!(vec!['☃', '⛄', '⛇'], d("☃⛄⛇"));
+        assert_eq!(vec!['𝗮', '𝗯', '𝗰', '𝗱', '𝗲'], d("𝗮𝗯𝗰𝗱𝗲"));
+    }
+
+    #[test]
+    fn decode_invalid() {
+        let (ch, size) = utf8::decode(b"");
+        assert_eq!(None, ch);
+        assert_eq!(0, size);
+
+        let (ch, size) = utf8::decode(b"\xFF");
+        assert_eq!(None, ch);
+        assert_eq!(1, size);
+
+        let (ch, size) = utf8::decode(b"\xCE\xF0");
+        assert_eq!(None, ch);
+        assert_eq!(1, size);
+
+        let (ch, size) = utf8::decode(b"\xE2\x98\xF0");
+        assert_eq!(None, ch);
+        assert_eq!(2, size);
+
+        let (ch, size) = utf8::decode(b"\xF0\x9D\x9D");
+        assert_eq!(None, ch);
+        assert_eq!(3, size);
+
+        let (ch, size) = utf8::decode(b"\xF0\x9D\x9D\xF0");
+        assert_eq!(None, ch);
+        assert_eq!(3, size);
+
+        let (ch, size) = utf8::decode(b"\xF0\x82\x82\xAC");
+        assert_eq!(None, ch);
+        assert_eq!(1, size);
+
+        let (ch, size) = utf8::decode(b"\xED\xA0\x80");
+        assert_eq!(None, ch);
+        assert_eq!(1, size);
+
+        let (ch, size) = utf8::decode(b"\xCEa");
+        assert_eq!(None, ch);
+        assert_eq!(1, size);
+
+        let (ch, size) = utf8::decode(b"\xE2\x98a");
+        assert_eq!(None, ch);
+        assert_eq!(2, size);
+
+        let (ch, size) = utf8::decode(b"\xF0\x9D\x9Ca");
+        assert_eq!(None, ch);
+        assert_eq!(3, size);
+    }
+
+    #[test]
+    fn decode_lossy() {
+        let (ch, size) = utf8::decode_lossy(b"");
+        assert_eq!('\u{FFFD}', ch);
+        assert_eq!(0, size);
+
+        let (ch, size) = utf8::decode_lossy(b"\xFF");
+        assert_eq!('\u{FFFD}', ch);
+        assert_eq!(1, size);
+
+        let (ch, size) = utf8::decode_lossy(b"\xCE\xF0");
+        assert_eq!('\u{FFFD}', ch);
+        assert_eq!(1, size);
+
+        let (ch, size) = utf8::decode_lossy(b"\xE2\x98\xF0");
+        assert_eq!('\u{FFFD}', ch);
+        assert_eq!(2, size);
+
+        let (ch, size) = utf8::decode_lossy(b"\xF0\x9D\x9D\xF0");
+        assert_eq!('\u{FFFD}', ch);
+        assert_eq!(3, size);
+
+        let (ch, size) = utf8::decode_lossy(b"\xF0\x82\x82\xAC");
+        assert_eq!('\u{FFFD}', ch);
+        assert_eq!(1, size);
+
+        let (ch, size) = utf8::decode_lossy(b"\xED\xA0\x80");
+        assert_eq!('\u{FFFD}', ch);
+        assert_eq!(1, size);
+
+        let (ch, size) = utf8::decode_lossy(b"\xCEa");
+        assert_eq!('\u{FFFD}', ch);
+        assert_eq!(1, size);
+
+        let (ch, size) = utf8::decode_lossy(b"\xE2\x98a");
+        assert_eq!('\u{FFFD}', ch);
+        assert_eq!(2, size);
+
+        let (ch, size) = utf8::decode_lossy(b"\xF0\x9D\x9Ca");
+        assert_eq!('\u{FFFD}', ch);
+        assert_eq!(3, size);
+    }
+
+    #[test]
+    fn decode_last_valid() {
+        fn d(mut s: &str) -> Vec<char> {
+            let mut chars = vec![];
+            while !s.is_empty() {
+                let (ch, size) = utf8::decode_last(s.as_bytes());
+                s = &s[..s.len() - size];
+                chars.push(ch.unwrap());
+            }
+            chars
+        }
+
+        assert_eq!(vec!['☃'], d("☃"));
+        assert_eq!(vec!['☃', '☃'], d("☃☃"));
+        assert_eq!(vec!['ε', 'δ', 'γ', 'β', 'α'], d("αβγδε"));
+        assert_eq!(vec!['⛇', '⛄', '☃'], d("☃⛄⛇"));
+        assert_eq!(vec!['𝗲', '𝗱', '𝗰', '𝗯', '𝗮'], d("𝗮𝗯𝗰𝗱𝗲"));
+    }
+
+    #[test]
+    fn decode_last_invalid() {
+        let (ch, size) = utf8::decode_last(b"");
+        assert_eq!(None, ch);
+        assert_eq!(0, size);
+
+        let (ch, size) = utf8::decode_last(b"\xFF");
+        assert_eq!(None, ch);
+        assert_eq!(1, size);
+
+        let (ch, size) = utf8::decode_last(b"\xCE\xF0");
+        assert_eq!(None, ch);
+        assert_eq!(1, size);
+
+        let (ch, size) = utf8::decode_last(b"\xCE");
+        assert_eq!(None, ch);
+        assert_eq!(1, size);
+
+        let (ch, size) = utf8::decode_last(b"\xE2\x98\xF0");
+        assert_eq!(None, ch);
+        assert_eq!(1, size);
+
+        let (ch, size) = utf8::decode_last(b"\xE2\x98");
+        assert_eq!(None, ch);
+        assert_eq!(2, size);
+
+        let (ch, size) = utf8::decode_last(b"\xF0\x9D\x9D\xF0");
+        assert_eq!(None, ch);
+        assert_eq!(1, size);
+
+        let (ch, size) = utf8::decode_last(b"\xF0\x9D\x9D");
+        assert_eq!(None, ch);
+        assert_eq!(3, size);
+
+        let (ch, size) = utf8::decode_last(b"\xF0\x82\x82\xAC");
+        assert_eq!(None, ch);
+        assert_eq!(1, size);
+
+        let (ch, size) = utf8::decode_last(b"\xED\xA0\x80");
+        assert_eq!(None, ch);
+        assert_eq!(1, size);
+
+        let (ch, size) = utf8::decode_last(b"\xED\xA0");
+        assert_eq!(None, ch);
+        assert_eq!(1, size);
+
+        let (ch, size) = utf8::decode_last(b"\xED");
+        assert_eq!(None, ch);
+        assert_eq!(1, size);
+
+        let (ch, size) = utf8::decode_last(b"a\xCE");
+        assert_eq!(None, ch);
+        assert_eq!(1, size);
+
+        let (ch, size) = utf8::decode_last(b"a\xE2\x98");
+        assert_eq!(None, ch);
+        assert_eq!(2, size);
+
+        let (ch, size) = utf8::decode_last(b"a\xF0\x9D\x9C");
+        assert_eq!(None, ch);
+        assert_eq!(3, size);
+    }
+
+    #[test]
+    fn decode_last_lossy() {
+        let (ch, size) = utf8::decode_last_lossy(b"");
+        assert_eq!('\u{FFFD}', ch);
+        assert_eq!(0, size);
+
+        let (ch, size) = utf8::decode_last_lossy(b"\xFF");
+        assert_eq!('\u{FFFD}', ch);
+        assert_eq!(1, size);
+
+        let (ch, size) = utf8::decode_last_lossy(b"\xCE\xF0");
+        assert_eq!('\u{FFFD}', ch);
+        assert_eq!(1, size);
+
+        let (ch, size) = utf8::decode_last_lossy(b"\xCE");
+        assert_eq!('\u{FFFD}', ch);
+        assert_eq!(1, size);
+
+        let (ch, size) = utf8::decode_last_lossy(b"\xE2\x98\xF0");
+        assert_eq!('\u{FFFD}', ch);
+        assert_eq!(1, size);
+
+        let (ch, size) = utf8::decode_last_lossy(b"\xE2\x98");
+        assert_eq!('\u{FFFD}', ch);
+        assert_eq!(2, size);
+
+        let (ch, size) = utf8::decode_last_lossy(b"\xF0\x9D\x9D\xF0");
+        assert_eq!('\u{FFFD}', ch);
+        assert_eq!(1, size);
+
+        let (ch, size) = utf8::decode_last_lossy(b"\xF0\x9D\x9D");
+        assert_eq!('\u{FFFD}', ch);
+        assert_eq!(3, size);
+
+        let (ch, size) = utf8::decode_last_lossy(b"\xF0\x82\x82\xAC");
+        assert_eq!('\u{FFFD}', ch);
+        assert_eq!(1, size);
+
+        let (ch, size) = utf8::decode_last_lossy(b"\xED\xA0\x80");
+        assert_eq!('\u{FFFD}', ch);
+        assert_eq!(1, size);
+
+        let (ch, size) = utf8::decode_last_lossy(b"\xED\xA0");
+        assert_eq!('\u{FFFD}', ch);
+        assert_eq!(1, size);
+
+        let (ch, size) = utf8::decode_last_lossy(b"\xED");
+        assert_eq!('\u{FFFD}', ch);
+        assert_eq!(1, size);
+
+        let (ch, size) = utf8::decode_last_lossy(b"a\xCE");
+        assert_eq!('\u{FFFD}', ch);
+        assert_eq!(1, size);
+
+        let (ch, size) = utf8::decode_last_lossy(b"a\xE2\x98");
+        assert_eq!('\u{FFFD}', ch);
+        assert_eq!(2, size);
+
+        let (ch, size) = utf8::decode_last_lossy(b"a\xF0\x9D\x9C");
+        assert_eq!('\u{FFFD}', ch);
+        assert_eq!(3, size);
+    }
+
+    #[test]
+    fn chars() {
+        for (i, &(expected, input)) in LOSSY_TESTS.iter().enumerate() {
+            let got: String = B(input).chars().collect();
+            assert_eq!(
+                expected, got,
+                "chars(ith: {:?}, given: {:?})",
+                i, input,
+            );
+            let got: String =
+                B(input).char_indices().map(|(_, _, ch)| ch).collect();
+            assert_eq!(
+                expected, got,
+                "char_indices(ith: {:?}, given: {:?})",
+                i, input,
+            );
+
+            let expected: String = expected.chars().rev().collect();
+
+            let got: String = B(input).chars().rev().collect();
+            assert_eq!(
+                expected, got,
+                "chars.rev(ith: {:?}, given: {:?})",
+                i, input,
+            );
+            let got: String =
+                B(input).char_indices().rev().map(|(_, _, ch)| ch).collect();
+            assert_eq!(
+                expected, got,
+                "char_indices.rev(ith: {:?}, given: {:?})",
+                i, input,
+            );
+        }
+    }
+
+    #[test]
+    fn utf8_chunks() {
+        let mut c = utf8::Utf8Chunks { bytes: b"123\xC0" };
+        assert_eq!(
+            (c.next(), c.next()),
+            (
+                Some(utf8::Utf8Chunk {
+                    valid: "123",
+                    invalid: b"\xC0".as_bstr(),
+                    incomplete: false,
+                }),
+                None,
+            )
+        );
+
+        let mut c = utf8::Utf8Chunks { bytes: b"123\xFF\xFF" };
+        assert_eq!(
+            (c.next(), c.next(), c.next()),
+            (
+                Some(utf8::Utf8Chunk {
+                    valid: "123",
+                    invalid: b"\xFF".as_bstr(),
+                    incomplete: false,
+                }),
+                Some(utf8::Utf8Chunk {
+                    valid: "",
+                    invalid: b"\xFF".as_bstr(),
+                    incomplete: false,
+                }),
+                None,
+            )
+        );
+
+        let mut c = utf8::Utf8Chunks { bytes: b"123\xD0" };
+        assert_eq!(
+            (c.next(), c.next()),
+            (
+                Some(utf8::Utf8Chunk {
+                    valid: "123",
+                    invalid: b"\xD0".as_bstr(),
+                    incomplete: true,
+                }),
+                None,
+            )
+        );
+
+        let mut c = utf8::Utf8Chunks { bytes: b"123\xD0456" };
+        assert_eq!(
+            (c.next(), c.next(), c.next()),
+            (
+                Some(utf8::Utf8Chunk {
+                    valid: "123",
+                    invalid: b"\xD0".as_bstr(),
+                    incomplete: false,
+                }),
+                Some(utf8::Utf8Chunk {
+                    valid: "456",
+                    invalid: b"".as_bstr(),
+                    incomplete: false,
+                }),
+                None,
+            )
+        );
+
+        let mut c = utf8::Utf8Chunks { bytes: b"123\xE2\x98" };
+        assert_eq!(
+            (c.next(), c.next()),
+            (
+                Some(utf8::Utf8Chunk {
+                    valid: "123",
+                    invalid: b"\xE2\x98".as_bstr(),
+                    incomplete: true,
+                }),
+                None,
+            )
+        );
+
+        let mut c = utf8::Utf8Chunks { bytes: b"123\xF4\x8F\xBF" };
+        assert_eq!(
+            (c.next(), c.next()),
+            (
+                Some(utf8::Utf8Chunk {
+                    valid: "123",
+                    invalid: b"\xF4\x8F\xBF".as_bstr(),
+                    incomplete: true,
+                }),
+                None,
+            )
+        );
+    }
+}

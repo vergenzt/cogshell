@@ -32,7 +32,7 @@ use crate::{
 pub struct Words<'a>(WordsWithBreaks<'a>);
 
 impl<'a> Words<'a> {
-    pub(crate) fn new(bs: &'a [u8]) -> Words<'a> {
+    pub(crate) fn new(bs: &'a str) -> Words<'a> {
         Words(WordsWithBreaks::new(bs))
     }
 
@@ -56,7 +56,7 @@ impl<'a> Words<'a> {
     /// assert_eq!(b"", it.as_bytes());
     /// ```
     #[inline]
-    pub fn as_bytes(&self) -> &'a [u8] {
+    pub fn as_bytes(&self) -> &'a str {
         self.0.as_bytes()
     }
 }
@@ -109,7 +109,7 @@ impl<'a> Iterator for Words<'a> {
 pub struct WordIndices<'a>(WordsWithBreakIndices<'a>);
 
 impl<'a> WordIndices<'a> {
-    pub(crate) fn new(bs: &'a [u8]) -> WordIndices<'a> {
+    pub(crate) fn new(bs: &'a str) -> WordIndices<'a> {
         WordIndices(WordsWithBreakIndices::new(bs))
     }
 
@@ -134,7 +134,7 @@ impl<'a> WordIndices<'a> {
     /// assert_eq!(b"", it.as_bytes());
     /// ```
     #[inline]
-    pub fn as_bytes(&self) -> &'a [u8] {
+    pub fn as_bytes(&self) -> &'a str {
         self.0.as_bytes()
     }
 }
@@ -176,11 +176,11 @@ impl<'a> Iterator for WordIndices<'a> {
 /// that do not use spaces between words.
 #[derive(Clone, Debug)]
 pub struct WordsWithBreaks<'a> {
-    bs: &'a [u8],
+    bs: &'a str,
 }
 
 impl<'a> WordsWithBreaks<'a> {
-    pub(crate) fn new(bs: &'a [u8]) -> WordsWithBreaks<'a> {
+    pub(crate) fn new(bs: &'a str) -> WordsWithBreaks<'a> {
         WordsWithBreaks { bs }
     }
 
@@ -207,7 +207,7 @@ impl<'a> WordsWithBreaks<'a> {
     /// assert_eq!(b"", it.as_bytes());
     /// ```
     #[inline]
-    pub fn as_bytes(&self) -> &'a [u8] {
+    pub fn as_bytes(&self) -> &'a str {
         self.bs
     }
 }
@@ -255,12 +255,12 @@ impl<'a> Iterator for WordsWithBreaks<'a> {
 /// that do not use spaces between words.
 #[derive(Clone, Debug)]
 pub struct WordsWithBreakIndices<'a> {
-    bs: &'a [u8],
+    bs: &'a str,
     forward_index: usize,
 }
 
 impl<'a> WordsWithBreakIndices<'a> {
-    pub(crate) fn new(bs: &'a [u8]) -> WordsWithBreakIndices<'a> {
+    pub(crate) fn new(bs: &'a str) -> WordsWithBreakIndices<'a> {
         WordsWithBreakIndices { bs, forward_index: 0 }
     }
 
@@ -287,7 +287,7 @@ impl<'a> WordsWithBreakIndices<'a> {
     /// assert_eq!(b"", it.as_bytes());
     /// ```
     #[inline]
-    pub fn as_bytes(&self) -> &'a [u8] {
+    pub fn as_bytes(&self) -> &'a str {
         self.bs
     }
 }
@@ -308,7 +308,7 @@ impl<'a> Iterator for WordsWithBreakIndices<'a> {
     }
 }
 
-fn decode_word(bs: &[u8]) -> (&str, usize) {
+fn decode_word(bs: &str) -> (&str, usize) {
     if bs.is_empty() {
         ("", 0)
     } else if let Some(hm) = {
@@ -326,4 +326,104 @@ fn decode_word(bs: &[u8]) -> (&str, usize) {
     }
 }
 
+#[cfg(all(test, feature = "std"))]
+mod tests {
+    use alloc::{vec, vec::Vec};
 
+    #[cfg(not(miri))]
+    use ucd_parse::WordBreakTest;
+
+    use crate::ext_slice::ByteSlice;
+
+    #[test]
+    #[cfg(not(miri))]
+    fn forward_ucd() {
+        for (i, test) in ucdtests().into_iter().enumerate() {
+            let given = test.words.concat();
+            let got = words(given.as_bytes());
+            assert_eq!(
+                test.words,
+                got,
+                "\n\nword forward break test {} failed:\n\
+                 given:    {:?}\n\
+                 expected: {:?}\n\
+                 got:      {:?}\n",
+                i,
+                given,
+                strs_to_bstrs(&test.words),
+                strs_to_bstrs(&got),
+            );
+        }
+    }
+
+    // Some additional tests that don't seem to be covered by the UCD tests.
+    //
+    // It's pretty amazing that the UCD tests miss these cases. I only found
+    // them by running this crate's segmenter and ICU's segmenter on the same
+    // text and comparing the output.
+    #[test]
+    fn forward_additional() {
+        assert_eq!(vec!["a", ".", "  ", "Y"], words(b"a.  Y"));
+        assert_eq!(vec!["r", ".", "  ", "Yo"], words(b"r.  Yo"));
+        assert_eq!(
+            vec!["whatsoever", ".", "  ", "You", " ", "may"],
+            words(b"whatsoever.  You may")
+        );
+        assert_eq!(
+            vec!["21stcentury'syesterday"],
+            words(b"21stcentury'syesterday")
+        );
+
+        assert_eq!(vec!["Bonta_", "'", "s"], words(b"Bonta_'s"));
+        assert_eq!(vec!["_vhat's"], words(b"_vhat's"));
+        assert_eq!(vec!["__on'anima"], words(b"__on'anima"));
+        assert_eq!(vec!["123_", "'", "4"], words(b"123_'4"));
+        assert_eq!(vec!["_123'4"], words(b"_123'4"));
+        assert_eq!(vec!["__12'345"], words(b"__12'345"));
+
+        assert_eq!(
+            vec!["tomorrowat4", ":", "00", ","],
+            words(b"tomorrowat4:00,")
+        );
+        assert_eq!(vec!["RS1", "'", "s"], words(b"RS1's"));
+        assert_eq!(vec!["X38"], words(b"X38"));
+
+        assert_eq!(vec!["4abc", ":", "00", ","], words(b"4abc:00,"));
+        assert_eq!(vec!["12S", "'", "1"], words(b"12S'1"));
+        assert_eq!(vec!["1XY"], words(b"1XY"));
+
+        assert_eq!(vec!["\u{FEFF}", "Ты"], words("\u{FEFF}Ты".as_bytes()));
+
+        // Tests that Vithkuqi works, which was introduced in Unicode 14.
+        // This test fails prior to Unicode 14.
+        assert_eq!(
+            vec!["\u{10570}\u{10597}"],
+            words("\u{10570}\u{10597}".as_bytes())
+        );
+    }
+
+    fn words(bytes: &str) -> Vec<&str> {
+        bytes.words_with_breaks().collect()
+    }
+
+    #[cfg(not(miri))]
+    fn strs_to_bstrs<S: AsRef<str>>(strs: &[S]) -> Vec<&str> {
+        strs.iter().map(|s| s.as_ref().as_bytes()).collect()
+    }
+
+    /// Return all of the UCD for word breaks.
+    #[cfg(not(miri))]
+    fn ucdtests() -> Vec<WordBreakTest> {
+        const TESTDATA: &str = include_str!("data/WordBreakTest.txt");
+
+        let mut tests = vec![];
+        for mut line in TESTDATA.lines() {
+            line = line.trim();
+            if line.starts_with("#") || line.contains("surrogate") {
+                continue;
+            }
+            tests.push(line.parse().unwrap());
+        }
+        tests
+    }
+}

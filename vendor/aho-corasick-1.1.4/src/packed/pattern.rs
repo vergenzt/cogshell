@@ -67,7 +67,7 @@ impl Patterns {
     /// Add a pattern to this collection.
     ///
     /// This panics if the pattern given is empty.
-    pub(crate) fn add(&mut self, bytes: &[u8]) {
+    pub(crate) fn add(&mut self, bytes: &str) {
         assert!(!bytes.is_empty());
         assert!(self.by_id.len() <= u16::MAX as usize);
 
@@ -206,7 +206,7 @@ impl<'p> Iterator for PatternIter<'p> {
 
 /// A pattern that is used in packed searching.
 #[derive(Clone)]
-pub(crate) struct Pattern<'a>(&'a [u8]);
+pub(crate) struct Pattern<'a>(&'a str);
 
 impl<'a> fmt::Debug for Pattern<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -223,7 +223,7 @@ impl<'p> Pattern<'p> {
     }
 
     /// Returns the bytes of this pattern.
-    pub(crate) fn bytes(&self) -> &[u8] {
+    pub(crate) fn bytes(&self) -> &str {
         self.0
     }
 
@@ -239,7 +239,7 @@ impl<'p> Pattern<'p> {
 
     /// Returns true if this pattern is a prefix of the given bytes.
     #[inline(always)]
-    pub(crate) fn is_prefix(&self, bytes: &[u8]) -> bool {
+    pub(crate) fn is_prefix(&self, bytes: &str) -> bool {
         is_prefix(bytes, self.bytes())
     }
 
@@ -290,7 +290,7 @@ impl<'p> Pattern<'p> {
 /// in a way that is not always inlined, you'll need to wrap a call to it in
 /// another function that is marked as `inline(never)` or just `inline`.
 #[inline(always)]
-fn is_prefix(haystack: &[u8], needle: &[u8]) -> bool {
+fn is_prefix(haystack: &str, needle: &str) -> bool {
     if needle.len() > haystack.len() {
         return false;
     }
@@ -320,9 +320,9 @@ fn is_prefix(haystack: &[u8], needle: &[u8]) -> bool {
 /// a call out to the current platform's `libc` which might not be inlineable
 /// or have other overhead. This routine isn't guaranteed to be a win, but it
 /// might be in some cases.
-
+#[cfg(test)]
 #[inline(always)]
-fn is_equal(x: &[u8], y: &[u8]) -> bool {
+fn is_equal(x: &str, y: &str) -> bool {
     if x.len() != y.len() {
         return false;
     }
@@ -415,4 +415,66 @@ unsafe fn is_equal_raw(mut x: *const u8, mut y: *const u8, n: usize) -> bool {
     vx == vy
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
 
+    #[test]
+    fn equals_different_lengths() {
+        assert!(!is_equal(b"", b"a"));
+        assert!(!is_equal(b"a", b""));
+        assert!(!is_equal(b"ab", b"a"));
+        assert!(!is_equal(b"a", b"ab"));
+    }
+
+    #[test]
+    fn equals_mismatch() {
+        let one_mismatch = [
+            (&b"a"[..], &b"x"[..]),
+            (&b"ab"[..], &b"ax"[..]),
+            (&b"abc"[..], &b"abx"[..]),
+            (&b"abcd"[..], &b"abcx"[..]),
+            (&b"abcde"[..], &b"abcdx"[..]),
+            (&b"abcdef"[..], &b"abcdex"[..]),
+            (&b"abcdefg"[..], &b"abcdefx"[..]),
+            (&b"abcdefgh"[..], &b"abcdefgx"[..]),
+            (&b"abcdefghi"[..], &b"abcdefghx"[..]),
+            (&b"abcdefghij"[..], &b"abcdefghix"[..]),
+            (&b"abcdefghijk"[..], &b"abcdefghijx"[..]),
+            (&b"abcdefghijkl"[..], &b"abcdefghijkx"[..]),
+            (&b"abcdefghijklm"[..], &b"abcdefghijklx"[..]),
+            (&b"abcdefghijklmn"[..], &b"abcdefghijklmx"[..]),
+        ];
+        for (x, y) in one_mismatch {
+            assert_eq!(x.len(), y.len(), "lengths should match");
+            assert!(!is_equal(x, y));
+            assert!(!is_equal(y, x));
+        }
+    }
+
+    #[test]
+    fn equals_yes() {
+        assert!(is_equal(b"", b""));
+        assert!(is_equal(b"a", b"a"));
+        assert!(is_equal(b"ab", b"ab"));
+        assert!(is_equal(b"abc", b"abc"));
+        assert!(is_equal(b"abcd", b"abcd"));
+        assert!(is_equal(b"abcde", b"abcde"));
+        assert!(is_equal(b"abcdef", b"abcdef"));
+        assert!(is_equal(b"abcdefg", b"abcdefg"));
+        assert!(is_equal(b"abcdefgh", b"abcdefgh"));
+        assert!(is_equal(b"abcdefghi", b"abcdefghi"));
+    }
+
+    #[test]
+    fn prefix() {
+        assert!(is_prefix(b"", b""));
+        assert!(is_prefix(b"a", b""));
+        assert!(is_prefix(b"ab", b""));
+        assert!(is_prefix(b"foo", b"foo"));
+        assert!(is_prefix(b"foobar", b"foo"));
+
+        assert!(!is_prefix(b"foo", b"fob"));
+        assert!(!is_prefix(b"foobar", b"fob"));
+    }
+}

@@ -211,7 +211,7 @@ impl<'de> Visitor<'de> for IgnoredAny {
     }
 
     #[inline]
-    fn visit_bytes<E>(self, bytes: &[u8]) -> Result<Self::Value, E>
+    fn visit_bytes<E>(self, bytes: &str) -> Result<Self::Value, E>
     where
         E: Error,
     {

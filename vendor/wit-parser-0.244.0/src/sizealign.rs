@@ -451,4 +451,176 @@ pub fn align_to_arch(val: ArchitectureSize, align: Alignment) -> ArchitectureSiz
     }
 }
 
+#[cfg(test)]
+mod test {
+    use super::*;
 
+    #[test]
+    fn align() {
+        // u8 + ptr
+        assert_eq!(
+            align_to_arch(ArchitectureSize::new(1, 0), Alignment::Pointer),
+            ArchitectureSize::new(0, 1)
+        );
+        // u8 + u64
+        assert_eq!(
+            align_to_arch(
+                ArchitectureSize::new(1, 0),
+                Alignment::Bytes(NonZeroUsize::new(8).unwrap())
+            ),
+            ArchitectureSize::new(8, 0)
+        );
+        // u8 + u32
+        assert_eq!(
+            align_to_arch(
+                ArchitectureSize::new(1, 0),
+                Alignment::Bytes(NonZeroUsize::new(4).unwrap())
+            ),
+            ArchitectureSize::new(4, 0)
+        );
+        // ptr + u64
+        assert_eq!(
+            align_to_arch(
+                ArchitectureSize::new(0, 1),
+                Alignment::Bytes(NonZeroUsize::new(8).unwrap())
+            ),
+            ArchitectureSize::new(8, 0)
+        );
+        // u32 + ptr
+        assert_eq!(
+            align_to_arch(ArchitectureSize::new(4, 0), Alignment::Pointer),
+            ArchitectureSize::new(0, 1)
+        );
+        // u32, ptr + u64
+        assert_eq!(
+            align_to_arch(
+                ArchitectureSize::new(0, 2),
+                Alignment::Bytes(NonZeroUsize::new(8).unwrap())
+            ),
+            ArchitectureSize::new(0, 2)
+        );
+        // ptr, u8 + u64
+        assert_eq!(
+            align_to_arch(
+                ArchitectureSize::new(1, 1),
+                Alignment::Bytes(NonZeroUsize::new(8).unwrap())
+            ),
+            ArchitectureSize::new(0, 2)
+        );
+        // ptr, u8 + ptr
+        assert_eq!(
+            align_to_arch(ArchitectureSize::new(1, 1), Alignment::Pointer),
+            ArchitectureSize::new(0, 2)
+        );
+        // ptr, ptr, u8 + u64
+        assert_eq!(
+            align_to_arch(
+                ArchitectureSize::new(1, 2),
+                Alignment::Bytes(NonZeroUsize::new(8).unwrap())
+            ),
+            ArchitectureSize::new(8, 2)
+        );
+        assert_eq!(
+            align_to_arch(
+                ArchitectureSize::new(30, 3),
+                Alignment::Bytes(NonZeroUsize::new(8).unwrap())
+            ),
+            ArchitectureSize::new(40, 2)
+        );
+
+        assert_eq!(
+            ArchitectureSize::new(12, 0).max(&ArchitectureSize::new(0, 2)),
+            ArchitectureSize::new(8, 1)
+        );
+        assert_eq!(
+            ArchitectureSize::new(10, 0).max(&ArchitectureSize::new(0, 2)),
+            ArchitectureSize::new(8, 1)
+        );
+
+        assert_eq!(
+            align_to_arch(
+                ArchitectureSize::new(2, 0),
+                Alignment::Bytes(NonZeroUsize::new(8).unwrap())
+            ),
+            ArchitectureSize::new(8, 0)
+        );
+        assert_eq!(
+            align_to_arch(ArchitectureSize::new(2, 0), Alignment::Pointer),
+            ArchitectureSize::new(0, 1)
+        );
+    }
+
+    #[test]
+    fn resource_size() {
+        // keep it identical to the old behavior
+        let obj = SizeAlign::default();
+        let elem = obj.calculate(&TypeDef {
+            name: None,
+            kind: TypeDefKind::Resource,
+            owner: crate::TypeOwner::None,
+            docs: Default::default(),
+            stability: Default::default(),
+        });
+        assert_eq!(elem.size, ArchitectureSize::new(usize::MAX, 0));
+        assert_eq!(
+            elem.align,
+            Alignment::Bytes(NonZeroUsize::new(usize::MAX).unwrap())
+        );
+    }
+    #[test]
+    fn result_ptr_10() {
+        let mut obj = SizeAlign::default();
+        let mut resolve = Resolve::default();
+        let tuple = crate::Tuple {
+            types: vec![Type::U16, Type::U16, Type::U16, Type::U16, Type::U16],
+        };
+        let id = resolve.types.alloc(TypeDef {
+            name: None,
+            kind: TypeDefKind::Tuple(tuple),
+            owner: crate::TypeOwner::None,
+            docs: Default::default(),
+            stability: Default::default(),
+        });
+        obj.fill(&resolve);
+        let my_result = crate::Result_ {
+            ok: Some(Type::String),
+            err: Some(Type::Id(id)),
+        };
+        let elem = obj.calculate(&TypeDef {
+            name: None,
+            kind: TypeDefKind::Result(my_result),
+            owner: crate::TypeOwner::None,
+            docs: Default::default(),
+            stability: Default::default(),
+        });
+        assert_eq!(elem.size, ArchitectureSize::new(8, 2));
+        assert_eq!(elem.align, Alignment::Pointer);
+    }
+    #[test]
+    fn result_ptr_64bit() {
+        let obj = SizeAlign::default();
+        let my_record = crate::Record {
+            fields: vec![
+                crate::Field {
+                    name: String::new(),
+                    ty: Type::String,
+                    docs: Default::default(),
+                },
+                crate::Field {
+                    name: String::new(),
+                    ty: Type::U64,
+                    docs: Default::default(),
+                },
+            ],
+        };
+        let elem = obj.calculate(&TypeDef {
+            name: None,
+            kind: TypeDefKind::Record(my_record),
+            owner: crate::TypeOwner::None,
+            docs: Default::default(),
+            stability: Default::default(),
+        });
+        assert_eq!(elem.size, ArchitectureSize::new(8, 2));
+        assert_eq!(elem.align, Alignment::Bytes(NonZeroUsize::new(8).unwrap()));
+    }
+}

@@ -5,7 +5,7 @@ use core::{
 
 use once_cell::unsync::Lazy;
 
-
+#[test]
 fn lazy_new() {
     let called = Cell::new(0);
     let x = Lazy::new(|| {
@@ -24,7 +24,7 @@ fn lazy_new() {
     assert_eq!(called.get(), 1);
 }
 
-
+#[test]
 fn lazy_deref_mut() {
     let called = Cell::new(0);
     let mut x = Lazy::new(|| {
@@ -43,7 +43,7 @@ fn lazy_deref_mut() {
     assert_eq!(called.get(), 1);
 }
 
-
+#[test]
 fn lazy_force_mut() {
     let called = Cell::new(0);
     let mut x = Lazy::new(|| {
@@ -59,7 +59,7 @@ fn lazy_force_mut() {
     assert_eq!(called.get(), 1);
 }
 
-
+#[test]
 fn lazy_get_mut() {
     let called = Cell::new(0);
     let mut x: Lazy<u32, _> = Lazy::new(|| {
@@ -78,7 +78,7 @@ fn lazy_get_mut() {
     assert_eq!(called.get(), 1);
 }
 
-
+#[test]
 fn lazy_default() {
     static CALLED: AtomicUsize = AtomicUsize::new(0);
 
@@ -103,7 +103,7 @@ fn lazy_default() {
     assert_eq!(CALLED.load(SeqCst), 1);
 }
 
-
+#[test]
 fn lazy_into_value() {
     let l: Lazy<i32, _> = Lazy::new(|| panic!());
     assert!(matches!(Lazy::into_value(l), Err(_)));
@@ -112,7 +112,7 @@ fn lazy_into_value() {
     assert!(matches!(Lazy::into_value(l), Ok(92)));
 }
 
-
+#[test]
 #[cfg(feature = "std")]
 fn lazy_poisoning() {
     let x: Lazy<String> = Lazy::new(|| panic!("kaboom"));
@@ -122,7 +122,7 @@ fn lazy_poisoning() {
     }
 }
 
-
+#[test]
 // https://github.com/rust-lang/rust/issues/34761#issuecomment-256320669
 fn arrrrrrrrrrrrrrrrrrrrrr() {
     let lazy: Lazy<&String, _>;

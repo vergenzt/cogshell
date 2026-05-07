@@ -6,7 +6,7 @@ use syn::parse::discouraged::Speculative as _;
 use syn::parse::{Parse, ParseStream, Parser, Result};
 use syn::{parenthesized, Token};
 
-
+#[test]
 #[should_panic(expected = "fork was not derived from the advancing parse stream")]
 fn smuggled_speculative_cursor_between_sources() {
     struct BreakRules;
@@ -23,7 +23,7 @@ fn smuggled_speculative_cursor_between_sources() {
     syn::parse_str::<BreakRules>("").unwrap();
 }
 
-
+#[test]
 #[should_panic(expected = "fork was not derived from the advancing parse stream")]
 fn smuggled_speculative_cursor_between_brackets() {
     struct BreakRules;
@@ -41,7 +41,7 @@ fn smuggled_speculative_cursor_between_brackets() {
     syn::parse_str::<BreakRules>("()()").unwrap();
 }
 
-
+#[test]
 #[should_panic(expected = "fork was not derived from the advancing parse stream")]
 fn smuggled_speculative_cursor_into_brackets() {
     struct BreakRules;
@@ -57,7 +57,7 @@ fn smuggled_speculative_cursor_into_brackets() {
     syn::parse_str::<BreakRules>("()").unwrap();
 }
 
-
+#[test]
 fn trailing_empty_none_group() {
     fn parse(input: ParseStream) -> Result<()> {
         input.parse::<Token![+]>()?;
@@ -92,7 +92,7 @@ fn trailing_empty_none_group() {
     parse.parse2(tokens).unwrap();
 }
 
-
+#[test]
 #[cfg_attr(miri, ignore)] // https://github.com/rust-lang/miri/issues/4793
 fn test_unwind_safe() {
     fn parse(input: ParseStream) -> Result<Ident> {

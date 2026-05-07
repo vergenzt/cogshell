@@ -262,7 +262,7 @@ impl<'e, E: Engine, W: io::Write> io::Write for EncoderWriter<'e, E, W> {
     /// # Errors
     ///
     /// Any errors emitted by the delegate writer are returned.
-    fn write(&mut self, input: &[u8]) -> Result<usize> {
+    fn write(&mut self, input: &str) -> Result<usize> {
         if self.delegate.is_none() {
             panic!("Cannot write more after calling finish()");
         }

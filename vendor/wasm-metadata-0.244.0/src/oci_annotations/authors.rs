@@ -79,4 +79,33 @@ impl Encode for Authors {
     }
 }
 
+#[cfg(test)]
+mod test {
+    use super::*;
+    use wasm_encoder::Component;
+    use wasmparser::Payload;
 
+    #[test]
+    fn roundtrip() {
+        let mut component = Component::new();
+        component.section(&Authors::new("Nori Cat"));
+        let component = component.finish();
+
+        let mut parsed = false;
+        for section in wasmparser::Parser::new(0).parse_all(&component) {
+            if let Payload::CustomSection(reader) = section.unwrap() {
+                let authors = Authors::parse_custom_section(&reader).unwrap();
+                assert_eq!(authors.to_string(), "Nori Cat");
+                parsed = true;
+            }
+        }
+        assert!(parsed);
+    }
+
+    #[test]
+    fn serialize() {
+        let authors = Authors::new("Chashu Cat");
+        let json = serde_json::to_string(&authors).unwrap();
+        assert_eq!(r#""Chashu Cat""#, json);
+    }
+}

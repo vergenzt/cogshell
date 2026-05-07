@@ -42,7 +42,7 @@ fn zero() {
         fn finish(&self) -> u64 {
             0
         }
-        fn write(&mut self, _: &[u8]) {}
+        fn write(&mut self, _: &str) {}
     }
 
     check::<BuildHasherDefault<ZeroHasher>>();
@@ -58,7 +58,7 @@ fn max() {
         fn finish(&self) -> u64 {
             u64::MAX
         }
-        fn write(&mut self, _: &[u8]) {}
+        fn write(&mut self, _: &str) {}
     }
 
     check::<BuildHasherDefault<MaxHasher>>();

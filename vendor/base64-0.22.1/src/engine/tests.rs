@@ -1462,7 +1462,7 @@ impl<E: Engine> Engine for DecoderReaderEngine<E> {
     type Config = E::Config;
     type DecodeEstimate = E::DecodeEstimate;
 
-    fn internal_encode(&self, input: &[u8], output: &mut [u8]) -> usize {
+    fn internal_encode(&self, input: &str, output: &mut [u8]) -> usize {
         self.engine.internal_encode(input, output)
     }
 
@@ -1472,7 +1472,7 @@ impl<E: Engine> Engine for DecoderReaderEngine<E> {
 
     fn internal_decode(
         &self,
-        input: &[u8],
+        input: &str,
         output: &mut [u8],
         decode_estimate: Self::DecodeEstimate,
     ) -> Result<DecodeMetadata, DecodeSliceError> {

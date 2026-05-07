@@ -7,7 +7,7 @@ use syn::parse::discouraged::AnyDelimiter;
 use syn::parse::{ParseStream, Parser as _, Result};
 use syn::{parenthesized, token, Ident, Lifetime, Token};
 
-
+#[test]
 fn test_peek_punct() {
     let tokens = quote!(+= + =);
 
@@ -34,7 +34,7 @@ fn test_peek_punct() {
     assert.parse2(tokens).unwrap();
 }
 
-
+#[test]
 fn test_peek_lifetime() {
     // 'static ;
     let tokens = TokenStream::from_iter([
@@ -59,7 +59,7 @@ fn test_peek_lifetime() {
     assert.parse2(tokens).unwrap();
 }
 
-
+#[test]
 fn test_peek_not_lifetime() {
     // ' static
     let tokens = TokenStream::from_iter([
@@ -82,7 +82,7 @@ fn test_peek_not_lifetime() {
     assert.parse2(tokens).unwrap();
 }
 
-
+#[test]
 fn test_peek_ident() {
     let tokens = quote!(static var);
 
@@ -103,7 +103,7 @@ fn test_peek_ident() {
     assert.parse2(tokens).unwrap();
 }
 
-
+#[test]
 fn test_peek_groups() {
     // pub ( :: ) «∅ ! = ∅» static
     let tokens = TokenStream::from_iter([

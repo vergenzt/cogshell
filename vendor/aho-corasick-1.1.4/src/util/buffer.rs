@@ -65,7 +65,7 @@ impl Buffer {
 
     /// Return the contents of this buffer.
     #[inline]
-    pub(crate) fn buffer(&self) -> &[u8] {
+    pub(crate) fn buffer(&self) -> &str {
         &self.buf[..self.end]
     }
 

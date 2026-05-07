@@ -801,7 +801,7 @@ extern crate std;
 ///     // you.
 ///     bitflags_path: "path::to::bitflags",
 ///
-///     // Indicates that instead of `&str` and `String` the `&[u8]` and
+///     // Indicates that instead of `&str` and `String` the `&str` and
 ///     // `Vec<u8>` types should be used. Only intended for cases where
 ///     // compiled size is of the utmost concern as this can avoid pulling in
 ///     // UTF-8 validation.

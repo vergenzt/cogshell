@@ -1,6 +1,6 @@
 use serde_json::Value;
 
-
+#[test]
 fn test() {
     let x1 = serde_json::from_str::<Value>("18446744073709551615.");
     assert!(x1.is_err());

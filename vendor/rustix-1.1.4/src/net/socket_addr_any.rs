@@ -130,7 +130,7 @@ impl SocketAddrAny {
 
     /// Gets the initialized part of the storage as bytes.
     #[inline]
-    fn bytes(&self) -> &[u8] {
+    fn bytes(&self) -> &str {
         let len = self.len.get() as usize;
         unsafe { core::slice::from_raw_parts(self.storage.as_ptr().cast(), len) }
     }
@@ -328,4 +328,17 @@ impl TryFrom<SocketAddrAny> for SocketAddrUnix {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
 
+    #[test]
+    fn any_read() {
+        let localhost = std::net::Ipv6Addr::LOCALHOST;
+        let addr = SocketAddrAny::from(SocketAddrV6::new(localhost, 7, 8, 9));
+        unsafe {
+            let same = SocketAddrAny::read(addr.as_ptr(), addr.addr_len());
+            assert_eq!(addr, same);
+        }
+    }
+}

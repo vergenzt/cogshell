@@ -2,7 +2,7 @@
 
 use std::mem::size_of_val;
 
-
+#[test]
 fn test_size() {
     #[allow(dead_code)]
     #[path = "../src/tables.rs"]
@@ -16,7 +16,7 @@ fn test_size() {
     assert_eq!(10056, size);
 }
 
-
+#[test]
 fn test_xid_size() {
     #[deny(dead_code)]
     #[path = "tables/mod.rs"]
@@ -29,7 +29,7 @@ fn test_xid_size() {
 }
 
 #[cfg(target_pointer_width = "64")]
-
+#[test]
 fn test_trieset_size() {
     #[deny(dead_code)]
     #[allow(clippy::redundant_static_lifetimes)]
@@ -75,7 +75,7 @@ fn test_trieset_size() {
     let _ = trie::BY_NAME;
 }
 
-
+#[test]
 fn test_fst_size() {
     let xid_start_fst = include_bytes!("fst/xid_start.fst");
     let xid_continue_fst = include_bytes!("fst/xid_continue.fst");
@@ -83,7 +83,7 @@ fn test_fst_size() {
     assert_eq!(143513, size);
 }
 
-
+#[test]
 fn test_roaring_size() {
     #[path = "roaring/mod.rs"]
     mod roaring;

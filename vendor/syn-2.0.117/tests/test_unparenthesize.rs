@@ -23,7 +23,7 @@ mod macros;
 mod common;
 mod repo;
 
-
+#[test]
 fn test_unparenthesize() {
     repo::rayon_init();
     repo::clone_rust();

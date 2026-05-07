@@ -9,7 +9,7 @@ struct Foo {
     bar: Vec<u8>,
 }
 
-
+#[test]
 fn serialize() {
     let foo = Foo {
         bar: vec![1, 10, 100],
@@ -19,7 +19,7 @@ fn serialize() {
     assert_eq!(ser, r#"{"bar":"010a64"}"#);
 }
 
-
+#[test]
 fn deserialize() {
     let foo = Foo {
         bar: vec![1, 10, 100],
@@ -38,7 +38,7 @@ struct Bar {
     foo: Vec<u8>,
 }
 
-
+#[test]
 fn serialize_upper() {
     let bar = Bar {
         foo: vec![1, 10, 100],
@@ -48,7 +48,7 @@ fn serialize_upper() {
     assert_eq!(ser, r#"{"foo":"010A64"}"#);
 }
 
-
+#[test]
 fn deserialize_upper() {
     let bar = Bar {
         foo: vec![1, 10, 100],

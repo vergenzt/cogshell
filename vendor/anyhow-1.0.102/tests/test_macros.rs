@@ -17,14 +17,14 @@ use anyhow::{anyhow, ensure, Result};
 use std::cell::Cell;
 use std::future;
 
-
+#[test]
 fn test_messages() {
     assert_eq!("oh no!", bail_literal().unwrap_err().to_string());
     assert_eq!("oh no!", bail_fmt().unwrap_err().to_string());
     assert_eq!("oh no!", bail_error().unwrap_err().to_string());
 }
 
-
+#[test]
 fn test_ensure() {
     let f = || {
         ensure!(1 + 1 == 2, "This is correct");
@@ -55,7 +55,7 @@ fn test_ensure() {
     );
 }
 
-
+#[test]
 fn test_ensure_nonbool() -> Result<()> {
     struct Struct {
         condition: bool,
@@ -69,7 +69,7 @@ fn test_ensure_nonbool() -> Result<()> {
     Ok(())
 }
 
-
+#[test]
 fn test_temporaries() {
     fn require_send_sync(_: impl Send + Sync) {}
 
@@ -90,7 +90,7 @@ fn test_temporaries() {
     });
 }
 
-
+#[test]
 fn test_brace_escape() {
     let err = anyhow!("unterminated ${{..}} expression");
     assert_eq!("unterminated ${..} expression", err.to_string());

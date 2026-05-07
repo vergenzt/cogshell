@@ -34,7 +34,7 @@ impl Finder {
     /// could not be constructed from the needle given, then `None` is
     /// returned.
     #[inline]
-    pub fn new(needle: &[u8]) -> Option<Finder> {
+    pub fn new(needle: &str) -> Option<Finder> {
         Finder::with_pair(needle, Pair::new(needle)?)
     }
 
@@ -46,7 +46,7 @@ impl Finder {
     /// If AVX2 is unavailable in the current environment, then `None` is
     /// returned.
     #[inline]
-    pub fn with_pair(needle: &[u8], pair: Pair) -> Option<Finder> {
+    pub fn with_pair(needle: &str, pair: Pair) -> Option<Finder> {
         if Finder::is_available() {
             // SAFETY: we check that sse2/avx2 is available above. We are also
             // guaranteed to have needle.len() > 1 because we have a valid
@@ -65,7 +65,7 @@ impl Finder {
     /// ensure that both SSE2 and AVX2 are available.
     #[target_feature(enable = "sse2", enable = "avx2")]
     #[inline]
-    unsafe fn with_pair_impl(needle: &[u8], pair: Pair) -> Finder {
+    unsafe fn with_pair_impl(needle: &str, pair: Pair) -> Finder {
         let sse2 = packedpair::Finder::<__m128i>::new(needle, pair);
         let avx2 = packedpair::Finder::<__m256i>::new(needle, pair);
         Finder { sse2, avx2 }
@@ -115,7 +115,7 @@ impl Finder {
     ///
     /// When `haystack.len()` is less than [`Finder::min_haystack_len`].
     #[inline]
-    pub fn find(&self, haystack: &[u8], needle: &[u8]) -> Option<usize> {
+    pub fn find(&self, haystack: &str, needle: &str) -> Option<usize> {
         // SAFETY: Building a `Finder` means it's safe to call 'sse2' routines.
         unsafe { self.find_impl(haystack, needle) }
     }
@@ -129,7 +129,7 @@ impl Finder {
     ///
     /// When `haystack.len()` is less than [`Finder::min_haystack_len`].
     #[inline]
-    pub fn find_prefilter(&self, haystack: &[u8]) -> Option<usize> {
+    pub fn find_prefilter(&self, haystack: &str) -> Option<usize> {
         // SAFETY: Building a `Finder` means it's safe to call 'sse2' routines.
         unsafe { self.find_prefilter_impl(haystack) }
     }
@@ -149,8 +149,8 @@ impl Finder {
     #[inline]
     unsafe fn find_impl(
         &self,
-        haystack: &[u8],
-        needle: &[u8],
+        haystack: &str,
+        needle: &str,
     ) -> Option<usize> {
         if haystack.len() < self.avx2.min_haystack_len() {
             self.sse2.find(haystack, needle)
@@ -172,7 +172,7 @@ impl Finder {
     /// when it is safe to call `sse2` and `avx2` routines.)
     #[target_feature(enable = "sse2", enable = "avx2")]
     #[inline]
-    unsafe fn find_prefilter_impl(&self, haystack: &[u8]) -> Option<usize> {
+    unsafe fn find_prefilter_impl(&self, haystack: &str) -> Option<usize> {
         if haystack.len() < self.avx2.min_haystack_len() {
             self.sse2.find_prefilter(haystack)
         } else {
@@ -212,4 +212,61 @@ impl Finder {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
 
+    fn find(haystack: &str, needle: &str) -> Option<Option<usize>> {
+        let f = Finder::new(needle)?;
+        if haystack.len() < f.min_haystack_len() {
+            return None;
+        }
+        Some(f.find(haystack, needle))
+    }
+
+    define_substring_forward_quickcheck!(find);
+
+    #[test]
+    fn forward_substring() {
+        crate::tests::substring::Runner::new().fwd(find).run()
+    }
+
+    #[test]
+    fn forward_packedpair() {
+        fn find(
+            haystack: &str,
+            needle: &str,
+            index1: u8,
+            index2: u8,
+        ) -> Option<Option<usize>> {
+            let pair = Pair::with_indices(needle, index1, index2)?;
+            let f = Finder::with_pair(needle, pair)?;
+            if haystack.len() < f.min_haystack_len() {
+                return None;
+            }
+            Some(f.find(haystack, needle))
+        }
+        crate::tests::packedpair::Runner::new().fwd(find).run()
+    }
+
+    #[test]
+    fn forward_packedpair_prefilter() {
+        fn find(
+            haystack: &str,
+            needle: &str,
+            index1: u8,
+            index2: u8,
+        ) -> Option<Option<usize>> {
+            if !cfg!(target_feature = "sse2") {
+                return None;
+            }
+            let pair = Pair::with_indices(needle, index1, index2)?;
+            let f = Finder::with_pair(needle, pair)?;
+            if haystack.len() < f.min_haystack_len() {
+                return None;
+            }
+            Some(f.find_prefilter(haystack))
+        }
+        crate::tests::packedpair::Runner::new().fwd(find).run()
+    }
+}

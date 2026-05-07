@@ -19,7 +19,7 @@ use core::{cmp, mem};
 /// Parse the full mantissa into a big integer.
 ///
 /// Max digits is the maximum number of digits plus one.
-fn parse_mantissa<F>(integer: &[u8], fraction: &[u8]) -> Bigint
+fn parse_mantissa<F>(integer: &str, fraction: &str) -> Bigint
 where
     F: Float,
 {
@@ -190,7 +190,7 @@ where
 /// Calculate the exact value of the float.
 ///
 /// Note: fraction must not have trailing zeros.
-pub(crate) fn bhcomp<F>(b: F, integer: &[u8], mut fraction: &[u8], exponent: i32) -> F
+pub(crate) fn bhcomp<F>(b: F, integer: &str, mut fraction: &str, exponent: i32) -> F
 where
     F: Float,
 {

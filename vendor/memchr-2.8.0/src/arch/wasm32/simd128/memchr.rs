@@ -86,7 +86,7 @@ impl One {
     /// The occurrence is reported as an offset into `haystack`. Its maximum
     /// value is `haystack.len() - 1`.
     #[inline]
-    pub fn find(&self, haystack: &[u8]) -> Option<usize> {
+    pub fn find(&self, haystack: &str) -> Option<usize> {
         // SAFETY: `find_raw` guarantees that if a pointer is returned, it
         // falls within the bounds of the start and end pointers.
         unsafe {
@@ -102,7 +102,7 @@ impl One {
     /// The occurrence is reported as an offset into `haystack`. Its maximum
     /// value is `haystack.len() - 1`.
     #[inline]
-    pub fn rfind(&self, haystack: &[u8]) -> Option<usize> {
+    pub fn rfind(&self, haystack: &str) -> Option<usize> {
         // SAFETY: `rfind_raw` guarantees that if a pointer is returned, it
         // falls within the bounds of the start and end pointers.
         unsafe {
@@ -114,7 +114,7 @@ impl One {
 
     /// Counts all occurrences of this byte in the given haystack.
     #[inline]
-    pub fn count(&self, haystack: &[u8]) -> usize {
+    pub fn count(&self, haystack: &str) -> usize {
         // SAFETY: All of our pointers are derived directly from a borrowed
         // slice, which is guaranteed to be valid.
         unsafe {
@@ -319,7 +319,7 @@ impl One {
     /// The iterator returned implements `DoubleEndedIterator`. This means it
     /// can also be used to find occurrences in reverse order.
     #[inline]
-    pub fn iter<'a, 'h>(&'a self, haystack: &'h [u8]) -> OneIter<'a, 'h> {
+    pub fn iter<'a, 'h>(&'a self, haystack: &'h str) -> OneIter<'a, 'h> {
         OneIter { searcher: self, it: generic::Iter::new(haystack) }
     }
 }
@@ -445,7 +445,7 @@ impl Two {
     /// The occurrence is reported as an offset into `haystack`. Its maximum
     /// value is `haystack.len() - 1`.
     #[inline]
-    pub fn find(&self, haystack: &[u8]) -> Option<usize> {
+    pub fn find(&self, haystack: &str) -> Option<usize> {
         // SAFETY: `find_raw` guarantees that if a pointer is returned, it
         // falls within the bounds of the start and end pointers.
         unsafe {
@@ -461,7 +461,7 @@ impl Two {
     /// The occurrence is reported as an offset into `haystack`. Its maximum
     /// value is `haystack.len() - 1`.
     #[inline]
-    pub fn rfind(&self, haystack: &[u8]) -> Option<usize> {
+    pub fn rfind(&self, haystack: &str) -> Option<usize> {
         // SAFETY: `rfind_raw` guarantees that if a pointer is returned, it
         // falls within the bounds of the start and end pointers.
         unsafe {
@@ -605,7 +605,7 @@ impl Two {
     /// The iterator returned implements `DoubleEndedIterator`. This means it
     /// can also be used to find occurrences in reverse order.
     #[inline]
-    pub fn iter<'a, 'h>(&'a self, haystack: &'h [u8]) -> TwoIter<'a, 'h> {
+    pub fn iter<'a, 'h>(&'a self, haystack: &'h str) -> TwoIter<'a, 'h> {
         TwoIter { searcher: self, it: generic::Iter::new(haystack) }
     }
 }
@@ -726,7 +726,7 @@ impl Three {
     /// The occurrence is reported as an offset into `haystack`. Its maximum
     /// value is `haystack.len() - 1`.
     #[inline]
-    pub fn find(&self, haystack: &[u8]) -> Option<usize> {
+    pub fn find(&self, haystack: &str) -> Option<usize> {
         // SAFETY: `find_raw` guarantees that if a pointer is returned, it
         // falls within the bounds of the start and end pointers.
         unsafe {
@@ -742,7 +742,7 @@ impl Three {
     /// The occurrence is reported as an offset into `haystack`. Its maximum
     /// value is `haystack.len() - 1`.
     #[inline]
-    pub fn rfind(&self, haystack: &[u8]) -> Option<usize> {
+    pub fn rfind(&self, haystack: &str) -> Option<usize> {
         // SAFETY: `rfind_raw` guarantees that if a pointer is returned, it
         // falls within the bounds of the start and end pointers.
         unsafe {
@@ -890,7 +890,7 @@ impl Three {
     /// The iterator returned implements `DoubleEndedIterator`. This means it
     /// can also be used to find occurrences in reverse order.
     #[inline]
-    pub fn iter<'a, 'h>(&'a self, haystack: &'h [u8]) -> ThreeIter<'a, 'h> {
+    pub fn iter<'a, 'h>(&'a self, haystack: &'h str) -> ThreeIter<'a, 'h> {
         ThreeIter { searcher: self, it: generic::Iter::new(haystack) }
     }
 }
@@ -941,4 +941,80 @@ impl<'a, 'h> DoubleEndedIterator for ThreeIter<'a, 'h> {
 
 impl<'a, 'h> core::iter::FusedIterator for ThreeIter<'a, 'h> {}
 
+#[cfg(test)]
+mod tests {
+    use super::*;
 
+    define_memchr_quickcheck!(super);
+
+    #[test]
+    fn forward_one() {
+        crate::tests::memchr::Runner::new(1).forward_iter(
+            |haystack, needles| {
+                Some(One::new(needles[0])?.iter(haystack).collect())
+            },
+        )
+    }
+
+    #[test]
+    fn reverse_one() {
+        crate::tests::memchr::Runner::new(1).reverse_iter(
+            |haystack, needles| {
+                Some(One::new(needles[0])?.iter(haystack).rev().collect())
+            },
+        )
+    }
+
+    #[test]
+    fn count_one() {
+        crate::tests::memchr::Runner::new(1).count_iter(|haystack, needles| {
+            Some(One::new(needles[0])?.iter(haystack).count())
+        })
+    }
+
+    #[test]
+    fn forward_two() {
+        crate::tests::memchr::Runner::new(2).forward_iter(
+            |haystack, needles| {
+                let n1 = needles.get(0).copied()?;
+                let n2 = needles.get(1).copied()?;
+                Some(Two::new(n1, n2)?.iter(haystack).collect())
+            },
+        )
+    }
+
+    #[test]
+    fn reverse_two() {
+        crate::tests::memchr::Runner::new(2).reverse_iter(
+            |haystack, needles| {
+                let n1 = needles.get(0).copied()?;
+                let n2 = needles.get(1).copied()?;
+                Some(Two::new(n1, n2)?.iter(haystack).rev().collect())
+            },
+        )
+    }
+
+    #[test]
+    fn forward_three() {
+        crate::tests::memchr::Runner::new(3).forward_iter(
+            |haystack, needles| {
+                let n1 = needles.get(0).copied()?;
+                let n2 = needles.get(1).copied()?;
+                let n3 = needles.get(2).copied()?;
+                Some(Three::new(n1, n2, n3)?.iter(haystack).collect())
+            },
+        )
+    }
+
+    #[test]
+    fn reverse_three() {
+        crate::tests::memchr::Runner::new(3).reverse_iter(
+            |haystack, needles| {
+                let n1 = needles.get(0).copied()?;
+                let n2 = needles.get(1).copied()?;
+                let n3 = needles.get(2).copied()?;
+                Some(Three::new(n1, n2, n3)?.iter(haystack).rev().collect())
+            },
+        )
+    }
+}

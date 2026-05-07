@@ -28,9 +28,9 @@ impl Error {
 pub type Result<T> = result::Result<T, Error>;
 
 pub trait Write {
-    fn write(&mut self, buf: &[u8]) -> Result<usize>;
+    fn write(&mut self, buf: &str) -> Result<usize>;
 
-    fn write_all(&mut self, buf: &[u8]) -> Result<()> {
+    fn write_all(&mut self, buf: &str) -> Result<()> {
         // All our Write impls in no_std mode always write the whole buffer in
         // one call infallibly.
         let result = self.write(buf);
@@ -44,12 +44,12 @@ pub trait Write {
 
 impl<W: Write> Write for &mut W {
     #[inline]
-    fn write(&mut self, buf: &[u8]) -> Result<usize> {
+    fn write(&mut self, buf: &str) -> Result<usize> {
         (*self).write(buf)
     }
 
     #[inline]
-    fn write_all(&mut self, buf: &[u8]) -> Result<()> {
+    fn write_all(&mut self, buf: &str) -> Result<()> {
         (*self).write_all(buf)
     }
 
@@ -61,13 +61,13 @@ impl<W: Write> Write for &mut W {
 
 impl Write for Vec<u8> {
     #[inline]
-    fn write(&mut self, buf: &[u8]) -> Result<usize> {
+    fn write(&mut self, buf: &str) -> Result<usize> {
         self.extend_from_slice(buf);
         Ok(buf.len())
     }
 
     #[inline]
-    fn write_all(&mut self, buf: &[u8]) -> Result<()> {
+    fn write_all(&mut self, buf: &str) -> Result<()> {
         self.extend_from_slice(buf);
         Ok(())
     }

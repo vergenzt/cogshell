@@ -139,7 +139,7 @@ pub trait BufReadExt: io::BufRead {
     fn for_byte_line<F>(&mut self, mut for_each_line: F) -> io::Result<()>
     where
         Self: Sized,
-        F: FnMut(&[u8]) -> io::Result<bool>,
+        F: FnMut(&str) -> io::Result<bool>,
     {
         self.for_byte_line_with_terminator(|line| {
             for_each_line(trim_line_slice(line))
@@ -190,7 +190,7 @@ pub trait BufReadExt: io::BufRead {
     ) -> io::Result<()>
     where
         Self: Sized,
-        F: FnMut(&[u8]) -> io::Result<bool>,
+        F: FnMut(&str) -> io::Result<bool>,
     {
         self.for_byte_record_with_terminator(terminator, |chunk| {
             for_each_record(trim_record_slice(chunk, terminator))
@@ -243,7 +243,7 @@ pub trait BufReadExt: io::BufRead {
     ) -> io::Result<()>
     where
         Self: Sized,
-        F: FnMut(&[u8]) -> io::Result<bool>,
+        F: FnMut(&str) -> io::Result<bool>,
     {
         self.for_byte_record_with_terminator(b'\n', for_each_line)
     }
@@ -293,7 +293,7 @@ pub trait BufReadExt: io::BufRead {
     ) -> io::Result<()>
     where
         Self: Sized,
-        F: FnMut(&[u8]) -> io::Result<bool>,
+        F: FnMut(&str) -> io::Result<bool>,
     {
         let mut bytes = vec![];
         let mut res = Ok(());
@@ -418,7 +418,7 @@ fn trim_line(line: &mut Vec<u8>) {
     }
 }
 
-fn trim_line_slice(mut line: &[u8]) -> &[u8] {
+fn trim_line_slice(mut line: &str) -> &str {
     if line.last_byte() == Some(b'\n') {
         line = &line[..line.len() - 1];
         if line.last_byte() == Some(b'\r') {
@@ -434,11 +434,87 @@ fn trim_record(record: &mut Vec<u8>, terminator: u8) {
     }
 }
 
-fn trim_record_slice(mut record: &[u8], terminator: u8) -> &[u8] {
+fn trim_record_slice(mut record: &str, terminator: u8) -> &str {
     if record.last_byte() == Some(terminator) {
         record = &record[..record.len() - 1];
     }
     record
 }
 
+#[cfg(all(test, feature = "std"))]
+mod tests {
+    use alloc::{vec, vec::Vec};
 
+    use crate::bstring::BString;
+
+    use super::BufReadExt;
+
+    fn collect_lines<B: AsRef<[u8]>>(slice: B) -> Vec<BString> {
+        let mut lines = vec![];
+        slice
+            .as_ref()
+            .for_byte_line(|line| {
+                lines.push(BString::from(line.to_vec()));
+                Ok(true)
+            })
+            .unwrap();
+        lines
+    }
+
+    fn collect_lines_term<B: AsRef<[u8]>>(slice: B) -> Vec<BString> {
+        let mut lines = vec![];
+        slice
+            .as_ref()
+            .for_byte_line_with_terminator(|line| {
+                lines.push(BString::from(line.to_vec()));
+                Ok(true)
+            })
+            .unwrap();
+        lines
+    }
+
+    #[test]
+    fn lines_without_terminator() {
+        assert_eq!(collect_lines(""), Vec::<BString>::new());
+
+        assert_eq!(collect_lines("\n"), vec![""]);
+        assert_eq!(collect_lines("\n\n"), vec!["", ""]);
+        assert_eq!(collect_lines("a\nb\n"), vec!["a", "b"]);
+        assert_eq!(collect_lines("a\nb"), vec!["a", "b"]);
+        assert_eq!(collect_lines("abc\nxyz\n"), vec!["abc", "xyz"]);
+        assert_eq!(collect_lines("abc\nxyz"), vec!["abc", "xyz"]);
+
+        assert_eq!(collect_lines("\r\n"), vec![""]);
+        assert_eq!(collect_lines("\r\n\r\n"), vec!["", ""]);
+        assert_eq!(collect_lines("a\r\nb\r\n"), vec!["a", "b"]);
+        assert_eq!(collect_lines("a\r\nb"), vec!["a", "b"]);
+        assert_eq!(collect_lines("abc\r\nxyz\r\n"), vec!["abc", "xyz"]);
+        assert_eq!(collect_lines("abc\r\nxyz"), vec!["abc", "xyz"]);
+
+        assert_eq!(collect_lines("abc\rxyz"), vec!["abc\rxyz"]);
+    }
+
+    #[test]
+    fn lines_with_terminator() {
+        assert_eq!(collect_lines_term(""), Vec::<BString>::new());
+
+        assert_eq!(collect_lines_term("\n"), vec!["\n"]);
+        assert_eq!(collect_lines_term("\n\n"), vec!["\n", "\n"]);
+        assert_eq!(collect_lines_term("a\nb\n"), vec!["a\n", "b\n"]);
+        assert_eq!(collect_lines_term("a\nb"), vec!["a\n", "b"]);
+        assert_eq!(collect_lines_term("abc\nxyz\n"), vec!["abc\n", "xyz\n"]);
+        assert_eq!(collect_lines_term("abc\nxyz"), vec!["abc\n", "xyz"]);
+
+        assert_eq!(collect_lines_term("\r\n"), vec!["\r\n"]);
+        assert_eq!(collect_lines_term("\r\n\r\n"), vec!["\r\n", "\r\n"]);
+        assert_eq!(collect_lines_term("a\r\nb\r\n"), vec!["a\r\n", "b\r\n"]);
+        assert_eq!(collect_lines_term("a\r\nb"), vec!["a\r\n", "b"]);
+        assert_eq!(
+            collect_lines_term("abc\r\nxyz\r\n"),
+            vec!["abc\r\n", "xyz\r\n"]
+        );
+        assert_eq!(collect_lines_term("abc\r\nxyz"), vec!["abc\r\n", "xyz"]);
+
+        assert_eq!(collect_lines_term("abc\rxyz"), vec!["abc\rxyz"]);
+    }
+}

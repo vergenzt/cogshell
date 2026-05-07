@@ -117,7 +117,7 @@ impl<'a> ComponentWorld<'a> {
                 continue;
             }
             let wasm = if library_info.is_some() {
-                Cow::Borrowed(wasm as &[u8])
+                Cow::Borrowed(wasm as &str)
             } else {
                 // Without `library_info` this means that this is an adapter.
                 // The goal of the adapter is to provide a suite of symbols that

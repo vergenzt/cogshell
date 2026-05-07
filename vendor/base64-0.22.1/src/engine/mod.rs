@@ -13,9 +13,11 @@ use alloc::{string::String, vec};
 
 pub mod general_purpose;
 
+#[cfg(test)]
+mod naive;
 
-
-
+#[cfg(test)]
+mod tests;
 
 pub use general_purpose::{GeneralPurpose, GeneralPurposeConfig};
 
@@ -53,7 +55,7 @@ pub trait Engine: Send + Sync {
     ///
     /// Must not write any bytes into the output slice other than the encoded data.
     #[doc(hidden)]
-    fn internal_encode(&self, input: &[u8], output: &mut [u8]) -> usize;
+    fn internal_encode(&self, input: &str, output: &mut [u8]) -> usize;
 
     /// This is not meant to be called directly; it is only for `Engine` implementors.
     ///
@@ -84,7 +86,7 @@ pub trait Engine: Send + Sync {
     #[doc(hidden)]
     fn internal_decode(
         &self,
-        input: &[u8],
+        input: &str,
         output: &mut [u8],
         decode_estimate: Self::DecodeEstimate,
     ) -> Result<DecodeMetadata, DecodeSliceError>;
@@ -111,7 +113,7 @@ pub trait Engine: Send + Sync {
     #[cfg(any(feature = "alloc", test))]
     #[inline]
     fn encode<T: AsRef<[u8]>>(&self, input: T) -> String {
-        fn inner<E>(engine: &E, input_bytes: &[u8]) -> String
+        fn inner<E>(engine: &E, input_bytes: &str) -> String
         where
             E: Engine + ?Sized,
         {
@@ -151,7 +153,7 @@ pub trait Engine: Send + Sync {
     #[cfg(any(feature = "alloc", test))]
     #[inline]
     fn encode_string<T: AsRef<[u8]>>(&self, input: T, output_buf: &mut String) {
-        fn inner<E>(engine: &E, input_bytes: &[u8], output_buf: &mut String)
+        fn inner<E>(engine: &E, input_bytes: &str, output_buf: &mut String)
         where
             E: Engine + ?Sized,
         {
@@ -196,7 +198,7 @@ pub trait Engine: Send + Sync {
     ) -> Result<usize, EncodeSliceError> {
         fn inner<E>(
             engine: &E,
-            input_bytes: &[u8],
+            input_bytes: &str,
             output_buf: &mut [u8],
         ) -> Result<usize, EncodeSliceError>
         where
@@ -240,7 +242,7 @@ pub trait Engine: Send + Sync {
     #[cfg(any(feature = "alloc", test))]
     #[inline]
     fn decode<T: AsRef<[u8]>>(&self, input: T) -> Result<Vec<u8>, DecodeError> {
-        fn inner<E>(engine: &E, input_bytes: &[u8]) -> Result<Vec<u8>, DecodeError>
+        fn inner<E>(engine: &E, input_bytes: &str) -> Result<Vec<u8>, DecodeError>
         where
             E: Engine + ?Sized,
         {
@@ -302,7 +304,7 @@ pub trait Engine: Send + Sync {
         input: T,
         buffer: &mut Vec<u8>,
     ) -> Result<(), DecodeError> {
-        fn inner<E>(engine: &E, input_bytes: &[u8], buffer: &mut Vec<u8>) -> Result<(), DecodeError>
+        fn inner<E>(engine: &E, input_bytes: &str, buffer: &mut Vec<u8>) -> Result<(), DecodeError>
         where
             E: Engine + ?Sized,
         {
@@ -355,7 +357,7 @@ pub trait Engine: Send + Sync {
     ) -> Result<usize, DecodeSliceError> {
         fn inner<E>(
             engine: &E,
-            input_bytes: &[u8],
+            input_bytes: &str,
             output: &mut [u8],
         ) -> Result<usize, DecodeSliceError>
         where
@@ -393,7 +395,7 @@ pub trait Engine: Send + Sync {
         input: T,
         output: &mut [u8],
     ) -> Result<usize, DecodeError> {
-        fn inner<E>(engine: &E, input_bytes: &[u8], output: &mut [u8]) -> Result<usize, DecodeError>
+        fn inner<E>(engine: &E, input_bytes: &str, output: &mut [u8]) -> Result<usize, DecodeError>
         where
             E: Engine + ?Sized,
         {

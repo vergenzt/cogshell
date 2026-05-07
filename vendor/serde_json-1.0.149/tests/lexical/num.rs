@@ -11,7 +11,7 @@ fn check_as_primitive<T: AsPrimitive>(t: T) {
     let _: f64 = t.as_f64();
 }
 
-
+#[test]
 fn as_primitive_test() {
     check_as_primitive(1u32);
     check_as_primitive(1u64);
@@ -33,7 +33,7 @@ fn check_number<T: Number>(x: T, y: T) {
     // Conversions already tested.
 }
 
-
+#[test]
 fn number_test() {
     check_number(1u32, 5);
     check_number(1u64, 5);
@@ -48,7 +48,7 @@ fn check_integer<T: Integer>(x: T) {
     let _ = x & T::ZERO;
 }
 
-
+#[test]
 fn integer_test() {
     check_integer(65u32);
     check_integer(65u64);
@@ -68,7 +68,7 @@ fn check_float<T: Float>(x: T) {
     let _ = x.to_bits() & T::MANTISSA_MASK;
 }
 
-
+#[test]
 fn float_test() {
     check_float(123f32);
     check_float(123f64);

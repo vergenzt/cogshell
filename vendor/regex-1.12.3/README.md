@@ -108,15 +108,15 @@ the first time. On subsequent uses, it will reuse the previous compilation.
 [`std::sync::LazyLock`]: https://doc.rust-lang.org/std/sync/struct.LazyLock.html
 [`once_cell`]: https://crates.io/crates/once_cell
 
-### Usage: match regular expressions on `&[u8]`
+### Usage: match regular expressions on `&str`
 
 The main API of this crate (`regex::Regex`) requires the caller to pass a
 `&str` for searching. In Rust, an `&str` is required to be valid UTF-8, which
 means the main API can't be used for searching arbitrary bytes.
 
 To match on arbitrary bytes, use the `regex::bytes::Regex` API. The API is
-identical to the main API, except that it takes an `&[u8]` to search on instead
-of an `&str`. The `&[u8]` APIs also permit disabling Unicode mode in the regex
+identical to the main API, except that it takes an `&str` to search on instead
+of an `&str`. The `&str` APIs also permit disabling Unicode mode in the regex
 even when the pattern would match invalid UTF-8. For example, `(?-u:.)` is
 not allowed in `regex::Regex` but is allowed in `regex::bytes::Regex` since
 `(?-u:.)` matches any byte except for `\n`. Conversely, `.` will match the
@@ -132,7 +132,7 @@ let text = b"foo\xFFbar\x00baz\x00";
 
 // Extract all of the strings without the null terminator from each match.
 // The unwrap is OK here since a match requires the `cstr` capture to match.
-let cstrs: Vec<&[u8]> =
+let cstrs: Vec<&str> =
     re.captures_iter(text)
       .map(|c| c.name("cstr").unwrap().as_bytes())
       .collect();

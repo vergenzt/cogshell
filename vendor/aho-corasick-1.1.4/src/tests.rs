@@ -1378,7 +1378,7 @@ fn run_stream_search_tests<F: FnMut(&SearchTest) -> Vec<Match>>(
     }
 }
 
-
+#[test]
 fn search_tests_have_unique_names() {
     let assert = |constname, tests: &[SearchTest]| {
         let mut seen = HashMap::new(); // map from test name to position
@@ -1405,7 +1405,7 @@ fn search_tests_have_unique_names() {
 }
 
 #[cfg(feature = "std")]
-
+#[test]
 #[should_panic]
 fn stream_not_allowed_leftmost_first() {
     let fsm = AhoCorasick::builder()
@@ -1416,7 +1416,7 @@ fn stream_not_allowed_leftmost_first() {
 }
 
 #[cfg(feature = "std")]
-
+#[test]
 #[should_panic]
 fn stream_not_allowed_leftmost_longest() {
     let fsm = AhoCorasick::builder()
@@ -1426,7 +1426,7 @@ fn stream_not_allowed_leftmost_longest() {
     assert_eq!(fsm.stream_find_iter(&b""[..]).count(), 0);
 }
 
-
+#[test]
 #[should_panic]
 fn overlapping_not_allowed_leftmost_first() {
     let fsm = AhoCorasick::builder()
@@ -1436,7 +1436,7 @@ fn overlapping_not_allowed_leftmost_first() {
     assert_eq!(fsm.find_overlapping_iter("").count(), 0);
 }
 
-
+#[test]
 #[should_panic]
 fn overlapping_not_allowed_leftmost_longest() {
     let fsm = AhoCorasick::builder()
@@ -1456,7 +1456,7 @@ fn overlapping_not_allowed_leftmost_longest() {
 // supporting anchored and sometimes not (depending on which searcher it
 // chooses to use internally), we ensure that the given 'StartKind' is always
 // respected.
-
+#[test]
 fn anchored_not_allowed_even_if_technically_available() {
     let ac = AhoCorasick::builder()
         .kind(Some(AhoCorasickKind::NoncontiguousNFA))
@@ -1485,7 +1485,7 @@ fn anchored_not_allowed_even_if_technically_available() {
 // is, we asked for an AC searcher with anchored support and we check that
 // unanchored searches return an error even if the underlying searcher would
 // technically support it.
-
+#[test]
 fn unanchored_not_allowed_even_if_technically_available() {
     let ac = AhoCorasick::builder()
         .kind(Some(AhoCorasickKind::NoncontiguousNFA))
@@ -1519,7 +1519,7 @@ fn unanchored_not_allowed_even_if_technically_available() {
 // packed searcher). Otherwise, prefilters that report false positives might
 // have searched past the bounds provided by the caller, but confirming the
 // match would subsequently fail.
-
+#[test]
 fn prefilter_stays_in_bounds() {
     let ac = AhoCorasick::builder()
         .match_kind(MatchKind::LeftmostFirst)
@@ -1533,7 +1533,7 @@ fn prefilter_stays_in_bounds() {
 //
 // In short, this test ensures that enabling ASCII case insensitivity does not
 // visit an exponential number of states when filling in failure transitions.
-
+#[test]
 fn regression_ascii_case_insensitive_no_exponential() {
     let ac = AhoCorasick::builder()
         .ascii_case_insensitive(true)
@@ -1547,7 +1547,7 @@ fn regression_ascii_case_insensitive_no_exponential() {
 // This test ensures that the rare byte prefilter works in a particular corner
 // case. In particular, the shift offset detected for '/' in the patterns below
 // was incorrect, leading to a false negative.
-
+#[test]
 fn regression_rare_byte_prefilter() {
     use crate::AhoCorasick;
 
@@ -1555,7 +1555,7 @@ fn regression_rare_byte_prefilter() {
     assert!(ac.is_match("ab/j/"));
 }
 
-
+#[test]
 fn regression_case_insensitive_prefilter() {
     for c in b'a'..b'z' {
         for c2 in b'a'..b'z' {
@@ -1584,7 +1584,7 @@ fn regression_case_insensitive_prefilter() {
 //
 // This occurs when the rare byte prefilter is active.
 #[cfg(feature = "std")]
-
+#[test]
 fn regression_stream_rare_byte_prefilter() {
     use std::io::Read;
 

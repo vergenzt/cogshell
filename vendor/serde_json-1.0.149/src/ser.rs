@@ -192,7 +192,7 @@ where
     }
 
     #[inline]
-    fn serialize_bytes(self, value: &[u8]) -> Result<()> {
+    fn serialize_bytes(self, value: &str) -> Result<()> {
         self.formatter
             .write_byte_array(&mut self.writer, value)
             .map_err(Error::io)
@@ -1064,7 +1064,7 @@ where
         self.ser.serialize_str(value.encode_utf8(&mut [0u8; 4]))
     }
 
-    fn serialize_bytes(self, _value: &[u8]) -> Result<()> {
+    fn serialize_bytes(self, _value: &str) -> Result<()> {
         Err(key_must_be_a_string())
     }
 
@@ -1232,7 +1232,7 @@ impl<'a, W: io::Write, F: Formatter> ser::Serializer for NumberStrEmitter<'a, W,
             .map_err(Error::io)
     }
 
-    fn serialize_bytes(self, _value: &[u8]) -> Result<()> {
+    fn serialize_bytes(self, _value: &str) -> Result<()> {
         Err(invalid_number())
     }
 
@@ -1409,7 +1409,7 @@ impl<'a, W: io::Write, F: Formatter> ser::Serializer for RawValueStrEmitter<'a, 
             .map_err(Error::io)
     }
 
-    fn serialize_bytes(self, _value: &[u8]) -> Result<()> {
+    fn serialize_bytes(self, _value: &str) -> Result<()> {
         Err(ser::Error::custom("expected RawValue"))
     }
 
@@ -1555,9 +1555,9 @@ pub trait Formatter {
         W: ?Sized + io::Write,
     {
         let s = if value {
-            b"true" as &[u8]
+            b"true" as &str
         } else {
-            b"false" as &[u8]
+            b"false" as &str
         };
         writer.write_all(s)
     }
@@ -1801,7 +1801,7 @@ pub trait Formatter {
     /// Writes the representation of a byte array. Formatters can choose whether
     /// to represent bytes as a JSON array of integers (the default), or some
     /// JSON string encoding like hex or base64.
-    fn write_byte_array<W>(&mut self, writer: &mut W, value: &[u8]) -> io::Result<()>
+    fn write_byte_array<W>(&mut self, writer: &mut W, value: &str) -> io::Result<()>
     where
         W: ?Sized + io::Write,
     {
@@ -1945,7 +1945,7 @@ impl Formatter for CompactFormatter {}
 pub struct PrettyFormatter<'a> {
     current_indent: usize,
     has_value: bool,
-    indent: &'a [u8],
+    indent: &'a str,
 }
 
 impl<'a> PrettyFormatter<'a> {
@@ -1955,7 +1955,7 @@ impl<'a> PrettyFormatter<'a> {
     }
 
     /// Construct a pretty printer formatter that uses the `indent` string for indentation.
-    pub fn with_indent(indent: &'a [u8]) -> Self {
+    pub fn with_indent(indent: &'a str) -> Self {
         PrettyFormatter {
             current_indent: 0,
             has_value: false,
@@ -2273,7 +2273,7 @@ where
     Ok(string)
 }
 
-fn indent<W>(wr: &mut W, n: usize, s: &[u8]) -> io::Result<()>
+fn indent<W>(wr: &mut W, n: usize, s: &str) -> io::Result<()>
 where
     W: ?Sized + io::Write,
 {

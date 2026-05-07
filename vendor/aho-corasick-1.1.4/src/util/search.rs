@@ -47,12 +47,12 @@ use crate::util::primitives::PatternID;
 /// add `start` to any match position returned in order for it to be a correct
 /// index into `haystack`.
 ///
-/// # Example: `&str` and `&[u8]` automatically convert to an `Input`
+/// # Example: `&str` and `&str` automatically convert to an `Input`
 ///
 /// There is a `From<&T> for Input` implementation for all `T: AsRef<[u8]>`.
 /// Additionally, the [`AhoCorasick`](crate::AhoCorasick) search APIs accept
 /// a `Into<Input>`. These two things combined together mean you can provide
-/// things like `&str` and `&[u8]` to search APIs when the defaults are
+/// things like `&str` and `&str` to search APIs when the defaults are
 /// suitable, but also an `Input` when they're not. For example:
 ///
 /// ```
@@ -81,7 +81,7 @@ use crate::util::primitives::PatternID;
 /// ```
 #[derive(Clone)]
 pub struct Input<'h> {
-    haystack: &'h [u8],
+    haystack: &'h str,
     span: Span,
     anchored: Anchored,
     earliest: bool,
@@ -490,7 +490,7 @@ impl<'h> Input<'h> {
     /// assert_eq!(b"foobar", input.haystack());
     /// ```
     #[inline]
-    pub fn haystack(&self) -> &[u8] {
+    pub fn haystack(&self) -> &str {
         self.haystack
     }
 
@@ -725,7 +725,7 @@ impl core::ops::Index<Span> for [u8] {
     type Output = [u8];
 
     #[inline]
-    fn index(&self, index: Span) -> &[u8] {
+    fn index(&self, index: Span) -> &str {
         &self[index.range()]
     }
 }

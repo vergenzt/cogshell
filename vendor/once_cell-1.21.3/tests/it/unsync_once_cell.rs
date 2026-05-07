@@ -5,7 +5,7 @@ use core::{
 
 use once_cell::unsync::OnceCell;
 
-
+#[test]
 fn once_cell() {
     let c = OnceCell::new();
     assert!(c.get().is_none());
@@ -16,14 +16,14 @@ fn once_cell() {
     assert_eq!(c.get(), Some(&92));
 }
 
-
+#[test]
 fn once_cell_with_value() {
     const CELL: OnceCell<i32> = OnceCell::with_value(12);
     let cell = CELL;
     assert_eq!(cell.get(), Some(&12));
 }
 
-
+#[test]
 fn once_cell_get_mut() {
     let mut c = OnceCell::new();
     assert!(c.get_mut().is_none());
@@ -32,7 +32,7 @@ fn once_cell_get_mut() {
     assert_eq!(c.get_mut(), Some(&mut 92));
 }
 
-
+#[test]
 fn once_cell_drop() {
     static DROP_CNT: AtomicUsize = AtomicUsize::new(0);
     struct Dropper;
@@ -49,13 +49,13 @@ fn once_cell_drop() {
     assert_eq!(DROP_CNT.load(SeqCst), 1);
 }
 
-
+#[test]
 fn once_cell_drop_empty() {
     let x = OnceCell::<String>::new();
     drop(x);
 }
 
-
+#[test]
 fn clone() {
     let s = OnceCell::new();
     let c = s.clone();
@@ -66,7 +66,7 @@ fn clone() {
     assert_eq!(c.get().map(String::as_str), Some("hello"));
 }
 
-
+#[test]
 fn get_or_try_init() {
     let cell: OnceCell<String> = OnceCell::new();
     assert!(cell.get().is_none());
@@ -81,13 +81,13 @@ fn get_or_try_init() {
     assert_eq!(cell.get(), Some(&"hello".to_string()));
 }
 
-
+#[test]
 fn from_impl() {
     assert_eq!(OnceCell::from("value").get(), Some(&"value"));
     assert_ne!(OnceCell::from("foo").get(), Some(&"bar"));
 }
 
-
+#[test]
 fn partialeq_impl() {
     assert!(OnceCell::from("value") == OnceCell::from("value"));
     assert!(OnceCell::from("foo") != OnceCell::from("bar"));
@@ -96,7 +96,7 @@ fn partialeq_impl() {
     assert!(OnceCell::<String>::new() != OnceCell::from("value".to_owned()));
 }
 
-
+#[test]
 fn into_inner() {
     let cell: OnceCell<String> = OnceCell::new();
     assert_eq!(cell.into_inner(), None);
@@ -105,7 +105,7 @@ fn into_inner() {
     assert_eq!(cell.into_inner(), Some("hello".to_string()));
 }
 
-
+#[test]
 fn debug_impl() {
     let cell = OnceCell::new();
     assert_eq!(format!("{:#?}", cell), "OnceCell(Uninit)");
@@ -121,7 +121,7 @@ fn debug_impl() {
     );
 }
 
-
+#[test]
 #[should_panic(expected = "reentrant init")]
 fn reentrant_init() {
     let x: OnceCell<Box<i32>> = OnceCell::new();
@@ -134,7 +134,7 @@ fn reentrant_init() {
     eprintln!("use after free: {:?}", dangling_ref.get().unwrap());
 }
 
-
+#[test]
 fn aliasing_in_get() {
     let x = OnceCell::new();
     x.set(42).unwrap();
@@ -143,7 +143,7 @@ fn aliasing_in_get() {
     println!("{}", at_x); // <------- up until here ---------------------------+
 }
 
-
+#[test]
 // https://github.com/rust-lang/rust/issues/34761#issuecomment-256320669
 fn arrrrrrrrrrrrrrrrrrrrrr() {
     let cell = OnceCell::new();

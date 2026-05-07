@@ -100,21 +100,21 @@ pub fn set_errno(err: Errno) {
     sys::set_errno(err)
 }
 
-
+#[test]
 fn it_works() {
     let x = errno();
     set_errno(x);
 }
 
 #[cfg(feature = "std")]
-
+#[test]
 fn it_works_with_to_string() {
     let x = errno();
     let _ = x.to_string();
 }
 
 #[cfg(feature = "std")]
-
+#[test]
 fn check_description() {
     let expect = if cfg!(windows) {
         "Incorrect function."
@@ -150,7 +150,7 @@ fn check_description() {
 }
 
 #[cfg(feature = "std")]
-
+#[test]
 fn check_error_into_errno() {
     const ERROR_CODE: i32 = 1;
 

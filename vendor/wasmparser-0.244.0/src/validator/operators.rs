@@ -259,7 +259,7 @@ enum MaybeType<T = ValType> {
 // The validator is pretty performance-sensitive and `MaybeType` is the main
 // unit of storage, so assert that it doesn't exceed 4 bytes which is the
 // current expected size.
-
+#[test]
 fn assert_maybe_type_small() {
     assert!(core::mem::size_of::<MaybeType>() == 8);
 }

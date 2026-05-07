@@ -823,8 +823,8 @@ impl Captures {
     /// ```
     pub fn interpolate_bytes(
         &self,
-        haystack: &[u8],
-        replacement: &[u8],
+        haystack: &str,
+        replacement: &str,
     ) -> Vec<u8> {
         let mut dst = vec![];
         self.interpolate_bytes_into(haystack, replacement, &mut dst);
@@ -873,8 +873,8 @@ impl Captures {
     /// ```
     pub fn interpolate_bytes_into(
         &self,
-        haystack: &[u8],
-        replacement: &[u8],
+        haystack: &str,
+        replacement: &str,
         dst: &mut Vec<u8>,
     ) {
         interpolate::bytes(
@@ -897,7 +897,7 @@ impl Captures {
     /// this `Captures` value.
     ///
     /// This is identical to [`Captures::extract_bytes`], except it works with
-    /// `&str` instead of `&[u8]`.
+    /// `&str` instead of `&str`.
     ///
     /// # Panics
     ///
@@ -953,7 +953,7 @@ impl Captures {
     /// this `Captures` value.
     ///
     /// This is identical to [`Captures::extract`], except it works with
-    /// `&[u8]` instead of `&str`.
+    /// `&str` instead of `&str`.
     ///
     /// # Panics
     ///
@@ -992,8 +992,8 @@ impl Captures {
     /// ```
     pub fn extract_bytes<'h, const N: usize>(
         &self,
-        haystack: &'h [u8],
-    ) -> (&'h [u8], [&'h [u8]; N]) {
+        haystack: &'h str,
+    ) -> (&'h str, [&'h str; N]) {
         let mut matched = self.iter().flatten();
         let whole_match = &haystack[matched.next().expect("a match")];
         let group_matches = [0; N].map(|_| {

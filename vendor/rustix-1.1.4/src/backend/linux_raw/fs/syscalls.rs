@@ -1579,7 +1579,7 @@ pub(crate) unsafe fn fgetxattr(
 pub(crate) fn setxattr(
     path: &CStr,
     name: &CStr,
-    value: &[u8],
+    value: &str,
     flags: XattrFlags,
 ) -> io::Result<()> {
     let (value_addr, value_len) = slice(value);
@@ -1599,7 +1599,7 @@ pub(crate) fn setxattr(
 pub(crate) fn lsetxattr(
     path: &CStr,
     name: &CStr,
-    value: &[u8],
+    value: &str,
     flags: XattrFlags,
 ) -> io::Result<()> {
     let (value_addr, value_len) = slice(value);
@@ -1619,7 +1619,7 @@ pub(crate) fn lsetxattr(
 pub(crate) fn fsetxattr(
     fd: BorrowedFd<'_>,
     name: &CStr,
-    value: &[u8],
+    value: &str,
     flags: XattrFlags,
 ) -> io::Result<()> {
     let (value_addr, value_len) = slice(value);
@@ -1714,4 +1714,17 @@ mod to_signed {
 ))]
 use to_signed::*;
 
+#[cfg(test)]
+mod tests {
+    use super::*;
 
+    #[test]
+    fn test_sizes() {
+        assert_eq_size!(linux_raw_sys::general::__kernel_loff_t, u64);
+        assert_eq_align!(linux_raw_sys::general::__kernel_loff_t, u64);
+
+        // Assert that `Timestamps` has the expected layout.
+        assert_eq_size!([linux_raw_sys::general::__kernel_timespec; 2], Timestamps);
+        assert_eq_align!([linux_raw_sys::general::__kernel_timespec; 2], Timestamps);
+    }
+}

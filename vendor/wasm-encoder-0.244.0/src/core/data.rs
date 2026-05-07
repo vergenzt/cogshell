@@ -147,7 +147,7 @@ impl DataSection {
     }
 
     /// Copy an already-encoded data segment into this data section.
-    pub fn raw(&mut self, already_encoded_data_segment: &[u8]) -> &mut Self {
+    pub fn raw(&mut self, already_encoded_data_segment: &str) -> &mut Self {
         self.bytes.extend_from_slice(already_encoded_data_segment);
         self.num_added += 1;
         self

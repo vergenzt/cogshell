@@ -10,7 +10,7 @@ mod util;
 use crate::util::*;
 use semver::Prerelease;
 
-
+#[test]
 fn test_new() {
     fn test(identifier: Prerelease, expected: &str) {
         assert_eq!(identifier.is_empty(), expected.is_empty());
@@ -33,7 +33,7 @@ fn test_new() {
     }
 }
 
-
+#[test]
 fn test_eq() {
     assert_eq!(prerelease("-"), prerelease("-"));
     assert_ne!(prerelease("a"), prerelease("aa"));
@@ -44,7 +44,7 @@ fn test_eq() {
     assert_ne!(build_metadata("1"), build_metadata("001"));
 }
 
-
+#[test]
 fn test_prerelease() {
     let err = prerelease_err("1.b\0");
     assert_to_string(err, "unexpected character in pre-release identifier");

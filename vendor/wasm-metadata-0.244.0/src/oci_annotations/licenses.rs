@@ -81,4 +81,42 @@ impl Encode for Licenses {
     }
 }
 
+#[cfg(test)]
+mod test {
+    use super::*;
+    use wasm_encoder::Component;
+    use wasmparser::Payload;
 
+    #[test]
+    fn roundtrip() {
+        let mut component = Component::new();
+        component.section(
+            &Licenses::new("Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT").unwrap(),
+        );
+        let component = component.finish();
+
+        let mut parsed = false;
+        for section in wasmparser::Parser::new(0).parse_all(&component) {
+            if let Payload::CustomSection(reader) = section.unwrap() {
+                let description = Licenses::parse_custom_section(&reader).unwrap();
+                assert_eq!(
+                    description.to_string(),
+                    "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT"
+                );
+                parsed = true;
+            }
+        }
+        assert!(parsed);
+    }
+
+    #[test]
+    fn serialize() {
+        let description =
+            Licenses::new("Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT").unwrap();
+        let json = serde_json::to_string(&description).unwrap();
+        assert_eq!(
+            r#""Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT""#,
+            json
+        );
+    }
+}

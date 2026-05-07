@@ -383,7 +383,9 @@ impl LookSet {
     /// returned set is equivalent to the original.
     #[inline]
     pub fn insert(self, look: Look) -> LookSet {
-        LookSet { bits: self.bits | look.as_repr() }
+        LookSet {
+            bits: self.bits | look.as_repr(),
+        }
     }
 
     /// Updates this set in place with the result of inserting the given
@@ -398,7 +400,9 @@ impl LookSet {
     /// returned set is equivalent to the original.
     #[inline]
     pub fn remove(self, look: Look) -> LookSet {
-        LookSet { bits: self.bits & !look.as_repr() }
+        LookSet {
+            bits: self.bits & !look.as_repr(),
+        }
     }
 
     /// Updates this set in place with the result of removing the given
@@ -412,7 +416,9 @@ impl LookSet {
     /// this set.
     #[inline]
     pub fn subtract(self, other: LookSet) -> LookSet {
-        LookSet { bits: self.bits & !other.bits }
+        LookSet {
+            bits: self.bits & !other.bits,
+        }
     }
 
     /// Updates this set in place with the result of subtracting the given set
@@ -425,7 +431,9 @@ impl LookSet {
     /// Returns a new set that is the union of this and the one given.
     #[inline]
     pub fn union(self, other: LookSet) -> LookSet {
-        LookSet { bits: self.bits | other.bits }
+        LookSet {
+            bits: self.bits | other.bits,
+        }
     }
 
     /// Updates this set in place with the result of unioning it with the one
@@ -438,7 +446,9 @@ impl LookSet {
     /// Returns a new set that is the intersection of this and the one given.
     #[inline]
     pub fn intersect(self, other: LookSet) -> LookSet {
-        LookSet { bits: self.bits & other.bits }
+        LookSet {
+            bits: self.bits & other.bits,
+        }
     }
 
     /// Updates this set in place with the result of intersecting it with the
@@ -455,7 +465,7 @@ impl LookSet {
     ///
     /// This panics if `slice.len() < 4`.
     #[inline]
-    pub fn read_repr(slice: &[u8]) -> LookSet {
+    pub fn read_repr(slice: &str) -> LookSet {
         let bits = u32::from_ne_bytes(slice[..4].try_into().unwrap());
         LookSet { bits }
     }
@@ -581,7 +591,9 @@ pub struct LookMatcher {
 impl LookMatcher {
     /// Creates a new default matcher for look-around assertions.
     pub fn new() -> LookMatcher {
-        LookMatcher { lineterm: DebugByte(b'\n') }
+        LookMatcher {
+            lineterm: DebugByte(b'\n'),
+        }
     }
 
     /// Sets the line terminator for use with `(?m:^)` and `(?m:$)`.
@@ -632,7 +644,7 @@ impl LookMatcher {
     /// This also may panic when `at > haystack.len()`. Note that `at ==
     /// haystack.len()` is legal and guaranteed not to panic.
     #[inline]
-    pub fn matches(&self, look: Look, haystack: &[u8], at: usize) -> bool {
+    pub fn matches(&self, look: Look, haystack: &str, at: usize) -> bool {
         self.matches_inline(look, haystack, at)
     }
 
@@ -655,12 +667,7 @@ impl LookMatcher {
     /// This also may panic when `at > haystack.len()`. Note that `at ==
     /// haystack.len()` is legal and guaranteed not to panic.
     #[cfg_attr(feature = "perf-inline", inline(always))]
-    pub(crate) fn matches_inline(
-        &self,
-        look: Look,
-        haystack: &[u8],
-        at: usize,
-    ) -> bool {
+    pub(crate) fn matches_inline(&self, look: Look, haystack: &str, at: usize) -> bool {
         match look {
             Look::Start => self.is_start(haystack, at),
             Look::End => self.is_end(haystack, at),
@@ -671,29 +678,15 @@ impl LookMatcher {
             Look::WordAscii => self.is_word_ascii(haystack, at),
             Look::WordAsciiNegate => self.is_word_ascii_negate(haystack, at),
             Look::WordUnicode => self.is_word_unicode(haystack, at).unwrap(),
-            Look::WordUnicodeNegate => {
-                self.is_word_unicode_negate(haystack, at).unwrap()
-            }
+            Look::WordUnicodeNegate => self.is_word_unicode_negate(haystack, at).unwrap(),
             Look::WordStartAscii => self.is_word_start_ascii(haystack, at),
             Look::WordEndAscii => self.is_word_end_ascii(haystack, at),
-            Look::WordStartUnicode => {
-                self.is_word_start_unicode(haystack, at).unwrap()
-            }
-            Look::WordEndUnicode => {
-                self.is_word_end_unicode(haystack, at).unwrap()
-            }
-            Look::WordStartHalfAscii => {
-                self.is_word_start_half_ascii(haystack, at)
-            }
-            Look::WordEndHalfAscii => {
-                self.is_word_end_half_ascii(haystack, at)
-            }
-            Look::WordStartHalfUnicode => {
-                self.is_word_start_half_unicode(haystack, at).unwrap()
-            }
-            Look::WordEndHalfUnicode => {
-                self.is_word_end_half_unicode(haystack, at).unwrap()
-            }
+            Look::WordStartUnicode => self.is_word_start_unicode(haystack, at).unwrap(),
+            Look::WordEndUnicode => self.is_word_end_unicode(haystack, at).unwrap(),
+            Look::WordStartHalfAscii => self.is_word_start_half_ascii(haystack, at),
+            Look::WordEndHalfAscii => self.is_word_end_half_ascii(haystack, at),
+            Look::WordStartHalfUnicode => self.is_word_start_half_unicode(haystack, at).unwrap(),
+            Look::WordEndHalfUnicode => self.is_word_end_half_unicode(haystack, at).unwrap(),
         }
     }
 
@@ -717,23 +710,13 @@ impl LookMatcher {
     /// This also may panic when `at > haystack.len()`. Note that `at ==
     /// haystack.len()` is legal and guaranteed not to panic.
     #[inline]
-    pub fn matches_set(
-        &self,
-        set: LookSet,
-        haystack: &[u8],
-        at: usize,
-    ) -> bool {
+    pub fn matches_set(&self, set: LookSet, haystack: &str, at: usize) -> bool {
         self.matches_set_inline(set, haystack, at)
     }
 
     /// Like `LookSet::matches`, but forcefully inlined for perf.
     #[cfg_attr(feature = "perf-inline", inline(always))]
-    pub(crate) fn matches_set_inline(
-        &self,
-        set: LookSet,
-        haystack: &[u8],
-        at: usize,
-    ) -> bool {
+    pub(crate) fn matches_set_inline(&self, set: LookSet, haystack: &str, at: usize) -> bool {
         // This used to use LookSet::iter with Look::matches on each element,
         // but that proved to be quite disastrous for perf. The manual "if
         // the set has this assertion, check it" turns out to be quite a bit
@@ -834,11 +817,7 @@ impl LookMatcher {
     /// Split up the given byte classes into equivalence classes in a way that
     /// is consistent with this look-around assertion.
     #[cfg(feature = "alloc")]
-    pub(crate) fn add_to_byteset(
-        &self,
-        look: Look,
-        set: &mut crate::util::alphabet::ByteClassSet,
-    ) {
+    pub(crate) fn add_to_byteset(&self, look: Look, set: &mut crate::util::alphabet::ByteClassSet) {
         match look {
             Look::Start | Look::End => {}
             Look::StartLF | Look::EndLF => {
@@ -904,7 +883,7 @@ impl LookMatcher {
     /// This may panic when `at > haystack.len()`. Note that `at ==
     /// haystack.len()` is legal and guaranteed not to panic.
     #[inline]
-    pub fn is_start(&self, _haystack: &[u8], at: usize) -> bool {
+    pub fn is_start(&self, _haystack: &str, at: usize) -> bool {
         at == 0
     }
 
@@ -916,7 +895,7 @@ impl LookMatcher {
     /// This may panic when `at > haystack.len()`. Note that `at ==
     /// haystack.len()` is legal and guaranteed not to panic.
     #[inline]
-    pub fn is_end(&self, haystack: &[u8], at: usize) -> bool {
+    pub fn is_end(&self, haystack: &str, at: usize) -> bool {
         at == haystack.len()
     }
 
@@ -928,7 +907,7 @@ impl LookMatcher {
     /// This may panic when `at > haystack.len()`. Note that `at ==
     /// haystack.len()` is legal and guaranteed not to panic.
     #[inline]
-    pub fn is_start_lf(&self, haystack: &[u8], at: usize) -> bool {
+    pub fn is_start_lf(&self, haystack: &str, at: usize) -> bool {
         self.is_start(haystack, at) || haystack[at - 1] == self.lineterm.0
     }
 
@@ -940,7 +919,7 @@ impl LookMatcher {
     /// This may panic when `at > haystack.len()`. Note that `at ==
     /// haystack.len()` is legal and guaranteed not to panic.
     #[inline]
-    pub fn is_end_lf(&self, haystack: &[u8], at: usize) -> bool {
+    pub fn is_end_lf(&self, haystack: &str, at: usize) -> bool {
         self.is_end(haystack, at) || haystack[at] == self.lineterm.0
     }
 
@@ -952,11 +931,10 @@ impl LookMatcher {
     /// This may panic when `at > haystack.len()`. Note that `at ==
     /// haystack.len()` is legal and guaranteed not to panic.
     #[inline]
-    pub fn is_start_crlf(&self, haystack: &[u8], at: usize) -> bool {
+    pub fn is_start_crlf(&self, haystack: &str, at: usize) -> bool {
         self.is_start(haystack, at)
             || haystack[at - 1] == b'\n'
-            || (haystack[at - 1] == b'\r'
-                && (at >= haystack.len() || haystack[at] != b'\n'))
+            || (haystack[at - 1] == b'\r' && (at >= haystack.len() || haystack[at] != b'\n'))
     }
 
     /// Returns true when [`Look::EndCRLF`] is satisfied `at` the given
@@ -967,11 +945,10 @@ impl LookMatcher {
     /// This may panic when `at > haystack.len()`. Note that `at ==
     /// haystack.len()` is legal and guaranteed not to panic.
     #[inline]
-    pub fn is_end_crlf(&self, haystack: &[u8], at: usize) -> bool {
+    pub fn is_end_crlf(&self, haystack: &str, at: usize) -> bool {
         self.is_end(haystack, at)
             || haystack[at] == b'\r'
-            || (haystack[at] == b'\n'
-                && (at == 0 || haystack[at - 1] != b'\r'))
+            || (haystack[at] == b'\n' && (at == 0 || haystack[at - 1] != b'\r'))
     }
 
     /// Returns true when [`Look::WordAscii`] is satisfied `at` the given
@@ -982,10 +959,9 @@ impl LookMatcher {
     /// This may panic when `at > haystack.len()`. Note that `at ==
     /// haystack.len()` is legal and guaranteed not to panic.
     #[inline]
-    pub fn is_word_ascii(&self, haystack: &[u8], at: usize) -> bool {
+    pub fn is_word_ascii(&self, haystack: &str, at: usize) -> bool {
         let word_before = at > 0 && utf8::is_word_byte(haystack[at - 1]);
-        let word_after =
-            at < haystack.len() && utf8::is_word_byte(haystack[at]);
+        let word_after = at < haystack.len() && utf8::is_word_byte(haystack[at]);
         word_before != word_after
     }
 
@@ -997,7 +973,7 @@ impl LookMatcher {
     /// This may panic when `at > haystack.len()`. Note that `at ==
     /// haystack.len()` is legal and guaranteed not to panic.
     #[inline]
-    pub fn is_word_ascii_negate(&self, haystack: &[u8], at: usize) -> bool {
+    pub fn is_word_ascii_negate(&self, haystack: &str, at: usize) -> bool {
         !self.is_word_ascii(haystack, at)
     }
 
@@ -1017,7 +993,7 @@ impl LookMatcher {
     #[inline]
     pub fn is_word_unicode(
         &self,
-        haystack: &[u8],
+        haystack: &str,
         at: usize,
     ) -> Result<bool, UnicodeWordBoundaryError> {
         let word_before = is_word_char::rev(haystack, at)?;
@@ -1041,7 +1017,7 @@ impl LookMatcher {
     #[inline]
     pub fn is_word_unicode_negate(
         &self,
-        haystack: &[u8],
+        haystack: &str,
         at: usize,
     ) -> Result<bool, UnicodeWordBoundaryError> {
         // This is pretty subtle. Why do we need to do UTF-8 decoding here?
@@ -1096,10 +1072,9 @@ impl LookMatcher {
     /// This may panic when `at > haystack.len()`. Note that `at ==
     /// haystack.len()` is legal and guaranteed not to panic.
     #[inline]
-    pub fn is_word_start_ascii(&self, haystack: &[u8], at: usize) -> bool {
+    pub fn is_word_start_ascii(&self, haystack: &str, at: usize) -> bool {
         let word_before = at > 0 && utf8::is_word_byte(haystack[at - 1]);
-        let word_after =
-            at < haystack.len() && utf8::is_word_byte(haystack[at]);
+        let word_after = at < haystack.len() && utf8::is_word_byte(haystack[at]);
         !word_before && word_after
     }
 
@@ -1111,10 +1086,9 @@ impl LookMatcher {
     /// This may panic when `at > haystack.len()`. Note that `at ==
     /// haystack.len()` is legal and guaranteed not to panic.
     #[inline]
-    pub fn is_word_end_ascii(&self, haystack: &[u8], at: usize) -> bool {
+    pub fn is_word_end_ascii(&self, haystack: &str, at: usize) -> bool {
         let word_before = at > 0 && utf8::is_word_byte(haystack[at - 1]);
-        let word_after =
-            at < haystack.len() && utf8::is_word_byte(haystack[at]);
+        let word_after = at < haystack.len() && utf8::is_word_byte(haystack[at]);
         word_before && !word_after
     }
 
@@ -1134,7 +1108,7 @@ impl LookMatcher {
     #[inline]
     pub fn is_word_start_unicode(
         &self,
-        haystack: &[u8],
+        haystack: &str,
         at: usize,
     ) -> Result<bool, UnicodeWordBoundaryError> {
         let word_before = is_word_char::rev(haystack, at)?;
@@ -1158,7 +1132,7 @@ impl LookMatcher {
     #[inline]
     pub fn is_word_end_unicode(
         &self,
-        haystack: &[u8],
+        haystack: &str,
         at: usize,
     ) -> Result<bool, UnicodeWordBoundaryError> {
         let word_before = is_word_char::rev(haystack, at)?;
@@ -1174,11 +1148,7 @@ impl LookMatcher {
     /// This may panic when `at > haystack.len()`. Note that `at ==
     /// haystack.len()` is legal and guaranteed not to panic.
     #[inline]
-    pub fn is_word_start_half_ascii(
-        &self,
-        haystack: &[u8],
-        at: usize,
-    ) -> bool {
+    pub fn is_word_start_half_ascii(&self, haystack: &str, at: usize) -> bool {
         let word_before = at > 0 && utf8::is_word_byte(haystack[at - 1]);
         !word_before
     }
@@ -1191,9 +1161,8 @@ impl LookMatcher {
     /// This may panic when `at > haystack.len()`. Note that `at ==
     /// haystack.len()` is legal and guaranteed not to panic.
     #[inline]
-    pub fn is_word_end_half_ascii(&self, haystack: &[u8], at: usize) -> bool {
-        let word_after =
-            at < haystack.len() && utf8::is_word_byte(haystack[at]);
+    pub fn is_word_end_half_ascii(&self, haystack: &str, at: usize) -> bool {
+        let word_after = at < haystack.len() && utf8::is_word_byte(haystack[at]);
         !word_after
     }
 
@@ -1213,7 +1182,7 @@ impl LookMatcher {
     #[inline]
     pub fn is_word_start_half_unicode(
         &self,
-        haystack: &[u8],
+        haystack: &str,
         at: usize,
     ) -> Result<bool, UnicodeWordBoundaryError> {
         // See `is_word_unicode_negate` for why we need to do this. We don't
@@ -1244,7 +1213,7 @@ impl LookMatcher {
     #[inline]
     pub fn is_word_end_half_unicode(
         &self,
-        haystack: &[u8],
+        haystack: &str,
         at: usize,
     ) -> Result<bool, UnicodeWordBoundaryError> {
         // See `is_word_unicode_negate` for why we need to do this. We don't
@@ -1407,7 +1376,7 @@ mod is_word_char {
 
     #[cfg_attr(feature = "perf-inline", inline(always))]
     pub(super) fn fwd(
-        haystack: &[u8],
+        haystack: &str,
         mut at: usize,
     ) -> Result<bool, super::UnicodeWordBoundaryError> {
         static WORD: Lazy<DFA> = Lazy::new(|| DFA::new(r"\w").unwrap());
@@ -1438,7 +1407,7 @@ mod is_word_char {
 
     #[cfg_attr(feature = "perf-inline", inline(always))]
     pub(super) fn rev(
-        haystack: &[u8],
+        haystack: &str,
         mut at: usize,
     ) -> Result<bool, super::UnicodeWordBoundaryError> {
         static WORD: Lazy<DFA> = Lazy::new(|| {
@@ -1498,7 +1467,7 @@ mod is_word_char {
 
     #[cfg_attr(feature = "perf-inline", inline(always))]
     pub(super) fn fwd(
-        haystack: &[u8],
+        haystack: &str,
         mut at: usize,
     ) -> Result<bool, super::UnicodeWordBoundaryError> {
         static WORD: Lazy<(DFA<Vec<u32>>, StateID)> = Lazy::new(|| {
@@ -1528,7 +1497,7 @@ mod is_word_char {
 
     #[cfg_attr(feature = "perf-inline", inline(always))]
     pub(super) fn rev(
-        haystack: &[u8],
+        haystack: &str,
         mut at: usize,
     ) -> Result<bool, super::UnicodeWordBoundaryError> {
         static WORD: Lazy<(DFA<Vec<u32>>, StateID)> = Lazy::new(|| {
@@ -1579,10 +1548,7 @@ mod is_word_char {
     }
 
     #[cfg_attr(feature = "perf-inline", inline(always))]
-    pub(super) fn fwd(
-        haystack: &[u8],
-        at: usize,
-    ) -> Result<bool, super::UnicodeWordBoundaryError> {
+    pub(super) fn fwd(haystack: &str, at: usize) -> Result<bool, super::UnicodeWordBoundaryError> {
         Ok(match utf8::decode(&haystack[at..]) {
             None | Some(Err(_)) => false,
             Some(Ok(ch)) => try_is_word_character(ch).expect(
@@ -1594,10 +1560,7 @@ mod is_word_char {
     }
 
     #[cfg_attr(feature = "perf-inline", inline(always))]
-    pub(super) fn rev(
-        haystack: &[u8],
-        at: usize,
-    ) -> Result<bool, super::UnicodeWordBoundaryError> {
+    pub(super) fn rev(haystack: &str, at: usize) -> Result<bool, super::UnicodeWordBoundaryError> {
         Ok(match utf8::decode_last(&haystack[..at]) {
             None | Some(Err(_)) => false,
             Some(Ok(ch)) => try_is_word_character(ch).expect(
@@ -1626,10 +1589,7 @@ mod is_word_char {
     }
 
     #[cfg_attr(feature = "perf-inline", inline(always))]
-    pub(super) fn fwd(
-        haystack: &[u8],
-        at: usize,
-    ) -> Result<bool, super::UnicodeWordBoundaryError> {
+    pub(super) fn fwd(haystack: &str, at: usize) -> Result<bool, super::UnicodeWordBoundaryError> {
         Ok(match utf8::decode(&haystack[at..]) {
             None | Some(Err(_)) => false,
             Some(Ok(ch)) => is_word_character(ch),
@@ -1637,10 +1597,7 @@ mod is_word_char {
     }
 
     #[cfg_attr(feature = "perf-inline", inline(always))]
-    pub(super) fn rev(
-        haystack: &[u8],
-        at: usize,
-    ) -> Result<bool, super::UnicodeWordBoundaryError> {
+    pub(super) fn rev(haystack: &str, at: usize) -> Result<bool, super::UnicodeWordBoundaryError> {
         Ok(match utf8::decode_last(&haystack[..at]) {
             None | Some(Err(_)) => false,
             Some(Ok(ch)) => is_word_character(ch),
@@ -1680,20 +1637,863 @@ mod is_word_char {
     }
 
     #[cfg_attr(feature = "perf-inline", inline(always))]
-    pub(super) fn fwd(
-        _bytes: &[u8],
-        _at: usize,
-    ) -> Result<bool, super::UnicodeWordBoundaryError> {
+    pub(super) fn fwd(_bytes: &str, _at: usize) -> Result<bool, super::UnicodeWordBoundaryError> {
         Err(super::UnicodeWordBoundaryError::new())
     }
 
     #[cfg_attr(feature = "perf-inline", inline(always))]
-    pub(super) fn rev(
-        _bytes: &[u8],
-        _at: usize,
-    ) -> Result<bool, super::UnicodeWordBoundaryError> {
+    pub(super) fn rev(_bytes: &str, _at: usize) -> Result<bool, super::UnicodeWordBoundaryError> {
         Err(super::UnicodeWordBoundaryError::new())
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
 
+    macro_rules! testlook {
+        ($look:expr, $haystack:expr, $at:expr) => {
+            LookMatcher::default().matches($look, $haystack.as_bytes(), $at)
+        };
+    }
+
+    #[test]
+    fn look_matches_start_line() {
+        let look = Look::StartLF;
+
+        assert!(testlook!(look, "", 0));
+        assert!(testlook!(look, "\n", 0));
+        assert!(testlook!(look, "\n", 1));
+        assert!(testlook!(look, "a", 0));
+        assert!(testlook!(look, "\na", 1));
+
+        assert!(!testlook!(look, "a", 1));
+        assert!(!testlook!(look, "a\na", 1));
+    }
+
+    #[test]
+    fn look_matches_end_line() {
+        let look = Look::EndLF;
+
+        assert!(testlook!(look, "", 0));
+        assert!(testlook!(look, "\n", 1));
+        assert!(testlook!(look, "\na", 0));
+        assert!(testlook!(look, "\na", 2));
+        assert!(testlook!(look, "a\na", 1));
+
+        assert!(!testlook!(look, "a", 0));
+        assert!(!testlook!(look, "\na", 1));
+        assert!(!testlook!(look, "a\na", 0));
+        assert!(!testlook!(look, "a\na", 2));
+    }
+
+    #[test]
+    fn look_matches_start_text() {
+        let look = Look::Start;
+
+        assert!(testlook!(look, "", 0));
+        assert!(testlook!(look, "\n", 0));
+        assert!(testlook!(look, "a", 0));
+
+        assert!(!testlook!(look, "\n", 1));
+        assert!(!testlook!(look, "\na", 1));
+        assert!(!testlook!(look, "a", 1));
+        assert!(!testlook!(look, "a\na", 1));
+    }
+
+    #[test]
+    fn look_matches_end_text() {
+        let look = Look::End;
+
+        assert!(testlook!(look, "", 0));
+        assert!(testlook!(look, "\n", 1));
+        assert!(testlook!(look, "\na", 2));
+
+        assert!(!testlook!(look, "\na", 0));
+        assert!(!testlook!(look, "a\na", 1));
+        assert!(!testlook!(look, "a", 0));
+        assert!(!testlook!(look, "\na", 1));
+        assert!(!testlook!(look, "a\na", 0));
+        assert!(!testlook!(look, "a\na", 2));
+    }
+
+    #[test]
+    #[cfg(all(not(miri), feature = "unicode-word-boundary"))]
+    fn look_matches_word_unicode() {
+        let look = Look::WordUnicode;
+
+        // \xF0\x9D\x9B\x83 = 𝛃 (in \w)
+        // \xF0\x90\x86\x80 = 𐆀 (not in \w)
+
+        // Simple ASCII word boundaries.
+        assert!(testlook!(look, "a", 0));
+        assert!(testlook!(look, "a", 1));
+        assert!(testlook!(look, "a ", 1));
+        assert!(testlook!(look, " a ", 1));
+        assert!(testlook!(look, " a ", 2));
+
+        // Unicode word boundaries with a non-ASCII codepoint.
+        assert!(testlook!(look, "𝛃", 0));
+        assert!(testlook!(look, "𝛃", 4));
+        assert!(testlook!(look, "𝛃 ", 4));
+        assert!(testlook!(look, " 𝛃 ", 1));
+        assert!(testlook!(look, " 𝛃 ", 5));
+
+        // Unicode word boundaries between non-ASCII codepoints.
+        assert!(testlook!(look, "𝛃𐆀", 0));
+        assert!(testlook!(look, "𝛃𐆀", 4));
+
+        // Non word boundaries for ASCII.
+        assert!(!testlook!(look, "", 0));
+        assert!(!testlook!(look, "ab", 1));
+        assert!(!testlook!(look, "a ", 2));
+        assert!(!testlook!(look, " a ", 0));
+        assert!(!testlook!(look, " a ", 3));
+
+        // Non word boundaries with a non-ASCII codepoint.
+        assert!(!testlook!(look, "𝛃b", 4));
+        assert!(!testlook!(look, "𝛃 ", 5));
+        assert!(!testlook!(look, " 𝛃 ", 0));
+        assert!(!testlook!(look, " 𝛃 ", 6));
+        assert!(!testlook!(look, "𝛃", 1));
+        assert!(!testlook!(look, "𝛃", 2));
+        assert!(!testlook!(look, "𝛃", 3));
+
+        // Non word boundaries with non-ASCII codepoints.
+        assert!(!testlook!(look, "𝛃𐆀", 1));
+        assert!(!testlook!(look, "𝛃𐆀", 2));
+        assert!(!testlook!(look, "𝛃𐆀", 3));
+        assert!(!testlook!(look, "𝛃𐆀", 5));
+        assert!(!testlook!(look, "𝛃𐆀", 6));
+        assert!(!testlook!(look, "𝛃𐆀", 7));
+        assert!(!testlook!(look, "𝛃𐆀", 8));
+    }
+
+    #[test]
+    fn look_matches_word_ascii() {
+        let look = Look::WordAscii;
+
+        // \xF0\x9D\x9B\x83 = 𝛃 (in \w)
+        // \xF0\x90\x86\x80 = 𐆀 (not in \w)
+
+        // Simple ASCII word boundaries.
+        assert!(testlook!(look, "a", 0));
+        assert!(testlook!(look, "a", 1));
+        assert!(testlook!(look, "a ", 1));
+        assert!(testlook!(look, " a ", 1));
+        assert!(testlook!(look, " a ", 2));
+
+        // Unicode word boundaries with a non-ASCII codepoint. Since this is
+        // an ASCII word boundary, none of these match.
+        assert!(!testlook!(look, "𝛃", 0));
+        assert!(!testlook!(look, "𝛃", 4));
+        assert!(!testlook!(look, "𝛃 ", 4));
+        assert!(!testlook!(look, " 𝛃 ", 1));
+        assert!(!testlook!(look, " 𝛃 ", 5));
+
+        // Unicode word boundaries between non-ASCII codepoints. Again, since
+        // this is an ASCII word boundary, none of these match.
+        assert!(!testlook!(look, "𝛃𐆀", 0));
+        assert!(!testlook!(look, "𝛃𐆀", 4));
+
+        // Non word boundaries for ASCII.
+        assert!(!testlook!(look, "", 0));
+        assert!(!testlook!(look, "ab", 1));
+        assert!(!testlook!(look, "a ", 2));
+        assert!(!testlook!(look, " a ", 0));
+        assert!(!testlook!(look, " a ", 3));
+
+        // Non word boundaries with a non-ASCII codepoint.
+        assert!(testlook!(look, "𝛃b", 4));
+        assert!(!testlook!(look, "𝛃 ", 5));
+        assert!(!testlook!(look, " 𝛃 ", 0));
+        assert!(!testlook!(look, " 𝛃 ", 6));
+        assert!(!testlook!(look, "𝛃", 1));
+        assert!(!testlook!(look, "𝛃", 2));
+        assert!(!testlook!(look, "𝛃", 3));
+
+        // Non word boundaries with non-ASCII codepoints.
+        assert!(!testlook!(look, "𝛃𐆀", 1));
+        assert!(!testlook!(look, "𝛃𐆀", 2));
+        assert!(!testlook!(look, "𝛃𐆀", 3));
+        assert!(!testlook!(look, "𝛃𐆀", 5));
+        assert!(!testlook!(look, "𝛃𐆀", 6));
+        assert!(!testlook!(look, "𝛃𐆀", 7));
+        assert!(!testlook!(look, "𝛃𐆀", 8));
+    }
+
+    #[test]
+    #[cfg(all(not(miri), feature = "unicode-word-boundary"))]
+    fn look_matches_word_unicode_negate() {
+        let look = Look::WordUnicodeNegate;
+
+        // \xF0\x9D\x9B\x83 = 𝛃 (in \w)
+        // \xF0\x90\x86\x80 = 𐆀 (not in \w)
+
+        // Simple ASCII word boundaries.
+        assert!(!testlook!(look, "a", 0));
+        assert!(!testlook!(look, "a", 1));
+        assert!(!testlook!(look, "a ", 1));
+        assert!(!testlook!(look, " a ", 1));
+        assert!(!testlook!(look, " a ", 2));
+
+        // Unicode word boundaries with a non-ASCII codepoint.
+        assert!(!testlook!(look, "𝛃", 0));
+        assert!(!testlook!(look, "𝛃", 4));
+        assert!(!testlook!(look, "𝛃 ", 4));
+        assert!(!testlook!(look, " 𝛃 ", 1));
+        assert!(!testlook!(look, " 𝛃 ", 5));
+
+        // Unicode word boundaries between non-ASCII codepoints.
+        assert!(!testlook!(look, "𝛃𐆀", 0));
+        assert!(!testlook!(look, "𝛃𐆀", 4));
+
+        // Non word boundaries for ASCII.
+        assert!(testlook!(look, "", 0));
+        assert!(testlook!(look, "ab", 1));
+        assert!(testlook!(look, "a ", 2));
+        assert!(testlook!(look, " a ", 0));
+        assert!(testlook!(look, " a ", 3));
+
+        // Non word boundaries with a non-ASCII codepoint.
+        assert!(testlook!(look, "𝛃b", 4));
+        assert!(testlook!(look, "𝛃 ", 5));
+        assert!(testlook!(look, " 𝛃 ", 0));
+        assert!(testlook!(look, " 𝛃 ", 6));
+        // These don't match because they could otherwise return an offset that
+        // splits the UTF-8 encoding of a codepoint.
+        assert!(!testlook!(look, "𝛃", 1));
+        assert!(!testlook!(look, "𝛃", 2));
+        assert!(!testlook!(look, "𝛃", 3));
+
+        // Non word boundaries with non-ASCII codepoints. These also don't
+        // match because they could otherwise return an offset that splits the
+        // UTF-8 encoding of a codepoint.
+        assert!(!testlook!(look, "𝛃𐆀", 1));
+        assert!(!testlook!(look, "𝛃𐆀", 2));
+        assert!(!testlook!(look, "𝛃𐆀", 3));
+        assert!(!testlook!(look, "𝛃𐆀", 5));
+        assert!(!testlook!(look, "𝛃𐆀", 6));
+        assert!(!testlook!(look, "𝛃𐆀", 7));
+        // But this one does, since 𐆀 isn't a word codepoint, and 8 is the end
+        // of the haystack. So the "end" of the haystack isn't a word and 𐆀
+        // isn't a word, thus, \B matches.
+        assert!(testlook!(look, "𝛃𐆀", 8));
+    }
+
+    #[test]
+    fn look_matches_word_ascii_negate() {
+        let look = Look::WordAsciiNegate;
+
+        // \xF0\x9D\x9B\x83 = 𝛃 (in \w)
+        // \xF0\x90\x86\x80 = 𐆀 (not in \w)
+
+        // Simple ASCII word boundaries.
+        assert!(!testlook!(look, "a", 0));
+        assert!(!testlook!(look, "a", 1));
+        assert!(!testlook!(look, "a ", 1));
+        assert!(!testlook!(look, " a ", 1));
+        assert!(!testlook!(look, " a ", 2));
+
+        // Unicode word boundaries with a non-ASCII codepoint. Since this is
+        // an ASCII word boundary, none of these match.
+        assert!(testlook!(look, "𝛃", 0));
+        assert!(testlook!(look, "𝛃", 4));
+        assert!(testlook!(look, "𝛃 ", 4));
+        assert!(testlook!(look, " 𝛃 ", 1));
+        assert!(testlook!(look, " 𝛃 ", 5));
+
+        // Unicode word boundaries between non-ASCII codepoints. Again, since
+        // this is an ASCII word boundary, none of these match.
+        assert!(testlook!(look, "𝛃𐆀", 0));
+        assert!(testlook!(look, "𝛃𐆀", 4));
+
+        // Non word boundaries for ASCII.
+        assert!(testlook!(look, "", 0));
+        assert!(testlook!(look, "ab", 1));
+        assert!(testlook!(look, "a ", 2));
+        assert!(testlook!(look, " a ", 0));
+        assert!(testlook!(look, " a ", 3));
+
+        // Non word boundaries with a non-ASCII codepoint.
+        assert!(!testlook!(look, "𝛃b", 4));
+        assert!(testlook!(look, "𝛃 ", 5));
+        assert!(testlook!(look, " 𝛃 ", 0));
+        assert!(testlook!(look, " 𝛃 ", 6));
+        assert!(testlook!(look, "𝛃", 1));
+        assert!(testlook!(look, "𝛃", 2));
+        assert!(testlook!(look, "𝛃", 3));
+
+        // Non word boundaries with non-ASCII codepoints.
+        assert!(testlook!(look, "𝛃𐆀", 1));
+        assert!(testlook!(look, "𝛃𐆀", 2));
+        assert!(testlook!(look, "𝛃𐆀", 3));
+        assert!(testlook!(look, "𝛃𐆀", 5));
+        assert!(testlook!(look, "𝛃𐆀", 6));
+        assert!(testlook!(look, "𝛃𐆀", 7));
+        assert!(testlook!(look, "𝛃𐆀", 8));
+    }
+
+    #[test]
+    fn look_matches_word_start_ascii() {
+        let look = Look::WordStartAscii;
+
+        // \xF0\x9D\x9B\x83 = 𝛃 (in \w)
+        // \xF0\x90\x86\x80 = 𐆀 (not in \w)
+
+        // Simple ASCII word boundaries.
+        assert!(testlook!(look, "a", 0));
+        assert!(!testlook!(look, "a", 1));
+        assert!(!testlook!(look, "a ", 1));
+        assert!(testlook!(look, " a ", 1));
+        assert!(!testlook!(look, " a ", 2));
+
+        // Unicode word boundaries with a non-ASCII codepoint. Since this is
+        // an ASCII word boundary, none of these match.
+        assert!(!testlook!(look, "𝛃", 0));
+        assert!(!testlook!(look, "𝛃", 4));
+        assert!(!testlook!(look, "𝛃 ", 4));
+        assert!(!testlook!(look, " 𝛃 ", 1));
+        assert!(!testlook!(look, " 𝛃 ", 5));
+
+        // Unicode word boundaries between non-ASCII codepoints. Again, since
+        // this is an ASCII word boundary, none of these match.
+        assert!(!testlook!(look, "𝛃𐆀", 0));
+        assert!(!testlook!(look, "𝛃𐆀", 4));
+
+        // Non word boundaries for ASCII.
+        assert!(!testlook!(look, "", 0));
+        assert!(!testlook!(look, "ab", 1));
+        assert!(!testlook!(look, "a ", 2));
+        assert!(!testlook!(look, " a ", 0));
+        assert!(!testlook!(look, " a ", 3));
+
+        // Non word boundaries with a non-ASCII codepoint.
+        assert!(testlook!(look, "𝛃b", 4));
+        assert!(!testlook!(look, "b𝛃", 1));
+        assert!(!testlook!(look, "𝛃 ", 5));
+        assert!(!testlook!(look, " 𝛃 ", 0));
+        assert!(!testlook!(look, " 𝛃 ", 6));
+        assert!(!testlook!(look, "𝛃", 1));
+        assert!(!testlook!(look, "𝛃", 2));
+        assert!(!testlook!(look, "𝛃", 3));
+
+        // Non word boundaries with non-ASCII codepoints.
+        assert!(!testlook!(look, "𝛃𐆀", 1));
+        assert!(!testlook!(look, "𝛃𐆀", 2));
+        assert!(!testlook!(look, "𝛃𐆀", 3));
+        assert!(!testlook!(look, "𝛃𐆀", 5));
+        assert!(!testlook!(look, "𝛃𐆀", 6));
+        assert!(!testlook!(look, "𝛃𐆀", 7));
+        assert!(!testlook!(look, "𝛃𐆀", 8));
+    }
+
+    #[test]
+    fn look_matches_word_end_ascii() {
+        let look = Look::WordEndAscii;
+
+        // \xF0\x9D\x9B\x83 = 𝛃 (in \w)
+        // \xF0\x90\x86\x80 = 𐆀 (not in \w)
+
+        // Simple ASCII word boundaries.
+        assert!(!testlook!(look, "a", 0));
+        assert!(testlook!(look, "a", 1));
+        assert!(testlook!(look, "a ", 1));
+        assert!(!testlook!(look, " a ", 1));
+        assert!(testlook!(look, " a ", 2));
+
+        // Unicode word boundaries with a non-ASCII codepoint. Since this is
+        // an ASCII word boundary, none of these match.
+        assert!(!testlook!(look, "𝛃", 0));
+        assert!(!testlook!(look, "𝛃", 4));
+        assert!(!testlook!(look, "𝛃 ", 4));
+        assert!(!testlook!(look, " 𝛃 ", 1));
+        assert!(!testlook!(look, " 𝛃 ", 5));
+
+        // Unicode word boundaries between non-ASCII codepoints. Again, since
+        // this is an ASCII word boundary, none of these match.
+        assert!(!testlook!(look, "𝛃𐆀", 0));
+        assert!(!testlook!(look, "𝛃𐆀", 4));
+
+        // Non word boundaries for ASCII.
+        assert!(!testlook!(look, "", 0));
+        assert!(!testlook!(look, "ab", 1));
+        assert!(!testlook!(look, "a ", 2));
+        assert!(!testlook!(look, " a ", 0));
+        assert!(!testlook!(look, " a ", 3));
+
+        // Non word boundaries with a non-ASCII codepoint.
+        assert!(!testlook!(look, "𝛃b", 4));
+        assert!(testlook!(look, "b𝛃", 1));
+        assert!(!testlook!(look, "𝛃 ", 5));
+        assert!(!testlook!(look, " 𝛃 ", 0));
+        assert!(!testlook!(look, " 𝛃 ", 6));
+        assert!(!testlook!(look, "𝛃", 1));
+        assert!(!testlook!(look, "𝛃", 2));
+        assert!(!testlook!(look, "𝛃", 3));
+
+        // Non word boundaries with non-ASCII codepoints.
+        assert!(!testlook!(look, "𝛃𐆀", 1));
+        assert!(!testlook!(look, "𝛃𐆀", 2));
+        assert!(!testlook!(look, "𝛃𐆀", 3));
+        assert!(!testlook!(look, "𝛃𐆀", 5));
+        assert!(!testlook!(look, "𝛃𐆀", 6));
+        assert!(!testlook!(look, "𝛃𐆀", 7));
+        assert!(!testlook!(look, "𝛃𐆀", 8));
+    }
+
+    #[test]
+    #[cfg(all(not(miri), feature = "unicode-word-boundary"))]
+    fn look_matches_word_start_unicode() {
+        let look = Look::WordStartUnicode;
+
+        // \xF0\x9D\x9B\x83 = 𝛃 (in \w)
+        // \xF0\x90\x86\x80 = 𐆀 (not in \w)
+
+        // Simple ASCII word boundaries.
+        assert!(testlook!(look, "a", 0));
+        assert!(!testlook!(look, "a", 1));
+        assert!(!testlook!(look, "a ", 1));
+        assert!(testlook!(look, " a ", 1));
+        assert!(!testlook!(look, " a ", 2));
+
+        // Unicode word boundaries with a non-ASCII codepoint.
+        assert!(testlook!(look, "𝛃", 0));
+        assert!(!testlook!(look, "𝛃", 4));
+        assert!(!testlook!(look, "𝛃 ", 4));
+        assert!(testlook!(look, " 𝛃 ", 1));
+        assert!(!testlook!(look, " 𝛃 ", 5));
+
+        // Unicode word boundaries between non-ASCII codepoints.
+        assert!(testlook!(look, "𝛃𐆀", 0));
+        assert!(!testlook!(look, "𝛃𐆀", 4));
+
+        // Non word boundaries for ASCII.
+        assert!(!testlook!(look, "", 0));
+        assert!(!testlook!(look, "ab", 1));
+        assert!(!testlook!(look, "a ", 2));
+        assert!(!testlook!(look, " a ", 0));
+        assert!(!testlook!(look, " a ", 3));
+
+        // Non word boundaries with a non-ASCII codepoint.
+        assert!(!testlook!(look, "𝛃b", 4));
+        assert!(!testlook!(look, "b𝛃", 1));
+        assert!(!testlook!(look, "𝛃 ", 5));
+        assert!(!testlook!(look, " 𝛃 ", 0));
+        assert!(!testlook!(look, " 𝛃 ", 6));
+        assert!(!testlook!(look, "𝛃", 1));
+        assert!(!testlook!(look, "𝛃", 2));
+        assert!(!testlook!(look, "𝛃", 3));
+
+        // Non word boundaries with non-ASCII codepoints.
+        assert!(!testlook!(look, "𝛃𐆀", 1));
+        assert!(!testlook!(look, "𝛃𐆀", 2));
+        assert!(!testlook!(look, "𝛃𐆀", 3));
+        assert!(!testlook!(look, "𝛃𐆀", 5));
+        assert!(!testlook!(look, "𝛃𐆀", 6));
+        assert!(!testlook!(look, "𝛃𐆀", 7));
+        assert!(!testlook!(look, "𝛃𐆀", 8));
+    }
+
+    #[test]
+    #[cfg(all(not(miri), feature = "unicode-word-boundary"))]
+    fn look_matches_word_end_unicode() {
+        let look = Look::WordEndUnicode;
+
+        // \xF0\x9D\x9B\x83 = 𝛃 (in \w)
+        // \xF0\x90\x86\x80 = 𐆀 (not in \w)
+
+        // Simple ASCII word boundaries.
+        assert!(!testlook!(look, "a", 0));
+        assert!(testlook!(look, "a", 1));
+        assert!(testlook!(look, "a ", 1));
+        assert!(!testlook!(look, " a ", 1));
+        assert!(testlook!(look, " a ", 2));
+
+        // Unicode word boundaries with a non-ASCII codepoint.
+        assert!(!testlook!(look, "𝛃", 0));
+        assert!(testlook!(look, "𝛃", 4));
+        assert!(testlook!(look, "𝛃 ", 4));
+        assert!(!testlook!(look, " 𝛃 ", 1));
+        assert!(testlook!(look, " 𝛃 ", 5));
+
+        // Unicode word boundaries between non-ASCII codepoints.
+        assert!(!testlook!(look, "𝛃𐆀", 0));
+        assert!(testlook!(look, "𝛃𐆀", 4));
+
+        // Non word boundaries for ASCII.
+        assert!(!testlook!(look, "", 0));
+        assert!(!testlook!(look, "ab", 1));
+        assert!(!testlook!(look, "a ", 2));
+        assert!(!testlook!(look, " a ", 0));
+        assert!(!testlook!(look, " a ", 3));
+
+        // Non word boundaries with a non-ASCII codepoint.
+        assert!(!testlook!(look, "𝛃b", 4));
+        assert!(!testlook!(look, "b𝛃", 1));
+        assert!(!testlook!(look, "𝛃 ", 5));
+        assert!(!testlook!(look, " 𝛃 ", 0));
+        assert!(!testlook!(look, " 𝛃 ", 6));
+        assert!(!testlook!(look, "𝛃", 1));
+        assert!(!testlook!(look, "𝛃", 2));
+        assert!(!testlook!(look, "𝛃", 3));
+
+        // Non word boundaries with non-ASCII codepoints.
+        assert!(!testlook!(look, "𝛃𐆀", 1));
+        assert!(!testlook!(look, "𝛃𐆀", 2));
+        assert!(!testlook!(look, "𝛃𐆀", 3));
+        assert!(!testlook!(look, "𝛃𐆀", 5));
+        assert!(!testlook!(look, "𝛃𐆀", 6));
+        assert!(!testlook!(look, "𝛃𐆀", 7));
+        assert!(!testlook!(look, "𝛃𐆀", 8));
+    }
+
+    #[test]
+    fn look_matches_word_start_half_ascii() {
+        let look = Look::WordStartHalfAscii;
+
+        // \xF0\x9D\x9B\x83 = 𝛃 (in \w)
+        // \xF0\x90\x86\x80 = 𐆀 (not in \w)
+
+        // Simple ASCII word boundaries.
+        assert!(testlook!(look, "a", 0));
+        assert!(!testlook!(look, "a", 1));
+        assert!(!testlook!(look, "a ", 1));
+        assert!(testlook!(look, " a ", 1));
+        assert!(!testlook!(look, " a ", 2));
+
+        // Unicode word boundaries with a non-ASCII codepoint. Since this is
+        // an ASCII word boundary, none of these match.
+        assert!(testlook!(look, "𝛃", 0));
+        assert!(testlook!(look, "𝛃", 4));
+        assert!(testlook!(look, "𝛃 ", 4));
+        assert!(testlook!(look, " 𝛃 ", 1));
+        assert!(testlook!(look, " 𝛃 ", 5));
+
+        // Unicode word boundaries between non-ASCII codepoints. Again, since
+        // this is an ASCII word boundary, none of these match.
+        assert!(testlook!(look, "𝛃𐆀", 0));
+        assert!(testlook!(look, "𝛃𐆀", 4));
+
+        // Non word boundaries for ASCII.
+        assert!(testlook!(look, "", 0));
+        assert!(!testlook!(look, "ab", 1));
+        assert!(testlook!(look, "a ", 2));
+        assert!(testlook!(look, " a ", 0));
+        assert!(testlook!(look, " a ", 3));
+
+        // Non word boundaries with a non-ASCII codepoint.
+        assert!(testlook!(look, "𝛃b", 4));
+        assert!(!testlook!(look, "b𝛃", 1));
+        assert!(testlook!(look, "𝛃 ", 5));
+        assert!(testlook!(look, " 𝛃 ", 0));
+        assert!(testlook!(look, " 𝛃 ", 6));
+        assert!(testlook!(look, "𝛃", 1));
+        assert!(testlook!(look, "𝛃", 2));
+        assert!(testlook!(look, "𝛃", 3));
+
+        // Non word boundaries with non-ASCII codepoints.
+        assert!(testlook!(look, "𝛃𐆀", 1));
+        assert!(testlook!(look, "𝛃𐆀", 2));
+        assert!(testlook!(look, "𝛃𐆀", 3));
+        assert!(testlook!(look, "𝛃𐆀", 5));
+        assert!(testlook!(look, "𝛃𐆀", 6));
+        assert!(testlook!(look, "𝛃𐆀", 7));
+        assert!(testlook!(look, "𝛃𐆀", 8));
+    }
+
+    #[test]
+    fn look_matches_word_end_half_ascii() {
+        let look = Look::WordEndHalfAscii;
+
+        // \xF0\x9D\x9B\x83 = 𝛃 (in \w)
+        // \xF0\x90\x86\x80 = 𐆀 (not in \w)
+
+        // Simple ASCII word boundaries.
+        assert!(!testlook!(look, "a", 0));
+        assert!(testlook!(look, "a", 1));
+        assert!(testlook!(look, "a ", 1));
+        assert!(!testlook!(look, " a ", 1));
+        assert!(testlook!(look, " a ", 2));
+
+        // Unicode word boundaries with a non-ASCII codepoint. Since this is
+        // an ASCII word boundary, none of these match.
+        assert!(testlook!(look, "𝛃", 0));
+        assert!(testlook!(look, "𝛃", 4));
+        assert!(testlook!(look, "𝛃 ", 4));
+        assert!(testlook!(look, " 𝛃 ", 1));
+        assert!(testlook!(look, " 𝛃 ", 5));
+
+        // Unicode word boundaries between non-ASCII codepoints. Again, since
+        // this is an ASCII word boundary, none of these match.
+        assert!(testlook!(look, "𝛃𐆀", 0));
+        assert!(testlook!(look, "𝛃𐆀", 4));
+
+        // Non word boundaries for ASCII.
+        assert!(testlook!(look, "", 0));
+        assert!(!testlook!(look, "ab", 1));
+        assert!(testlook!(look, "a ", 2));
+        assert!(testlook!(look, " a ", 0));
+        assert!(testlook!(look, " a ", 3));
+
+        // Non word boundaries with a non-ASCII codepoint.
+        assert!(!testlook!(look, "𝛃b", 4));
+        assert!(testlook!(look, "b𝛃", 1));
+        assert!(testlook!(look, "𝛃 ", 5));
+        assert!(testlook!(look, " 𝛃 ", 0));
+        assert!(testlook!(look, " 𝛃 ", 6));
+        assert!(testlook!(look, "𝛃", 1));
+        assert!(testlook!(look, "𝛃", 2));
+        assert!(testlook!(look, "𝛃", 3));
+
+        // Non word boundaries with non-ASCII codepoints.
+        assert!(testlook!(look, "𝛃𐆀", 1));
+        assert!(testlook!(look, "𝛃𐆀", 2));
+        assert!(testlook!(look, "𝛃𐆀", 3));
+        assert!(testlook!(look, "𝛃𐆀", 5));
+        assert!(testlook!(look, "𝛃𐆀", 6));
+        assert!(testlook!(look, "𝛃𐆀", 7));
+        assert!(testlook!(look, "𝛃𐆀", 8));
+    }
+
+    #[test]
+    #[cfg(all(not(miri), feature = "unicode-word-boundary"))]
+    fn look_matches_word_start_half_unicode() {
+        let look = Look::WordStartHalfUnicode;
+
+        // \xF0\x9D\x9B\x83 = 𝛃 (in \w)
+        // \xF0\x90\x86\x80 = 𐆀 (not in \w)
+
+        // Simple ASCII word boundaries.
+        assert!(testlook!(look, "a", 0));
+        assert!(!testlook!(look, "a", 1));
+        assert!(!testlook!(look, "a ", 1));
+        assert!(testlook!(look, " a ", 1));
+        assert!(!testlook!(look, " a ", 2));
+
+        // Unicode word boundaries with a non-ASCII codepoint.
+        assert!(testlook!(look, "𝛃", 0));
+        assert!(!testlook!(look, "𝛃", 4));
+        assert!(!testlook!(look, "𝛃 ", 4));
+        assert!(testlook!(look, " 𝛃 ", 1));
+        assert!(!testlook!(look, " 𝛃 ", 5));
+
+        // Unicode word boundaries between non-ASCII codepoints.
+        assert!(testlook!(look, "𝛃𐆀", 0));
+        assert!(!testlook!(look, "𝛃𐆀", 4));
+
+        // Non word boundaries for ASCII.
+        assert!(testlook!(look, "", 0));
+        assert!(!testlook!(look, "ab", 1));
+        assert!(testlook!(look, "a ", 2));
+        assert!(testlook!(look, " a ", 0));
+        assert!(testlook!(look, " a ", 3));
+
+        // Non word boundaries with a non-ASCII codepoint.
+        assert!(!testlook!(look, "𝛃b", 4));
+        assert!(!testlook!(look, "b𝛃", 1));
+        assert!(testlook!(look, "𝛃 ", 5));
+        assert!(testlook!(look, " 𝛃 ", 0));
+        assert!(testlook!(look, " 𝛃 ", 6));
+        assert!(!testlook!(look, "𝛃", 1));
+        assert!(!testlook!(look, "𝛃", 2));
+        assert!(!testlook!(look, "𝛃", 3));
+
+        // Non word boundaries with non-ASCII codepoints.
+        assert!(!testlook!(look, "𝛃𐆀", 1));
+        assert!(!testlook!(look, "𝛃𐆀", 2));
+        assert!(!testlook!(look, "𝛃𐆀", 3));
+        assert!(!testlook!(look, "𝛃𐆀", 5));
+        assert!(!testlook!(look, "𝛃𐆀", 6));
+        assert!(!testlook!(look, "𝛃𐆀", 7));
+        assert!(testlook!(look, "𝛃𐆀", 8));
+    }
+
+    #[test]
+    #[cfg(all(not(miri), feature = "unicode-word-boundary"))]
+    fn look_matches_word_end_half_unicode() {
+        let look = Look::WordEndHalfUnicode;
+
+        // \xF0\x9D\x9B\x83 = 𝛃 (in \w)
+        // \xF0\x90\x86\x80 = 𐆀 (not in \w)
+
+        // Simple ASCII word boundaries.
+        assert!(!testlook!(look, "a", 0));
+        assert!(testlook!(look, "a", 1));
+        assert!(testlook!(look, "a ", 1));
+        assert!(!testlook!(look, " a ", 1));
+        assert!(testlook!(look, " a ", 2));
+
+        // Unicode word boundaries with a non-ASCII codepoint.
+        assert!(!testlook!(look, "𝛃", 0));
+        assert!(testlook!(look, "𝛃", 4));
+        assert!(testlook!(look, "𝛃 ", 4));
+        assert!(!testlook!(look, " 𝛃 ", 1));
+        assert!(testlook!(look, " 𝛃 ", 5));
+
+        // Unicode word boundaries between non-ASCII codepoints.
+        assert!(!testlook!(look, "𝛃𐆀", 0));
+        assert!(testlook!(look, "𝛃𐆀", 4));
+
+        // Non word boundaries for ASCII.
+        assert!(testlook!(look, "", 0));
+        assert!(!testlook!(look, "ab", 1));
+        assert!(testlook!(look, "a ", 2));
+        assert!(testlook!(look, " a ", 0));
+        assert!(testlook!(look, " a ", 3));
+
+        // Non word boundaries with a non-ASCII codepoint.
+        assert!(!testlook!(look, "𝛃b", 4));
+        assert!(!testlook!(look, "b𝛃", 1));
+        assert!(testlook!(look, "𝛃 ", 5));
+        assert!(testlook!(look, " 𝛃 ", 0));
+        assert!(testlook!(look, " 𝛃 ", 6));
+        assert!(!testlook!(look, "𝛃", 1));
+        assert!(!testlook!(look, "𝛃", 2));
+        assert!(!testlook!(look, "𝛃", 3));
+
+        // Non word boundaries with non-ASCII codepoints.
+        assert!(!testlook!(look, "𝛃𐆀", 1));
+        assert!(!testlook!(look, "𝛃𐆀", 2));
+        assert!(!testlook!(look, "𝛃𐆀", 3));
+        assert!(!testlook!(look, "𝛃𐆀", 5));
+        assert!(!testlook!(look, "𝛃𐆀", 6));
+        assert!(!testlook!(look, "𝛃𐆀", 7));
+        assert!(testlook!(look, "𝛃𐆀", 8));
+    }
+
+    #[test]
+    fn look_set() {
+        let mut f = LookSet::default();
+        assert!(!f.contains(Look::Start));
+        assert!(!f.contains(Look::End));
+        assert!(!f.contains(Look::StartLF));
+        assert!(!f.contains(Look::EndLF));
+        assert!(!f.contains(Look::WordUnicode));
+        assert!(!f.contains(Look::WordUnicodeNegate));
+        assert!(!f.contains(Look::WordAscii));
+        assert!(!f.contains(Look::WordAsciiNegate));
+
+        f = f.insert(Look::Start);
+        assert!(f.contains(Look::Start));
+        f = f.remove(Look::Start);
+        assert!(!f.contains(Look::Start));
+
+        f = f.insert(Look::End);
+        assert!(f.contains(Look::End));
+        f = f.remove(Look::End);
+        assert!(!f.contains(Look::End));
+
+        f = f.insert(Look::StartLF);
+        assert!(f.contains(Look::StartLF));
+        f = f.remove(Look::StartLF);
+        assert!(!f.contains(Look::StartLF));
+
+        f = f.insert(Look::EndLF);
+        assert!(f.contains(Look::EndLF));
+        f = f.remove(Look::EndLF);
+        assert!(!f.contains(Look::EndLF));
+
+        f = f.insert(Look::StartCRLF);
+        assert!(f.contains(Look::StartCRLF));
+        f = f.remove(Look::StartCRLF);
+        assert!(!f.contains(Look::StartCRLF));
+
+        f = f.insert(Look::EndCRLF);
+        assert!(f.contains(Look::EndCRLF));
+        f = f.remove(Look::EndCRLF);
+        assert!(!f.contains(Look::EndCRLF));
+
+        f = f.insert(Look::WordUnicode);
+        assert!(f.contains(Look::WordUnicode));
+        f = f.remove(Look::WordUnicode);
+        assert!(!f.contains(Look::WordUnicode));
+
+        f = f.insert(Look::WordUnicodeNegate);
+        assert!(f.contains(Look::WordUnicodeNegate));
+        f = f.remove(Look::WordUnicodeNegate);
+        assert!(!f.contains(Look::WordUnicodeNegate));
+
+        f = f.insert(Look::WordAscii);
+        assert!(f.contains(Look::WordAscii));
+        f = f.remove(Look::WordAscii);
+        assert!(!f.contains(Look::WordAscii));
+
+        f = f.insert(Look::WordAsciiNegate);
+        assert!(f.contains(Look::WordAsciiNegate));
+        f = f.remove(Look::WordAsciiNegate);
+        assert!(!f.contains(Look::WordAsciiNegate));
+
+        f = f.insert(Look::WordStartAscii);
+        assert!(f.contains(Look::WordStartAscii));
+        f = f.remove(Look::WordStartAscii);
+        assert!(!f.contains(Look::WordStartAscii));
+
+        f = f.insert(Look::WordEndAscii);
+        assert!(f.contains(Look::WordEndAscii));
+        f = f.remove(Look::WordEndAscii);
+        assert!(!f.contains(Look::WordEndAscii));
+
+        f = f.insert(Look::WordStartUnicode);
+        assert!(f.contains(Look::WordStartUnicode));
+        f = f.remove(Look::WordStartUnicode);
+        assert!(!f.contains(Look::WordStartUnicode));
+
+        f = f.insert(Look::WordEndUnicode);
+        assert!(f.contains(Look::WordEndUnicode));
+        f = f.remove(Look::WordEndUnicode);
+        assert!(!f.contains(Look::WordEndUnicode));
+
+        f = f.insert(Look::WordStartHalfAscii);
+        assert!(f.contains(Look::WordStartHalfAscii));
+        f = f.remove(Look::WordStartHalfAscii);
+        assert!(!f.contains(Look::WordStartHalfAscii));
+
+        f = f.insert(Look::WordEndHalfAscii);
+        assert!(f.contains(Look::WordEndHalfAscii));
+        f = f.remove(Look::WordEndHalfAscii);
+        assert!(!f.contains(Look::WordEndHalfAscii));
+
+        f = f.insert(Look::WordStartHalfUnicode);
+        assert!(f.contains(Look::WordStartHalfUnicode));
+        f = f.remove(Look::WordStartHalfUnicode);
+        assert!(!f.contains(Look::WordStartHalfUnicode));
+
+        f = f.insert(Look::WordEndHalfUnicode);
+        assert!(f.contains(Look::WordEndHalfUnicode));
+        f = f.remove(Look::WordEndHalfUnicode);
+        assert!(!f.contains(Look::WordEndHalfUnicode));
+    }
+
+    #[test]
+    fn look_set_iter() {
+        let set = LookSet::empty();
+        assert_eq!(0, set.iter().count());
+
+        let set = LookSet::full();
+        assert_eq!(18, set.iter().count());
+
+        let set = LookSet::empty()
+            .insert(Look::StartLF)
+            .insert(Look::WordUnicode);
+        assert_eq!(2, set.iter().count());
+
+        let set = LookSet::empty().insert(Look::StartLF);
+        assert_eq!(1, set.iter().count());
+
+        let set = LookSet::empty().insert(Look::WordAsciiNegate);
+        assert_eq!(1, set.iter().count());
+
+        let set = LookSet::empty().insert(Look::WordEndHalfUnicode);
+        assert_eq!(1, set.iter().count());
+    }
+
+    #[test]
+    #[cfg(feature = "alloc")]
+    fn look_set_debug() {
+        let res = alloc::format!("{:?}", LookSet::empty());
+        assert_eq!("∅", res);
+        let res = alloc::format!("{:?}", LookSet::full());
+        assert_eq!("Az^$rRbB𝛃𝚩<>〈〉◁▷◀▶", res);
+    }
+}

@@ -16,7 +16,7 @@ use quote::{quote, ToTokens as _};
 use syn::parse::Parser as _;
 use syn::{Block, Stmt};
 
-
+#[test]
 fn test_raw_operator() {
     let stmt = syn::parse_str::<Stmt>("let _ = &raw const x;").unwrap();
 
@@ -41,7 +41,7 @@ fn test_raw_operator() {
     "#);
 }
 
-
+#[test]
 fn test_raw_variable() {
     let stmt = syn::parse_str::<Stmt>("let _ = &raw;").unwrap();
 
@@ -65,12 +65,12 @@ fn test_raw_variable() {
     "#);
 }
 
-
+#[test]
 fn test_raw_invalid() {
     assert!(syn::parse_str::<Stmt>("let _ = &raw x;").is_err());
 }
 
-
+#[test]
 fn test_none_group() {
     // «∅ async fn f() {} ∅»
     let tokens = TokenStream::from_iter([TokenTree::Group(Group::new(
@@ -125,7 +125,7 @@ fn test_none_group() {
     "#);
 }
 
-
+#[test]
 fn test_let_dot_dot() {
     let tokens = quote! {
         let .. = 10;
@@ -143,7 +143,7 @@ fn test_let_dot_dot() {
     "#);
 }
 
-
+#[test]
 fn test_let_else() {
     let tokens = quote! {
         let Some(x) = None else { return 0; };
@@ -194,7 +194,7 @@ fn test_let_else() {
     "#);
 }
 
-
+#[test]
 fn test_macros() {
     let tokens = quote! {
         fn main() {
@@ -278,7 +278,7 @@ fn test_macros() {
     "#);
 }
 
-
+#[test]
 fn test_early_parse_loop() {
     // The following is an Expr::Loop followed by Expr::Tuple. It is not an
     // Expr::Call.

@@ -26,9 +26,7 @@ const SEEDS: &[Seed] = &[
 /// match based on a pair of bytes matching at the right offsets.
 pub(crate) struct Runner {
     fwd: Option<
-        Box<
-            dyn FnMut(&[u8], &[u8], u8, u8) -> Option<Option<usize>> + 'static,
-        >,
+        Box<dyn FnMut(&str, &str, u8, u8) -> Option<Option<usize>> + 'static>,
     >,
 }
 
@@ -76,7 +74,7 @@ impl Runner {
     /// If this is not set, then forward "packed pair" search is not tested.
     pub(crate) fn fwd(
         mut self,
-        search: impl FnMut(&[u8], &[u8], u8, u8) -> Option<Option<usize>> + 'static,
+        search: impl FnMut(&str, &str, u8, u8) -> Option<Option<usize>> + 'static,
     ) -> Runner {
         self.fwd = Some(Box::new(search));
         self

@@ -52,7 +52,7 @@ impl<'de> Deserialize<'de> for Enum {
     }
 }
 
-
+#[test]
 fn test() {
     let s = r#" {"Variant":{"x":0,"y":0}} "#;
     assert!(serde_json::from_str::<Enum>(s).is_err());

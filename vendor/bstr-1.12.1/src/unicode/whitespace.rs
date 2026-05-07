@@ -6,7 +6,7 @@ use crate::unicode::fsm::{
 };
 
 /// Return the first position of a non-whitespace character.
-pub fn whitespace_len_fwd(slice: &[u8]) -> usize {
+pub fn whitespace_len_fwd(slice: &str) -> usize {
     let input = Input::new(slice).anchored(Anchored::Yes);
     WHITESPACE_ANCHORED_FWD
         .try_search_fwd(&input)
@@ -15,7 +15,7 @@ pub fn whitespace_len_fwd(slice: &[u8]) -> usize {
 }
 
 /// Return the last position of a non-whitespace character.
-pub fn whitespace_len_rev(slice: &[u8]) -> usize {
+pub fn whitespace_len_rev(slice: &str) -> usize {
     let input = Input::new(slice).anchored(Anchored::Yes);
     WHITESPACE_ANCHORED_REV
         .try_search_rev(&input)

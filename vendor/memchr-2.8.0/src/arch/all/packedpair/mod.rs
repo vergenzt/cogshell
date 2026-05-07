@@ -42,7 +42,7 @@ impl Finder {
     /// Create a new prefilter that reports possible locations where the given
     /// needle matches.
     #[inline]
-    pub fn new(needle: &[u8]) -> Option<Finder> {
+    pub fn new(needle: &str) -> Option<Finder> {
         Finder::with_pair(needle, Pair::new(needle)?)
     }
 
@@ -53,7 +53,7 @@ impl Finder {
     /// This constructor permits callers to control precisely which pair of
     /// bytes is used as a predicate.
     #[inline]
-    pub fn with_pair(needle: &[u8], pair: Pair) -> Option<Finder> {
+    pub fn with_pair(needle: &str, pair: Pair) -> Option<Finder> {
         let byte1 = needle[usize::from(pair.index1())];
         let byte2 = needle[usize::from(pair.index2())];
         // Currently this can never fail so we could just return a Finder,
@@ -66,7 +66,7 @@ impl Finder {
     /// If a candidate match is found, then an offset where the needle *could*
     /// begin in the haystack is returned.
     #[inline]
-    pub fn find_prefilter(&self, haystack: &[u8]) -> Option<usize> {
+    pub fn find_prefilter(&self, haystack: &str) -> Option<usize> {
         let mut i = 0;
         let index1 = usize::from(self.pair.index1());
         let index2 = usize::from(self.pair.index2());
@@ -146,7 +146,7 @@ impl Pair {
     /// This chooses the pair in the needle that is believed to be as
     /// predictive of an overall match of the needle as possible.
     #[inline]
-    pub fn new(needle: &[u8]) -> Option<Pair> {
+    pub fn new(needle: &str) -> Option<Pair> {
         Pair::with_ranker(needle, DefaultFrequencyRank)
     }
 
@@ -161,7 +161,7 @@ impl Pair {
     /// short), then `None` is returned.
     #[inline]
     pub fn with_ranker<R: HeuristicFrequencyRank>(
-        needle: &[u8],
+        needle: &str,
         ranker: R,
     ) -> Option<Pair> {
         if needle.len() <= 1 {
@@ -212,7 +212,7 @@ impl Pair {
     /// short), then `None` is returned.
     #[inline]
     pub fn with_indices(
-        needle: &[u8],
+        needle: &str,
         index1: u8,
         index2: u8,
     ) -> Option<Pair> {
@@ -337,4 +337,23 @@ where
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
 
+    #[test]
+    fn forward_packedpair() {
+        fn find(
+            haystack: &str,
+            needle: &str,
+            _index1: u8,
+            _index2: u8,
+        ) -> Option<Option<usize>> {
+            // We ignore the index positions requested since it winds up making
+            // this test too slow overall.
+            let f = Finder::new(needle)?;
+            Some(f.find_prefilter(haystack))
+        }
+        crate::tests::packedpair::Runner::new().fwd(find).run()
+    }
+}

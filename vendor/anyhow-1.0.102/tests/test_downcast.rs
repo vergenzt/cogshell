@@ -10,7 +10,7 @@ use std::error::Error as StdError;
 use std::fmt::{self, Display};
 use std::io;
 
-
+#[test]
 fn test_downcast() {
     assert_eq!(
         "oh no!",
@@ -30,7 +30,7 @@ fn test_downcast() {
     );
 }
 
-
+#[test]
 fn test_downcast_ref() {
     assert_eq!(
         "oh no!",
@@ -50,7 +50,7 @@ fn test_downcast_ref() {
     );
 }
 
-
+#[test]
 fn test_downcast_mut() {
     assert_eq!(
         "oh no!",
@@ -76,7 +76,7 @@ fn test_downcast_mut() {
     assert_eq!(bailed.downcast::<String>().unwrap(), "clobber");
 }
 
-
+#[test]
 fn test_drop() {
     let has_dropped = Flag::new();
     let error = Error::new(DetectDrop::new(&has_dropped));
@@ -84,7 +84,7 @@ fn test_drop() {
     assert!(has_dropped.get());
 }
 
-
+#[test]
 fn test_as_ref() {
     let error = bail_error().unwrap_err();
     let ref_dyn: &dyn StdError = error.as_ref();
@@ -93,7 +93,7 @@ fn test_as_ref() {
     assert_eq!("oh no!", ref_dyn_send_sync.to_string());
 }
 
-
+#[test]
 fn test_large_alignment() {
     #[repr(align(64))]
     #[derive(Debug)]
@@ -114,7 +114,7 @@ fn test_large_alignment() {
     );
 }
 
-
+#[test]
 fn test_unsuccessful_downcast() {
     let mut error = bail_error().unwrap_err();
     assert!(error.downcast_ref::<&str>().is_none());

@@ -1,6 +1,6 @@
 use super::*;
 
-
+#[test]
 fn cases() {
     case(TestFlags::empty(), "TestFlags(0x0)", "0", "0", "0", "0");
     case(TestFlags::A, "TestFlags(A)", "1", "1", "1", "1");

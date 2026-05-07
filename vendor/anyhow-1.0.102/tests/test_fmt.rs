@@ -66,26 +66,26 @@ Error {
 }\
 ";
 
-
+#[test]
 fn test_display() {
     assert_eq!("g failed", h().unwrap_err().to_string());
 }
 
-
+#[test]
 fn test_altdisplay() {
     assert_eq!(EXPECTED_ALTDISPLAY_F, format!("{:#}", f().unwrap_err()));
     assert_eq!(EXPECTED_ALTDISPLAY_G, format!("{:#}", g().unwrap_err()));
     assert_eq!(EXPECTED_ALTDISPLAY_H, format!("{:#}", h().unwrap_err()));
 }
 
-
+#[test]
 fn test_debug() {
     assert_eq!(EXPECTED_DEBUG_F, format!("{:?}", f().unwrap_err()));
     assert_eq!(EXPECTED_DEBUG_G, format!("{:?}", g().unwrap_err()));
     assert_eq!(EXPECTED_DEBUG_H, format!("{:?}", h().unwrap_err()));
 }
 
-
+#[test]
 fn test_altdebug() {
     assert_eq!(EXPECTED_ALTDEBUG_F, format!("{:#?}", f().unwrap_err()));
     assert_eq!(EXPECTED_ALTDEBUG_G, format!("{:#?}", g().unwrap_err()));

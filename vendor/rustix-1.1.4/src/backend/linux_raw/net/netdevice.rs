@@ -20,7 +20,7 @@ pub(crate) fn name_to_index(fd: BorrowedFd<'_>, if_name: &str) -> io::Result<u32
         return Err(io::Errno::NODEV);
     }
 
-    // SAFETY: Convert `&[u8]` to `&[c_char]`.
+    // SAFETY: Convert `&str` to `&[c_char]`.
     let if_name_bytes = unsafe {
         slice::from_raw_parts(if_name_bytes.as_ptr().cast::<c_char>(), if_name_bytes.len())
     };
@@ -52,7 +52,7 @@ pub(crate) fn index_to_name(fd: BorrowedFd<'_>, index: u32) -> io::Result<(usize
     {
         let ifrn_name = unsafe { &ifreq.ifr_ifrn.ifrn_name[..nul_byte] };
 
-        // SAFETY: Convert `&[c_char]` to `&[u8]`.
+        // SAFETY: Convert `&[c_char]` to `&str`.
         let ifrn_name =
             unsafe { slice::from_raw_parts(ifrn_name.as_ptr().cast::<u8>(), ifrn_name.len()) };
 

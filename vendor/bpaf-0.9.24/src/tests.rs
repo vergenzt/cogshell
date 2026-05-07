@@ -1,6 +1,6 @@
 use crate::args::Arg;
 
-
+#[test]
 #[cfg(any(windows, unix))]
 fn wtf_shenanigans_1() {
     use crate::args::{split_os_argument, Arg, ArgType};
@@ -40,7 +40,7 @@ fn wtf_shenanigans_1() {
     }
 }
 
-
+#[test]
 fn wtf_shenanigans_2() {
     use crate::args::{split_os_argument, split_os_argument_fallback, ArgType};
     use std::ffi::OsString;
@@ -74,7 +74,7 @@ fn wtf_shenanigans_2() {
     }
 }
 
-
+#[test]
 fn fallback_with_strange_args_produces_same_results() {
     use crate::args::{split_os_argument, split_os_argument_fallback};
     let s = std::ffi::OsString::from("-Obits=2048");
@@ -83,7 +83,7 @@ fn fallback_with_strange_args_produces_same_results() {
     assert_eq!(r1, r2);
 }
 
-
+#[test]
 fn de_yoda() {
     use bpaf::*;
     let parser = construct!(a(short('a').switch()), b(short('b').switch())).to_options();

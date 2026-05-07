@@ -8,7 +8,7 @@ use std::{
     thread,
 };
 
-
+#[test]
 fn test_basic() {
     // For the wasi platforms, `std::env::temp_dir` will panic. For those targets, configure the /tmp
     // directory instead as the base directory for temp files.
@@ -23,7 +23,7 @@ fn test_basic() {
     assert_eq!("abcde", buf);
 }
 
-
+#[test]
 fn test_cleanup() {
     // For the wasi platforms, `std::env::temp_dir` will panic. For those targets, configure the /tmp
     // directory instead as the base directory for temp files.
@@ -41,7 +41,7 @@ fn test_cleanup() {
 
 // Only run this test on Linux. MacOS doesn't like us creating so many files, apparently.
 #[cfg(target_os = "linux")]
-
+#[test]
 fn test_pathological_cleaner() {
     let tmpdir = tempfile::tempdir().unwrap();
     let (tx, rx) = sync_channel(0);

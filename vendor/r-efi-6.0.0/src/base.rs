@@ -761,4 +761,233 @@ impl Guid {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::mem::{align_of, size_of};
 
+    // Helper to compute a hash of an object.
+    fn hash<T: core::hash::Hash>(v: &T) -> u64 {
+        let mut h = std::hash::DefaultHasher::new();
+        v.hash(&mut h);
+        core::hash::Hasher::finish(&h)
+    }
+
+    // Verify Type Size and Alignemnt
+    //
+    // Since UEFI defines explicitly the ABI of their types, we can verify that our implementation
+    // is correct by checking the size and alignment of the ABI types matches what the spec
+    // mandates.
+    #[test]
+    fn type_size_and_alignment() {
+        //
+        // Booleans
+        //
+
+        assert_eq!(size_of::<Boolean>(), 1);
+        assert_eq!(align_of::<Boolean>(), 1);
+
+        //
+        // Char8 / Char16
+        //
+
+        assert_eq!(size_of::<Char8>(), 1);
+        assert_eq!(align_of::<Char8>(), 1);
+        assert_eq!(size_of::<Char16>(), 2);
+        assert_eq!(align_of::<Char16>(), 2);
+
+        assert_eq!(size_of::<Char8>(), size_of::<u8>());
+        assert_eq!(align_of::<Char8>(), align_of::<u8>());
+        assert_eq!(size_of::<Char16>(), size_of::<u16>());
+        assert_eq!(align_of::<Char16>(), align_of::<u16>());
+
+        //
+        // Status
+        //
+
+        assert_eq!(size_of::<Status>(), size_of::<usize>());
+        assert_eq!(align_of::<Status>(), align_of::<usize>());
+
+        //
+        // Handles / Events
+        //
+
+        assert_eq!(size_of::<Handle>(), size_of::<usize>());
+        assert_eq!(align_of::<Handle>(), align_of::<usize>());
+        assert_eq!(size_of::<Event>(), size_of::<usize>());
+        assert_eq!(align_of::<Event>(), align_of::<usize>());
+
+        assert_eq!(size_of::<Handle>(), size_of::<*mut ()>());
+        assert_eq!(align_of::<Handle>(), align_of::<*mut ()>());
+        assert_eq!(size_of::<Event>(), size_of::<*mut ()>());
+        assert_eq!(align_of::<Event>(), align_of::<*mut ()>());
+
+        //
+        // Lba / Tpl
+        //
+
+        assert_eq!(size_of::<Lba>(), size_of::<u64>());
+        assert_eq!(align_of::<Lba>(), align_of::<u64>());
+        assert_eq!(size_of::<Tpl>(), size_of::<usize>());
+        assert_eq!(align_of::<Tpl>(), align_of::<usize>());
+
+        //
+        // PhysicalAddress / VirtualAddress
+        //
+
+        assert_eq!(size_of::<PhysicalAddress>(), size_of::<u64>());
+        assert_eq!(align_of::<PhysicalAddress>(), align_of::<u64>());
+        assert_eq!(size_of::<VirtualAddress>(), size_of::<u64>());
+        assert_eq!(align_of::<VirtualAddress>(), align_of::<u64>());
+
+        //
+        // ImageEntryPoint
+        //
+
+        assert_eq!(size_of::<ImageEntryPoint>(), size_of::<fn()>());
+        assert_eq!(align_of::<ImageEntryPoint>(), align_of::<fn()>());
+
+        //
+        // Guid
+        //
+
+        assert_eq!(size_of::<Guid>(), 16);
+        assert_eq!(align_of::<Guid>(), 4);
+
+        //
+        // Networking Types
+        //
+
+        assert_eq!(size_of::<MacAddress>(), 32);
+        assert_eq!(align_of::<MacAddress>(), 1);
+        assert_eq!(size_of::<Ipv4Address>(), 4);
+        assert_eq!(align_of::<Ipv4Address>(), 1);
+        assert_eq!(size_of::<Ipv6Address>(), 16);
+        assert_eq!(align_of::<Ipv6Address>(), 1);
+        assert_eq!(size_of::<IpAddress>(), 16);
+        assert_eq!(align_of::<IpAddress>(), 4);
+    }
+
+    #[test]
+    fn eficall() {
+        //
+        // Make sure the eficall!{} macro can deal with all kinds of function callbacks.
+        //
+
+        let _: eficall! {fn()};
+        let _: eficall! {unsafe fn()};
+        let _: eficall! {fn(i32)};
+        let _: eficall! {fn(i32) -> i32};
+        let _: eficall! {fn(i32, i32) -> (i32, i32)};
+
+        eficall! {fn _unused00() {}}
+        eficall! {unsafe fn _unused01() {}}
+        eficall! {pub unsafe fn _unused02() {}}
+    }
+
+    // Verify Boolean ABI
+    //
+    // Even though booleans are strictly 1-bit, and thus 0 or 1, in practice all UEFI systems
+    // treat it more like C does, and a boolean formatted as `u8` now allows any value other than
+    // 0 to represent `true`. Make sure we support the same.
+    #[test]
+    fn booleans() {
+        // Verify PartialEq works.
+        assert_ne!(Boolean::FALSE, Boolean::TRUE);
+
+        // Verify Boolean<->bool conversion and comparison works.
+        assert_eq!(Boolean::FALSE, false);
+        assert_eq!(Boolean::TRUE, true);
+
+        // Iterate all possible values for `u8` and verify 0 behaves as `false`, and everything
+        // else behaves as `true`. We verify both, the natural constructor through `From`, as well
+        // as a transmute.
+        for i in 0u8..=255u8 {
+            let v1: Boolean = i.into();
+            let v2: Boolean = unsafe { std::mem::transmute::<u8, Boolean>(i) };
+
+            assert_eq!(v1, v2);
+            assert_eq!(v1, v1);
+            assert_eq!(v2, v2);
+
+            match i {
+                0 => {
+                    assert_eq!(v1, Boolean::FALSE);
+                    assert_eq!(v1, false);
+                    assert_eq!(v2, Boolean::FALSE);
+                    assert_eq!(v2, false);
+
+                    assert_ne!(v1, Boolean::TRUE);
+                    assert_ne!(v1, true);
+                    assert_ne!(v2, Boolean::TRUE);
+                    assert_ne!(v2, true);
+
+                    assert!(v1 < Boolean::TRUE);
+                    assert!(v1 < true);
+                    assert!(v1 >= Boolean::FALSE);
+                    assert!(v1 >= false);
+                    assert!(v1 <= Boolean::FALSE);
+                    assert!(v1 <= false);
+                    assert_eq!(v1.cmp(&true.into()), core::cmp::Ordering::Less);
+                    assert_eq!(v1.cmp(&false.into()), core::cmp::Ordering::Equal);
+
+                    assert_eq!(hash(&v1), hash(&false));
+                }
+                _ => {
+                    assert_eq!(v1, Boolean::TRUE);
+                    assert_eq!(v1, true);
+                    assert_eq!(v2, Boolean::TRUE);
+                    assert_eq!(v2, true);
+
+                    assert_ne!(v1, Boolean::FALSE);
+                    assert_ne!(v1, false);
+                    assert_ne!(v2, Boolean::FALSE);
+                    assert_ne!(v2, false);
+
+                    assert!(v1 <= Boolean::TRUE);
+                    assert!(v1 <= true);
+                    assert!(v1 >= Boolean::TRUE);
+                    assert!(v1 >= true);
+                    assert!(v1 > Boolean::FALSE);
+                    assert!(v1 > false);
+                    assert_eq!(v1.cmp(&true.into()), core::cmp::Ordering::Equal);
+                    assert_eq!(v1.cmp(&false.into()), core::cmp::Ordering::Greater);
+
+                    assert_eq!(hash(&v1), hash(&true));
+                }
+            }
+        }
+    }
+
+    // Verify Guid Manipulations
+    //
+    // Test that creation of Guids from fields and bytes yields the expected
+    // values, and conversions work as expected.
+    #[test]
+    fn guid() {
+        let fields = (
+            0x550e8400,
+            0xe29b,
+            0x41d4,
+            0xa7,
+            0x16,
+            &[0x44, 0x66, 0x55, 0x44, 0x00, 0x00],
+        );
+        #[rustfmt::skip]
+        let bytes = [
+            0x00, 0x84, 0x0e, 0x55,
+            0x9b, 0xe2,
+            0xd4, 0x41,
+            0xa7,
+            0x16,
+            0x44, 0x66, 0x55, 0x44, 0x00, 0x00,
+        ];
+        let (f0, f1, f2, f3, f4, f5) = fields;
+        let g_fields = Guid::from_fields(f0, f1, f2, f3, f4, f5);
+        let g_bytes = Guid::from_bytes(&bytes);
+
+        assert_eq!(g_fields, g_bytes);
+        assert_eq!(g_fields.as_bytes(), &bytes);
+        assert_eq!(g_bytes.as_fields(), fields);
+    }
+}

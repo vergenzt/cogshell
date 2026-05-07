@@ -772,10 +772,10 @@ impl Regex {
     ///     .configure(Regex::config().utf8_empty(false))
     ///     .build(r"")?;
     /// let hay = "☃".as_bytes();
-    /// let got: Vec<&[u8]> = re.split(hay).map(|sp| &hay[sp]).collect();
+    /// let got: Vec<&str> = re.split(hay).map(|sp| &hay[sp]).collect();
     /// assert_eq!(got, vec![
     ///     // Writing byte string slices is just brutal. The problem is that
-    ///     // b"foo" has type &[u8; 3] instead of &[u8].
+    ///     // b"foo" has type &[u8; 3] instead of &str.
     ///     &[][..], &[b'\xE2'][..], &[b'\x98'][..], &[b'\x83'][..], &[][..],
     /// ]);
     ///
@@ -3346,7 +3346,7 @@ impl Config {
 /// a UTF-8 encoded codepoint.
 ///
 /// However, it can be useful to disable this requirement, particularly if
-/// you're searching things like `&[u8]` that are not known to be valid UTF-8.
+/// you're searching things like `&str` that are not known to be valid UTF-8.
 ///
 /// ```
 /// use regex_automata::{meta::Regex, util::syntax, Match};
@@ -3690,4 +3690,17 @@ impl Builder {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
 
+    // I found this in the course of building out the benchmark suite for
+    // rebar.
+    #[test]
+    fn regression_suffix_literal_count() {
+        let _ = env_logger::try_init();
+
+        let re = Regex::new(r"[a-zA-Z]+ing").unwrap();
+        assert_eq!(1, re.find_iter("tingling").count());
+    }
+}

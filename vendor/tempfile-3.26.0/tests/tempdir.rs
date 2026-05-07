@@ -23,7 +23,7 @@ fn configure_wasi_temp_dir() {
     }
 }
 
-
+#[test]
 fn test_tempdir() {
     configure_wasi_temp_dir();
 
@@ -36,7 +36,7 @@ fn test_tempdir() {
     assert!(!path.exists());
 }
 
-
+#[test]
 fn test_prefix() {
     configure_wasi_temp_dir();
 
@@ -45,7 +45,7 @@ fn test_prefix() {
     assert!(name.starts_with("prefix"));
 }
 
-
+#[test]
 fn test_suffix() {
     configure_wasi_temp_dir();
 
@@ -54,7 +54,7 @@ fn test_suffix() {
     assert!(name.ends_with("suffix"));
 }
 
-
+#[test]
 fn test_customnamed() {
     configure_wasi_temp_dir();
 
@@ -70,7 +70,7 @@ fn test_customnamed() {
     assert_eq!(name.len(), 24);
 }
 
-
+#[test]
 #[cfg_attr(target_os = "wasi", ignore = "thread::spawn is not supported")]
 fn test_rm_tempdir_threading() {
     configure_wasi_temp_dir();
@@ -108,7 +108,7 @@ fn test_rm_tempdir_threading() {
     assert!(!path.exists());
 }
 
-
+#[test]
 fn test_tempdir_keep() {
     configure_wasi_temp_dir();
 
@@ -121,7 +121,7 @@ fn test_tempdir_keep() {
     assert!(!path.exists());
 }
 
-
+#[test]
 fn test_tmpdir_close() {
     configure_wasi_temp_dir();
 
@@ -132,7 +132,7 @@ fn test_tmpdir_close() {
     assert!(!path.exists());
 }
 
-
+#[test]
 #[cfg_attr(target_os = "wasi", ignore = "unwinding is not supported")]
 fn dont_double_panic() {
     configure_wasi_temp_dir();
@@ -151,7 +151,7 @@ fn dont_double_panic() {
     assert!(r.is_err());
 }
 
-
+#[test]
 fn pass_as_asref_path() {
     configure_wasi_temp_dir();
 
@@ -164,7 +164,7 @@ fn pass_as_asref_path() {
     }
 }
 
-
+#[test]
 fn test_disable_cleanup() {
     configure_wasi_temp_dir();
 

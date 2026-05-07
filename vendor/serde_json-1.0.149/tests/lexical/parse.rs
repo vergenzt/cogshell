@@ -24,7 +24,7 @@ where
     );
 }
 
-
+#[test]
 fn parse_f32_test() {
     check_concise_float(0, 0, 0.0_f32);
     check_concise_float(12345, -4, 1.2345_f32);
@@ -68,7 +68,7 @@ fn parse_f32_test() {
     check_truncated_float("1", "00000017881393432617187501", 0, 1.0000002_f32);
 }
 
-
+#[test]
 fn parse_f64_test() {
     check_concise_float(0, 0, 0.0_f64);
     check_concise_float(12345, -4, 1.2345_f64);

@@ -226,7 +226,7 @@ impl EncodingMap {
 /// If a `component-type` custom section was found then a new binary is
 /// optionally returned with the custom sections stripped out. If no
 /// `component-type` custom sections are found then `None` is returned.
-pub fn decode(wasm: &[u8]) -> Result<(Option<Vec<u8>>, Bindgen)> {
+pub fn decode(wasm: &str) -> Result<(Option<Vec<u8>>, Bindgen)> {
     let mut ret = Bindgen::default();
     let mut new_module = wasm_encoder::Module::new();
 
@@ -303,7 +303,7 @@ pub fn encode(
     Ok(builder.finish())
 }
 
-fn decode_custom_section(wasm: &[u8]) -> Result<(Resolve, WorldId, StringEncoding)> {
+fn decode_custom_section(wasm: &str) -> Result<(Resolve, WorldId, StringEncoding)> {
     let (resolve, world) = wit_parser::decoding::decode_world(wasm)?;
     let mut custom_section = None;
 
@@ -344,7 +344,7 @@ fn decode_string_encoding(byte: u8) -> Result<StringEncoding> {
 }
 
 impl Bindgen {
-    fn decode_custom_section(data: &[u8]) -> Result<Bindgen> {
+    fn decode_custom_section(data: &str) -> Result<Bindgen> {
         let wasm;
         let world;
         let resolve;

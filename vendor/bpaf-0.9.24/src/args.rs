@@ -742,10 +742,208 @@ impl State {
         false
     }
 
-    
+    #[cfg(test)]
     pub(crate) fn peek(&self) -> Option<&Arg> {
         self.items_iter().next().map(|x| x.1)
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::meta_help::Metavar;
+    use crate::{long, short};
+    const M: Metavar = Metavar("M");
 
+    #[allow(clippy::fallible_impl_from)] // this is for tests only, panic is okay
+    impl<const N: usize> From<&'static [&'static str; N]> for State {
+        fn from(value: &'static [&'static str; N]) -> Self {
+            let args = Args::from(value);
+            let mut msg = None;
+            let res = State::construct(args, &[], &[], &mut msg);
+            if let Some(err) = &msg {
+                panic!("Couldn't construct state: {:?}/{:?}", err, res);
+            }
+            res
+        }
+    }
+
+    #[test]
+    fn long_arg() {
+        let mut a = State::from(&["--speed", "12"]);
+        let s = a.take_arg(&long("speed"), false, M).unwrap().unwrap();
+        assert_eq!(s, "12");
+        assert!(a.is_empty());
+    }
+    #[test]
+    fn long_flag_and_positional() {
+        let mut a = State::from(&["--speed", "12"]);
+        let flag = a.take_flag(&long("speed"));
+        assert!(flag);
+        assert!(!a.is_empty());
+        let s = a.take_positional_word(M).unwrap();
+        assert_eq!(s.2, "12");
+        assert!(a.is_empty());
+    }
+
+    #[test]
+    fn multiple_short_flags() {
+        let args = Args::from(&["-vvv"]);
+        let mut err = None;
+        let mut a = State::construct(args, &['v'], &[], &mut err);
+        assert!(a.take_flag(&short('v')));
+        assert!(a.take_flag(&short('v')));
+        assert!(a.take_flag(&short('v')));
+        assert!(!a.take_flag(&short('v')));
+        assert!(a.is_empty());
+    }
+
+    #[test]
+    fn long_arg_with_equality() {
+        let mut a = State::from(&["--speed=12"]);
+        let s = a.take_arg(&long("speed"), false, M).unwrap().unwrap();
+        assert_eq!(s, "12");
+        assert!(a.is_empty());
+    }
+
+    #[test]
+    fn long_arg_with_equality_and_minus() {
+        let mut a = State::from(&["--speed=-12"]);
+        let s = a.take_arg(&long("speed"), true, M).unwrap().unwrap();
+        assert_eq!(s, "-12");
+        assert!(a.is_empty());
+    }
+
+    #[test]
+    fn short_arg_with_equality() {
+        let mut a = State::from(&["-s=12"]);
+        let s = a.take_arg(&short('s'), false, M).unwrap().unwrap();
+        assert_eq!(s, "12");
+        assert!(a.is_empty());
+    }
+
+    #[test]
+    fn short_arg_with_equality_and_minus() {
+        let mut a = State::from(&["-s=-12"]);
+        let s = a.take_arg(&short('s'), false, M).unwrap().unwrap();
+        assert_eq!(s, "-12");
+        assert!(a.is_empty());
+    }
+
+    #[test]
+    fn short_arg_with_equality_and_minus_is_adjacent() {
+        let mut a = State::from(&["-s=-12"]);
+        let s = a.take_arg(&short('s'), true, M).unwrap().unwrap();
+        assert_eq!(s, "-12");
+        assert!(a.is_empty());
+    }
+
+    #[test]
+    fn short_arg_without_equality() {
+        let mut a = State::from(&["-s", "12"]);
+        let s = a.take_arg(&short('s'), false, M).unwrap().unwrap();
+        assert_eq!(s, "12");
+        assert!(a.is_empty());
+    }
+
+    #[test]
+    fn two_short_flags() {
+        let mut a = State::from(&["-s", "-v"]);
+        assert!(a.take_flag(&short('s')));
+        assert!(a.take_flag(&short('v')));
+        assert!(a.is_empty());
+    }
+
+    #[test]
+    fn two_short_flags2() {
+        let mut a = State::from(&["-s", "-v"]);
+        assert!(a.take_flag(&short('v')));
+        assert!(!a.take_flag(&short('v')));
+        assert!(a.take_flag(&short('s')));
+        assert!(!a.take_flag(&short('s')));
+        assert!(a.is_empty());
+    }
+
+    #[test]
+    fn command_with_flags() {
+        let mut a = State::from(&["cmd", "-s", "v"]);
+        assert!(a.take_cmd("cmd"));
+        let s = a.take_arg(&short('s'), false, M).unwrap().unwrap();
+        assert_eq!(s, "v");
+        assert!(a.is_empty());
+    }
+
+    #[test]
+    fn command_and_positional() {
+        let mut a = State::from(&["cmd", "pos"]);
+        assert!(a.take_cmd("cmd"));
+        let w = a.take_positional_word(M).unwrap();
+        assert_eq!(w.2, "pos");
+        assert!(a.is_empty());
+    }
+
+    #[test]
+    fn positionals_after_double_dash1() {
+        let mut a = State::from(&["-v", "--", "-x"]);
+        assert!(a.take_flag(&short('v')));
+        let w = a.take_positional_word(M).unwrap();
+        assert_eq!(w.2, "-x");
+        assert!(a.is_empty());
+    }
+
+    #[test]
+    fn positionals_after_double_dash2() {
+        let mut a = State::from(&["-v", "--", "-x"]);
+        assert!(a.take_flag(&short('v')));
+        let w = a.take_positional_word(M).unwrap();
+        assert_eq!(w.2, "-x");
+        assert!(a.is_empty());
+    }
+
+    #[test]
+    fn positionals_after_double_dash3() {
+        let mut a = State::from(&["-v", "12", "--", "-x"]);
+        let w = a.take_arg(&short('v'), false, M).unwrap().unwrap();
+        assert_eq!(w, "12");
+        let w = a.take_positional_word(M).unwrap();
+        assert_eq!(w.2, "-x");
+        assert!(a.is_empty());
+    }
+
+    #[test]
+    fn ambiguity_towards_flag() {
+        let args = Args::from(&["-abc"]);
+        let mut err = None;
+        let mut a = State::construct(args, &['a', 'b', 'c'], &[], &mut err);
+
+        assert!(a.take_flag(&short('a')));
+        assert!(a.take_flag(&short('b')));
+        assert!(a.take_flag(&short('c')));
+    }
+
+    #[test]
+    fn ambiguity_towards_argument() {
+        let args = Args::from(&["-abc"]);
+        let mut err = None;
+        let mut a = State::construct(args, &[], &['a'], &mut err);
+
+        let r = a.take_arg(&short('a'), false, M).unwrap().unwrap();
+        assert_eq!(r, "bc");
+    }
+
+    #[test]
+    fn ambiguity_towards_error() {
+        let args = Args::from(&["-abc"]);
+        let mut err = None;
+        let _a = State::construct(args, &['a', 'b', 'c'], &['a'], &mut err);
+        assert!(err.is_some());
+    }
+
+    #[test]
+    fn ambiguity_towards_default() {
+        // AKA unresolved
+        let a = State::from(&["-abc"]);
+        let is_ambig = matches!(a.peek(), Some(Arg::Word(_)));
+        assert!(is_ambig);
+    }
+}

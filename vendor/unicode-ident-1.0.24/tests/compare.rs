@@ -6,7 +6,7 @@ mod fst;
 mod roaring;
 mod trie;
 
-
+#[test]
 fn compare_all_implementations() {
     let xid_start_fst = fst::xid_start_fst();
     let xid_continue_fst = fst::xid_continue_fst();

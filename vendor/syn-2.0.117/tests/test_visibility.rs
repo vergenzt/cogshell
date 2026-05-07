@@ -53,47 +53,47 @@ macro_rules! assert_vis_parse {
     };
 }
 
-
+#[test]
 fn test_pub() {
     assert_vis_parse!("pub", Ok(Visibility::Public(_)));
 }
 
-
+#[test]
 fn test_inherited() {
     assert_vis_parse!("", Ok(Visibility::Inherited));
 }
 
-
+#[test]
 fn test_in() {
     assert_vis_parse!("pub(in foo::bar)", Ok(Visibility::Restricted(_)));
 }
 
-
+#[test]
 fn test_pub_crate() {
     assert_vis_parse!("pub(crate)", Ok(Visibility::Restricted(_)));
 }
 
-
+#[test]
 fn test_pub_self() {
     assert_vis_parse!("pub(self)", Ok(Visibility::Restricted(_)));
 }
 
-
+#[test]
 fn test_pub_super() {
     assert_vis_parse!("pub(super)", Ok(Visibility::Restricted(_)));
 }
 
-
+#[test]
 fn test_missing_in() {
     assert_vis_parse!("pub(foo::bar)", Ok(Visibility::Public(_)) + "(foo::bar)");
 }
 
-
+#[test]
 fn test_missing_in_path() {
     assert_vis_parse!("pub(in)", Err);
 }
 
-
+#[test]
 fn test_crate_path() {
     assert_vis_parse!(
         "pub(crate::A, crate::B)",
@@ -101,12 +101,12 @@ fn test_crate_path() {
     );
 }
 
-
+#[test]
 fn test_junk_after_in() {
     assert_vis_parse!("pub(in some::path @@garbage)", Err);
 }
 
-
+#[test]
 fn test_inherited_vis_named_field() {
     // mimics `struct S { $vis $field: () }` where $vis is empty
     let tokens = TokenStream::from_iter([
@@ -144,7 +144,7 @@ fn test_inherited_vis_named_field() {
     "#);
 }
 
-
+#[test]
 fn test_inherited_vis_unnamed_field() {
     // mimics `struct S($vis $ty);` where $vis is empty
     let tokens = TokenStream::from_iter([

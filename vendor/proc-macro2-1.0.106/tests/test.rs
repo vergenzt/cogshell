@@ -13,7 +13,7 @@ use std::ffi::CStr;
 use std::iter;
 use std::str::{self, FromStr};
 
-
+#[test]
 fn idents() {
     assert_eq!(
         Ident::new("String", Span::call_site()).to_string(),
@@ -23,7 +23,7 @@ fn idents() {
     assert_eq!(Ident::new("_", Span::call_site()).to_string(), "_");
 }
 
-
+#[test]
 fn raw_idents() {
     assert_eq!(
         Ident::new_raw("String", Span::call_site()).to_string(),
@@ -32,73 +32,73 @@ fn raw_idents() {
     assert_eq!(Ident::new_raw("fn", Span::call_site()).to_string(), "r#fn");
 }
 
-
+#[test]
 #[should_panic(expected = "`r#_` cannot be a raw identifier")]
 fn ident_raw_underscore() {
     Ident::new_raw("_", Span::call_site());
 }
 
-
+#[test]
 #[should_panic(expected = "`r#super` cannot be a raw identifier")]
 fn ident_raw_reserved() {
     Ident::new_raw("super", Span::call_site());
 }
 
-
+#[test]
 #[should_panic(expected = "Ident is not allowed to be empty; use Option<Ident>")]
 fn ident_empty() {
     Ident::new("", Span::call_site());
 }
 
-
+#[test]
 #[should_panic(expected = "Ident cannot be a number; use Literal instead")]
 fn ident_number() {
     Ident::new("255", Span::call_site());
 }
 
-
+#[test]
 #[should_panic(expected = "\"a#\" is not a valid Ident")]
 fn ident_invalid() {
     Ident::new("a#", Span::call_site());
 }
 
-
+#[test]
 #[should_panic(expected = "not a valid Ident")]
 fn raw_ident_empty() {
     Ident::new("r#", Span::call_site());
 }
 
-
+#[test]
 #[should_panic(expected = "not a valid Ident")]
 fn raw_ident_number() {
     Ident::new("r#255", Span::call_site());
 }
 
-
+#[test]
 #[should_panic(expected = "\"r#a#\" is not a valid Ident")]
 fn raw_ident_invalid() {
     Ident::new("r#a#", Span::call_site());
 }
 
-
+#[test]
 #[should_panic(expected = "not a valid Ident")]
 fn lifetime_empty() {
     Ident::new("'", Span::call_site());
 }
 
-
+#[test]
 #[should_panic(expected = "not a valid Ident")]
 fn lifetime_number() {
     Ident::new("'255", Span::call_site());
 }
 
-
+#[test]
 #[should_panic(expected = r#""'a#" is not a valid Ident"#)]
 fn lifetime_invalid() {
     Ident::new("'a#", Span::call_site());
 }
 
-
+#[test]
 fn literal_string() {
     #[track_caller]
     fn assert(literal: Literal, expected: &str) {
@@ -122,7 +122,7 @@ fn literal_string() {
     "\"\\\r\n  \rx\"".parse::<TokenStream>().unwrap_err();
 }
 
-
+#[test]
 fn literal_raw_string() {
     "r\"\r\n\"".parse::<TokenStream>().unwrap();
 
@@ -147,7 +147,7 @@ fn literal_raw_string() {
 }
 
 #[cfg(procmacro2_semver_exempt)]
-
+#[test]
 fn literal_string_value() {
     for string in ["", "...", "...\t...", "...\\...", "...\0...", "...\u{1}..."] {
         assert_eq!(string, Literal::string(string).str_value().unwrap());
@@ -170,7 +170,7 @@ fn literal_string_value() {
     }
 }
 
-
+#[test]
 fn literal_byte_character() {
     #[track_caller]
     fn assert(literal: Literal, expected: &str) {
@@ -188,7 +188,7 @@ fn literal_byte_character() {
     assert(Literal::byte_character(b'"'), r#"  b'"'  "#);
 }
 
-
+#[test]
 fn literal_byte_string() {
     #[track_caller]
     fn assert(literal: Literal, expected: &str) {
@@ -216,7 +216,7 @@ fn literal_byte_string() {
 }
 
 #[cfg(procmacro2_semver_exempt)]
-
+#[test]
 fn literal_byte_string_value() {
     for bytestr in [
         &b""[..],
@@ -251,7 +251,7 @@ fn literal_byte_string_value() {
     }
 }
 
-
+#[test]
 fn literal_c_string() {
     #[track_caller]
     fn assert(literal: Literal, expected: &str) {
@@ -323,7 +323,7 @@ fn literal_c_string() {
 }
 
 #[cfg(procmacro2_semver_exempt)]
-
+#[test]
 fn literal_c_string_value() {
     for cstr in [
         c"",
@@ -358,7 +358,7 @@ fn literal_c_string_value() {
     }
 }
 
-
+#[test]
 fn literal_character() {
     #[track_caller]
     fn assert(literal: Literal, expected: &str) {
@@ -374,7 +374,7 @@ fn literal_character() {
     assert(Literal::character('\u{1}'), r#"  '\u{1}'  "#);
 }
 
-
+#[test]
 fn literal_integer() {
     #[track_caller]
     fn assert(literal: Literal, expected: &str) {
@@ -413,7 +413,7 @@ fn literal_integer() {
     assert(Literal::i32_unsuffixed(-10), "-10");
 }
 
-
+#[test]
 fn literal_float() {
     #[track_caller]
     fn assert(literal: Literal, expected: &str) {
@@ -436,7 +436,7 @@ fn literal_float() {
     );
 }
 
-
+#[test]
 fn literal_suffix() {
     fn token_count(p: &str) -> usize {
         p.parse::<TokenStream>().unwrap().into_iter().count()
@@ -466,7 +466,7 @@ fn literal_suffix() {
     assert_eq!(token_count("0.0ECMA"), 1);
 }
 
-
+#[test]
 fn literal_iter_negative() {
     let negative_literal = Literal::i32_suffixed(-3);
     let tokens = TokenStream::from(TokenTree::Literal(negative_literal));
@@ -487,7 +487,7 @@ fn literal_iter_negative() {
     assert!(iter.next().is_none());
 }
 
-
+#[test]
 fn literal_parse() {
     assert!("1".parse::<Literal>().is_ok());
     assert!("-1".parse::<Literal>().is_ok());
@@ -508,7 +508,7 @@ fn literal_parse() {
     assert!("-\"\"".parse::<Literal>().is_err());
 }
 
-
+#[test]
 fn literal_span() {
     let positive = "0.1".parse::<Literal>().unwrap();
     let negative = "-0.1".parse::<Literal>().unwrap();
@@ -533,7 +533,7 @@ fn literal_span() {
 }
 
 #[cfg(span_locations)]
-
+#[test]
 fn source_text() {
     let input = "    𓀕 a z    ";
     let mut tokens = input
@@ -550,7 +550,7 @@ fn source_text() {
     assert_eq!("a", second.span().source_text().unwrap());
 }
 
-
+#[test]
 fn lifetimes() {
     let mut tokens = "'a 'static 'struct 'r#gen 'r#prefix#lifetime"
         .parse::<TokenStream>()
@@ -625,7 +625,7 @@ fn lifetimes() {
     "'r#gen'a".parse::<TokenStream>().unwrap_err();
 }
 
-
+#[test]
 fn roundtrip() {
     fn roundtrip(p: &str) {
         println!("parse: {}", p);
@@ -664,7 +664,7 @@ fn roundtrip() {
     roundtrip("\"\\u{10_F0FF__}foo\\u{1_0_0_0__}\"");
 }
 
-
+#[test]
 fn fail() {
     fn fail(p: &str) {
         if let Ok(s) = p.parse::<TokenStream>() {
@@ -688,7 +688,7 @@ fn fail() {
 }
 
 #[cfg(span_locations)]
-
+#[test]
 fn span_test() {
     check_spans(
         "\
@@ -713,7 +713,7 @@ testing 123
 }
 
 #[cfg(procmacro2_semver_exempt)]
-
+#[test]
 fn default_span() {
     let start = Span::call_site().start();
     assert_eq!(start.line, 1);
@@ -726,7 +726,7 @@ fn default_span() {
 }
 
 #[cfg(procmacro2_semver_exempt)]
-
+#[test]
 fn span_join() {
     let source1 = "aaa\nbbb"
         .parse::<TokenStream>()
@@ -757,13 +757,13 @@ fn span_join() {
     assert_eq!(joined1.unwrap().file(), source1[0].span().file());
 }
 
-
+#[test]
 fn no_panic() {
     let s = str::from_utf8(b"b\'\xc2\x86  \x00\x00\x00^\"").unwrap();
     assert!(s.parse::<TokenStream>().is_err());
 }
 
-
+#[test]
 fn punct_before_comment() {
     let mut tts = TokenStream::from_str("~// comment").unwrap().into_iter();
     match tts.next().unwrap() {
@@ -775,7 +775,7 @@ fn punct_before_comment() {
     }
 }
 
-
+#[test]
 fn joint_last_token() {
     // This test verifies that we match the behavior of libproc_macro *not* in
     // the range nightly-2020-09-06 through nightly-2020-09-10, in which this
@@ -790,7 +790,7 @@ fn joint_last_token() {
     assert_eq!(punct.spacing(), Spacing::Joint);
 }
 
-
+#[test]
 fn raw_identifier() {
     let mut tts = TokenStream::from_str("r#dyn").unwrap().into_iter();
     match tts.next().unwrap() {
@@ -800,7 +800,7 @@ fn raw_identifier() {
     assert!(tts.next().is_none());
 }
 
-
+#[test]
 fn test_display_ident() {
     let ident = Ident::new("proc_macro", Span::call_site());
     assert_eq!(format!("{ident}"), "proc_macro");
@@ -811,7 +811,7 @@ fn test_display_ident() {
     assert_eq!(format!("{ident:-^14}"), "r#proc_macro");
 }
 
-
+#[test]
 fn test_debug_ident() {
     let ident = Ident::new("proc_macro", Span::call_site());
     let expected = if cfg!(span_locations) {
@@ -830,14 +830,14 @@ fn test_debug_ident() {
     assert_eq!(expected, format!("{:?}", ident));
 }
 
-
+#[test]
 fn test_display_tokenstream() {
     let tts = TokenStream::from_str("[a + 1]").unwrap();
     assert_eq!(format!("{tts}"), "[a + 1]");
     assert_eq!(format!("{tts:-^5}"), "[a + 1]");
 }
 
-
+#[test]
 fn test_debug_tokenstream() {
     let tts = TokenStream::from_str("[a + 1]").unwrap();
 
@@ -941,21 +941,21 @@ TokenStream [
     }
 }
 
-
+#[test]
 fn default_tokenstream_is_empty() {
     let default_token_stream = <TokenStream as Default>::default();
 
     assert!(default_token_stream.is_empty());
 }
 
-
+#[test]
 fn tokenstream_size_hint() {
     let tokens = "a b (c d) e".parse::<TokenStream>().unwrap();
 
     assert_eq!(tokens.into_iter().size_hint(), (4, Some(4)));
 }
 
-
+#[test]
 fn tuple_indexing() {
     // This behavior may change depending on https://github.com/rust-lang/rust/pull/71322
     let mut tokens = "tuple.0.0".parse::<TokenStream>().unwrap().into_iter();
@@ -966,7 +966,7 @@ fn tuple_indexing() {
 }
 
 #[cfg(span_locations)]
-
+#[test]
 fn non_ascii_tokens() {
     check_spans("// abc", &[]);
     check_spans("// ábc", &[]);
@@ -1031,7 +1031,7 @@ fn check_spans_internal(ts: TokenStream, lines: &mut &[(usize, usize, usize, usi
     }
 }
 
-
+#[test]
 fn whitespace() {
     // space, horizontal tab, vertical tab, form feed, carriage return, line
     // feed, non-breaking space, left-to-right mark, right-to-left mark
@@ -1043,7 +1043,7 @@ fn whitespace() {
     lone_carriage_returns.parse::<TokenStream>().unwrap();
 }
 
-
+#[test]
 fn byte_order_mark() {
     let string = "\u{feff}foo";
     let tokens = string.parse::<TokenStream>().unwrap();
@@ -1066,7 +1066,7 @@ fn create_span() -> proc_macro2::Span {
 }
 
 #[cfg(span_locations)]
-
+#[test]
 fn test_invalidate_current_thread_spans() {
     let actual = format!("{:#?}", create_span());
     assert_eq!(actual, "bytes(1..2)");
@@ -1082,7 +1082,7 @@ fn test_invalidate_current_thread_spans() {
 }
 
 #[cfg(span_locations)]
-
+#[test]
 #[should_panic(expected = "Invalid span with no related FileInfo!")]
 fn test_use_span_after_invalidation() {
     let span = create_span();

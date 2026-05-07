@@ -1356,4 +1356,58 @@ impl Default for Stability {
     }
 }
 
+#[cfg(test)]
+mod test {
+    use super::*;
 
+    #[test]
+    fn test_discriminant_type() {
+        assert_eq!(discriminant_type(1), Int::U8);
+        assert_eq!(discriminant_type(0x100), Int::U8);
+        assert_eq!(discriminant_type(0x101), Int::U16);
+        assert_eq!(discriminant_type(0x10000), Int::U16);
+        assert_eq!(discriminant_type(0x10001), Int::U32);
+        if let Ok(num_cases) = usize::try_from(0x100000000_u64) {
+            assert_eq!(discriminant_type(num_cases), Int::U32);
+        }
+    }
+
+    #[test]
+    fn test_find_futures_and_streams() {
+        let mut resolve = Resolve::default();
+        let t0 = resolve.types.alloc(TypeDef {
+            name: None,
+            kind: TypeDefKind::Future(Some(Type::U32)),
+            owner: TypeOwner::None,
+            docs: Docs::default(),
+            stability: Stability::Unknown,
+        });
+        let t1 = resolve.types.alloc(TypeDef {
+            name: None,
+            kind: TypeDefKind::Future(Some(Type::Id(t0))),
+            owner: TypeOwner::None,
+            docs: Docs::default(),
+            stability: Stability::Unknown,
+        });
+        let t2 = resolve.types.alloc(TypeDef {
+            name: None,
+            kind: TypeDefKind::Stream(Some(Type::U32)),
+            owner: TypeOwner::None,
+            docs: Docs::default(),
+            stability: Stability::Unknown,
+        });
+        let found = Function {
+            name: "foo".into(),
+            kind: FunctionKind::Freestanding,
+            params: vec![("p1".into(), Type::Id(t1)), ("p2".into(), Type::U32)],
+            result: Some(Type::Id(t2)),
+            docs: Docs::default(),
+            stability: Stability::Unknown,
+        }
+        .find_futures_and_streams(&resolve);
+        assert_eq!(3, found.len());
+        assert_eq!(t0, found[0]);
+        assert_eq!(t1, found[1]);
+        assert_eq!(t2, found[2]);
+    }
+}

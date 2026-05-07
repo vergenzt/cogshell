@@ -18,7 +18,7 @@ fn configure_wasi_temp_dir() {
     }
 }
 
-
+#[test]
 fn test_prefix() {
     configure_wasi_temp_dir();
 
@@ -27,7 +27,7 @@ fn test_prefix() {
     assert!(name.starts_with("prefix"));
 }
 
-
+#[test]
 fn test_suffix() {
     configure_wasi_temp_dir();
 
@@ -36,7 +36,7 @@ fn test_suffix() {
     assert!(name.ends_with("suffix"));
 }
 
-
+#[test]
 fn test_basic() {
     configure_wasi_temp_dir();
 
@@ -48,7 +48,7 @@ fn test_basic() {
     assert_eq!("abcde", buf);
 }
 
-
+#[test]
 fn test_deleted() {
     configure_wasi_temp_dir();
 
@@ -59,7 +59,7 @@ fn test_deleted() {
     assert!(!exists(&path));
 }
 
-
+#[test]
 fn test_persist() {
     configure_wasi_temp_dir();
 
@@ -90,7 +90,7 @@ fn test_persist() {
     std::fs::remove_file(&persist_path).unwrap();
 }
 
-
+#[test]
 fn test_persist_noclobber() {
     configure_wasi_temp_dir();
 
@@ -116,7 +116,7 @@ fn test_persist_noclobber() {
     std::fs::remove_file(&persist_path).unwrap();
 }
 
-
+#[test]
 fn test_customnamed() {
     configure_wasi_temp_dir();
 
@@ -132,7 +132,7 @@ fn test_customnamed() {
     assert_eq!(name.len(), 18);
 }
 
-
+#[test]
 fn test_append() {
     configure_wasi_temp_dir();
 
@@ -147,7 +147,7 @@ fn test_append() {
     assert_eq!(buf, b"a");
 }
 
-
+#[test]
 fn test_reopen() {
     configure_wasi_temp_dir();
 
@@ -162,7 +162,7 @@ fn test_reopen() {
     assert_eq!("abcde", buf);
 }
 
-
+#[test]
 fn test_into_file() {
     configure_wasi_temp_dir();
 
@@ -180,7 +180,7 @@ fn test_into_file() {
     assert_eq!("abcde", buf);
 }
 
-
+#[test]
 fn test_immut() {
     configure_wasi_temp_dir();
 
@@ -192,7 +192,7 @@ fn test_immut() {
     assert_eq!("abcde", buf);
 }
 
-
+#[test]
 fn test_temppath() {
     configure_wasi_temp_dir();
 
@@ -203,7 +203,7 @@ fn test_temppath() {
     assert!(path.is_file());
 }
 
-
+#[test]
 fn test_temppath_persist() {
     configure_wasi_temp_dir();
 
@@ -233,7 +233,7 @@ fn test_temppath_persist() {
     std::fs::remove_file(&persist_path).unwrap();
 }
 
-
+#[test]
 fn test_temppath_persist_noclobber() {
     configure_wasi_temp_dir();
 
@@ -266,7 +266,7 @@ fn test_temppath_persist_noclobber() {
     std::fs::remove_file(&persist_path).unwrap();
 }
 
-
+#[test]
 fn temp_path_from_existing() {
     configure_wasi_temp_dir();
 
@@ -297,7 +297,7 @@ fn temp_path_from_existing() {
     );
 }
 
-
+#[test]
 #[allow(unreachable_code)]
 fn temp_path_from_argument_types() {
     // This just has to compile
@@ -312,7 +312,7 @@ fn temp_path_from_argument_types() {
     TempPath::from_path(PathBuf::new().into_boxed_path());
 }
 
-
+#[test]
 fn test_write_after_close() {
     configure_wasi_temp_dir();
 
@@ -320,7 +320,7 @@ fn test_write_after_close() {
     File::create(path).unwrap().write_all(b"test").unwrap();
 }
 
-
+#[test]
 fn test_change_dir() {
     configure_wasi_temp_dir();
 
@@ -338,7 +338,7 @@ fn test_change_dir() {
     drop(dir_b);
 }
 
-
+#[test]
 fn test_change_dir_make() {
     configure_wasi_temp_dir();
 
@@ -356,7 +356,7 @@ fn test_change_dir_make() {
     drop(dir_b);
 }
 
-
+#[test]
 fn test_into_parts() {
     configure_wasi_temp_dir();
 
@@ -379,7 +379,7 @@ fn test_into_parts() {
     assert_eq!("abcdefgh", buf);
 }
 
-
+#[test]
 fn test_from_parts() {
     configure_wasi_temp_dir();
 
@@ -393,7 +393,7 @@ fn test_from_parts() {
     assert!(file.path().exists());
 }
 
-
+#[test]
 fn test_keep() {
     configure_wasi_temp_dir();
 
@@ -424,7 +424,7 @@ fn test_keep() {
     std::fs::remove_file(&path).unwrap();
 }
 
-
+#[test]
 fn test_disable_cleanup() {
     configure_wasi_temp_dir();
 
@@ -461,7 +461,7 @@ fn test_disable_cleanup() {
     }
 }
 
-
+#[test]
 fn test_make() {
     configure_wasi_temp_dir();
 
@@ -470,7 +470,7 @@ fn test_make() {
     assert!(tmpfile.path().is_file());
 }
 
-
+#[test]
 fn test_make_in() {
     configure_wasi_temp_dir();
 
@@ -484,7 +484,7 @@ fn test_make_in() {
     assert_eq!(tmpfile.path().parent(), Some(tmp_dir.path()));
 }
 
-
+#[test]
 fn test_make_fnmut() {
     configure_wasi_temp_dir();
 
@@ -502,7 +502,7 @@ fn test_make_fnmut() {
 }
 
 #[cfg(unix)]
-
+#[test]
 fn test_make_uds() {
     use std::os::unix::net::UnixListener;
 
@@ -517,7 +517,7 @@ fn test_make_uds() {
 }
 
 #[cfg(unix)]
-
+#[test]
 fn test_make_uds_conflict() {
     use std::io::ErrorKind;
     use std::os::unix::net::UnixListener;
@@ -552,7 +552,7 @@ fn test_make_uds_conflict() {
 }
 
 /// Make sure we re-seed with system randomness if we run into a conflict.
-
+#[test]
 fn test_reseed() {
     configure_wasi_temp_dir();
 
@@ -596,7 +596,7 @@ fn test_reseed() {
 }
 
 // Issue #224.
-
+#[test]
 fn test_overly_generic_bounds() {
     pub struct Foo<T>(T);
 

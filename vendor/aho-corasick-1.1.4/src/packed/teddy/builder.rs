@@ -347,7 +347,7 @@ impl Searcher {
     #[inline(always)]
     pub(crate) fn find(
         &self,
-        haystack: &[u8],
+        haystack: &str,
         at: usize,
     ) -> Option<crate::Match> {
         // SAFETY: The Teddy implementations all require a minimum haystack
@@ -423,7 +423,7 @@ trait SearcherT:
     ///
     /// Essentially, the `start` and `end` pointers must be valid and point
     /// to a haystack one can read. As long as you derive them from, for
-    /// example, a `&[u8]`, they should automatically satisfy all of the safety
+    /// example, a `&str`, they should automatically satisfy all of the safety
     /// obligations:
     ///
     /// * Both `start` and `end` must be valid for reads.

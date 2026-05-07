@@ -605,7 +605,7 @@ impl fmt::Display for Error {
     }
 }
 
-
+#[test]
 fn test_validate_id() {
     validate_id(0, "apple").unwrap();
     validate_id(0, "apple-pear").unwrap();
@@ -665,7 +665,7 @@ fn test_validate_id() {
     assert!(validate_id(0, "\u{212b}").is_err(), "non-ascii");
 }
 
-
+#[test]
 fn test_tokenizer() {
     fn collect(s: &str) -> Result<Vec<Token>> {
         let mut t = Tokenizer::new(s, 0, None)?;

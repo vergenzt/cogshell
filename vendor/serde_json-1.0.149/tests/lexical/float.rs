@@ -18,7 +18,7 @@ fn check_normalize(mant: u64, exp: i32, shift: u32, r_mant: u64, r_exp: i32) {
     );
 }
 
-
+#[test]
 fn normalize_test() {
     // F32
     // 0
@@ -95,7 +95,7 @@ fn check_round_to_f32(mant: u64, exp: i32, r_mant: u64, r_exp: i32) {
     );
 }
 
-
+#[test]
 fn round_to_f32_test() {
     // This is lossy, so some of these values are **slightly** rounded.
 
@@ -136,7 +136,7 @@ fn check_round_to_f64(mant: u64, exp: i32, r_mant: u64, r_exp: i32) {
     );
 }
 
-
+#[test]
 fn round_to_f64_test() {
     // This is lossy, so some of these values are **slightly** rounded.
 
@@ -190,7 +190,7 @@ fn assert_normalized_eq(mut x: ExtendedFloat, mut y: ExtendedFloat) {
     assert_eq!(x, y);
 }
 
-
+#[test]
 fn from_float() {
     let values: [f32; 26] = [
         1e-40, 2e-40, 1e-35, 2e-35, 1e-30, 2e-30, 1e-25, 2e-25, 1e-20, 2e-20, 1e-15, 2e-15, 1e-10,
@@ -242,7 +242,7 @@ const INTEGERS: [u64; 32] = [
     18446744073709551615, // 0xFFFFFFFFFFFFFFFF
 ];
 
-
+#[test]
 fn to_f32_test() {
     // underflow
     let x = ExtendedFloat {
@@ -328,7 +328,7 @@ fn to_f32_test() {
     }
 }
 
-
+#[test]
 fn to_f64_test() {
     // underflow
     let x = ExtendedFloat {
@@ -476,7 +476,7 @@ fn check_mul(a: ExtendedFloat, b: ExtendedFloat, c: ExtendedFloat) {
     assert_eq!(r, c);
 }
 
-
+#[test]
 fn mul_test() {
     // Normalized (64-bit mantissa)
     let a = ExtendedFloat {
@@ -529,7 +529,7 @@ fn check_imul(mut a: ExtendedFloat, b: ExtendedFloat, c: ExtendedFloat) {
     assert_eq!(a, c);
 }
 
-
+#[test]
 fn imul_test() {
     // Normalized (64-bit mantissa)
     let a = ExtendedFloat {

@@ -15,7 +15,7 @@ mod debug;
 use quote::quote;
 use syn::{Data, DeriveInput};
 
-
+#[test]
 fn test_unit() {
     let input = quote! {
         struct Unit;
@@ -34,7 +34,7 @@ fn test_unit() {
     "#);
 }
 
-
+#[test]
 fn test_struct() {
     let input = quote! {
         #[derive(Debug, Clone)]
@@ -131,7 +131,7 @@ fn test_struct() {
     "#);
 }
 
-
+#[test]
 fn test_union() {
     let input = quote! {
         union MaybeUninit<T> {
@@ -184,7 +184,7 @@ fn test_union() {
     "#);
 }
 
-
+#[test]
 #[cfg(feature = "full")]
 fn test_enum() {
     let input = quote! {
@@ -347,7 +347,7 @@ fn test_enum() {
     "#);
 }
 
-
+#[test]
 fn test_attr_with_non_mod_style_path() {
     let input = quote! {
         #[inert <T>]
@@ -357,7 +357,7 @@ fn test_attr_with_non_mod_style_path() {
     syn::parse2::<DeriveInput>(input).unwrap_err();
 }
 
-
+#[test]
 fn test_attr_with_mod_style_path_with_self() {
     let input = quote! {
         #[foo::self]
@@ -407,7 +407,7 @@ fn test_attr_with_mod_style_path_with_self() {
     "#);
 }
 
-
+#[test]
 fn test_pub_restricted() {
     // Taken from tests/rust/src/test/ui/resolve/auxiliary/privacy-struct-ctor.rs
     let input = quote! {
@@ -464,7 +464,7 @@ fn test_pub_restricted() {
     "#);
 }
 
-
+#[test]
 fn test_pub_restricted_crate() {
     let input = quote! {
         pub(crate) struct S;
@@ -491,7 +491,7 @@ fn test_pub_restricted_crate() {
     "#);
 }
 
-
+#[test]
 fn test_pub_restricted_super() {
     let input = quote! {
         pub(super) struct S;
@@ -518,7 +518,7 @@ fn test_pub_restricted_super() {
     "#);
 }
 
-
+#[test]
 fn test_pub_restricted_in_super() {
     let input = quote! {
         pub(in super) struct S;
@@ -546,7 +546,7 @@ fn test_pub_restricted_in_super() {
     "#);
 }
 
-
+#[test]
 fn test_fields_on_unit_struct() {
     let input = quote! {
         struct S;
@@ -572,7 +572,7 @@ fn test_fields_on_unit_struct() {
     assert_eq!(0, data.fields.iter().count());
 }
 
-
+#[test]
 fn test_fields_on_named_struct() {
     let input = quote! {
         struct S {
@@ -664,7 +664,7 @@ fn test_fields_on_named_struct() {
     "#);
 }
 
-
+#[test]
 fn test_fields_on_tuple_struct() {
     let input = quote! {
         struct S(i32, pub String);
@@ -745,7 +745,7 @@ fn test_fields_on_tuple_struct() {
     "#);
 }
 
-
+#[test]
 fn test_ambiguous_crate() {
     let input = quote! {
         // The field type is `(crate::X)` not `crate (::X)`.

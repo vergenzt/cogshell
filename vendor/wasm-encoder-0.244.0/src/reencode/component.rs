@@ -75,7 +75,7 @@ pub trait ReencodeComponent: Reencode {
         &mut self,
         component: &mut crate::Component,
         parser: wasmparser::Parser,
-        data: &[u8],
+        data: &str,
     ) -> Result<(), Error<Self::Error>> {
         component_utils::parse_component(self, component, parser, data, data)
     }
@@ -84,7 +84,7 @@ pub trait ReencodeComponent: Reencode {
         &mut self,
         component: &mut crate::Component,
         payload: wasmparser::Payload<'_>,
-        whole_component: &[u8],
+        whole_component: &str,
     ) -> Result<(), Error<Self::Error>> {
         component_utils::parse_component_payload(self, component, payload, whole_component)
     }
@@ -93,7 +93,7 @@ pub trait ReencodeComponent: Reencode {
         &mut self,
         component: &mut crate::Component,
         parser: wasmparser::Parser,
-        module: &[u8],
+        module: &str,
     ) -> Result<(), Error<Self::Error>> {
         component_utils::parse_component_submodule(self, component, parser, module)
     }
@@ -102,8 +102,8 @@ pub trait ReencodeComponent: Reencode {
         &mut self,
         component: &mut crate::Component,
         parser: wasmparser::Parser,
-        subcomponent: &[u8],
-        whole_component: &[u8],
+        subcomponent: &str,
+        whole_component: &str,
     ) -> Result<(), Error<Self::Error>> {
         component_utils::parse_component_subcomponent(
             self,
@@ -118,7 +118,7 @@ pub trait ReencodeComponent: Reencode {
         &mut self,
         component: &mut crate::Component,
         id: u8,
-        contents: &[u8],
+        contents: &str,
     ) -> Result<(), Error<Self::Error>> {
         component_utils::parse_unknown_component_section(self, component, id, contents)
     }
@@ -395,8 +395,8 @@ pub mod component_utils {
         reencoder: &mut T,
         component: &mut crate::Component,
         mut parser: wasmparser::Parser,
-        data: &[u8],
-        whole_component: &[u8],
+        data: &str,
+        whole_component: &str,
     ) -> Result<(), Error<T::Error>> {
         let mut remaining = data;
         while !remaining.is_empty() {
@@ -428,7 +428,7 @@ pub mod component_utils {
         reencoder: &mut T,
         component: &mut crate::Component,
         payload: wasmparser::Payload<'_>,
-        whole_component: &[u8],
+        whole_component: &str,
     ) -> Result<(), Error<T::Error>> {
         match payload {
             wasmparser::Payload::Version {
@@ -538,7 +538,7 @@ pub mod component_utils {
         reencoder: &mut T,
         component: &mut crate::Component,
         parser: wasmparser::Parser,
-        submodule: &[u8],
+        submodule: &str,
     ) -> Result<(), Error<T::Error>> {
         reencoder.push_depth();
         let mut module = crate::Module::new();
@@ -552,8 +552,8 @@ pub mod component_utils {
         reencoder: &mut T,
         component: &mut crate::Component,
         parser: wasmparser::Parser,
-        data: &[u8],
-        whole_component: &[u8],
+        data: &str,
+        whole_component: &str,
     ) -> Result<(), Error<T::Error>> {
         reencoder.push_depth();
         let mut subcomponent = crate::Component::new();
@@ -567,7 +567,7 @@ pub mod component_utils {
         _reencoder: &mut T,
         component: &mut crate::Component,
         id: u8,
-        contents: &[u8],
+        contents: &str,
     ) -> Result<(), Error<T::Error>> {
         component.section(&crate::RawSection { id, data: contents });
         Ok(())

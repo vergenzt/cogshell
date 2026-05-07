@@ -17,7 +17,7 @@ use super::EncoderWriter;
 const URL_SAFE_ENGINE: GeneralPurpose = GeneralPurpose::new(&URL_SAFE, PAD);
 const NO_PAD_ENGINE: GeneralPurpose = GeneralPurpose::new(&STANDARD, NO_PAD);
 
-
+#[test]
 fn encode_three_bytes() {
     let mut c = Cursor::new(Vec::new());
     {
@@ -29,7 +29,7 @@ fn encode_three_bytes() {
     assert_eq!(&c.get_ref()[..], URL_SAFE_ENGINE.encode("abc").as_bytes());
 }
 
-
+#[test]
 fn encode_nine_bytes_two_writes() {
     let mut c = Cursor::new(Vec::new());
     {
@@ -46,7 +46,7 @@ fn encode_nine_bytes_two_writes() {
     );
 }
 
-
+#[test]
 fn encode_one_then_two_bytes() {
     let mut c = Cursor::new(Vec::new());
     {
@@ -60,7 +60,7 @@ fn encode_one_then_two_bytes() {
     assert_eq!(&c.get_ref()[..], URL_SAFE_ENGINE.encode("abc").as_bytes());
 }
 
-
+#[test]
 fn encode_one_then_five_bytes() {
     let mut c = Cursor::new(Vec::new());
     {
@@ -77,7 +77,7 @@ fn encode_one_then_five_bytes() {
     );
 }
 
-
+#[test]
 fn encode_1_2_3_bytes() {
     let mut c = Cursor::new(Vec::new());
     {
@@ -96,7 +96,7 @@ fn encode_1_2_3_bytes() {
     );
 }
 
-
+#[test]
 fn encode_with_padding() {
     let mut c = Cursor::new(Vec::new());
     {
@@ -109,7 +109,7 @@ fn encode_with_padding() {
     assert_eq!(&c.get_ref()[..], URL_SAFE_ENGINE.encode("abcd").as_bytes());
 }
 
-
+#[test]
 fn encode_with_padding_multiple_writes() {
     let mut c = Cursor::new(Vec::new());
     {
@@ -128,7 +128,7 @@ fn encode_with_padding_multiple_writes() {
     );
 }
 
-
+#[test]
 fn finish_writes_extra_byte() {
     let mut c = Cursor::new(Vec::new());
     {
@@ -148,7 +148,7 @@ fn finish_writes_extra_byte() {
     );
 }
 
-
+#[test]
 fn write_partial_chunk_encodes_partial_chunk() {
     let mut c = Cursor::new(Vec::new());
     {
@@ -163,7 +163,7 @@ fn write_partial_chunk_encodes_partial_chunk() {
     assert_eq!(3, c.get_ref().len());
 }
 
-
+#[test]
 fn write_1_chunk_encodes_complete_chunk() {
     let mut c = Cursor::new(Vec::new());
     {
@@ -176,7 +176,7 @@ fn write_1_chunk_encodes_complete_chunk() {
     assert_eq!(4, c.get_ref().len());
 }
 
-
+#[test]
 fn write_1_chunk_and_partial_encodes_only_complete_chunk() {
     let mut c = Cursor::new(Vec::new());
     {
@@ -190,7 +190,7 @@ fn write_1_chunk_and_partial_encodes_only_complete_chunk() {
     assert_eq!(4, c.get_ref().len());
 }
 
-
+#[test]
 fn write_2_partials_to_exactly_complete_chunk_encodes_complete_chunk() {
     let mut c = Cursor::new(Vec::new());
     {
@@ -204,7 +204,7 @@ fn write_2_partials_to_exactly_complete_chunk_encodes_complete_chunk() {
     assert_eq!(4, c.get_ref().len());
 }
 
-
+#[test]
 fn write_partial_then_enough_to_complete_chunk_but_not_complete_another_chunk_encodes_complete_chunk_without_consuming_remaining(
 ) {
     let mut c = Cursor::new(Vec::new());
@@ -220,7 +220,7 @@ fn write_partial_then_enough_to_complete_chunk_but_not_complete_another_chunk_en
     assert_eq!(4, c.get_ref().len());
 }
 
-
+#[test]
 fn write_partial_then_enough_to_complete_chunk_and_another_chunk_encodes_complete_chunks() {
     let mut c = Cursor::new(Vec::new());
     {
@@ -235,7 +235,7 @@ fn write_partial_then_enough_to_complete_chunk_and_another_chunk_encodes_complet
     assert_eq!(8, c.get_ref().len());
 }
 
-
+#[test]
 fn write_partial_then_enough_to_complete_chunk_and_another_chunk_and_another_partial_chunk_encodes_only_complete_chunks(
 ) {
     let mut c = Cursor::new(Vec::new());
@@ -252,7 +252,7 @@ fn write_partial_then_enough_to_complete_chunk_and_another_chunk_and_another_par
     assert_eq!(8, c.get_ref().len());
 }
 
-
+#[test]
 fn drop_calls_finish_for_you() {
     let mut c = Cursor::new(Vec::new());
     {
@@ -263,7 +263,7 @@ fn drop_calls_finish_for_you() {
     assert_eq!(2, c.get_ref().len());
 }
 
-
+#[test]
 fn every_possible_split_of_input() {
     let mut rng = rand::thread_rng();
     let mut orig_data = Vec::<u8>::new();
@@ -295,18 +295,18 @@ fn every_possible_split_of_input() {
     }
 }
 
-
+#[test]
 fn encode_random_config_matches_normal_encode_reasonable_input_len() {
     // choose up to 2 * buf size, so ~half the time it'll use a full buffer
     do_encode_random_config_matches_normal_encode(super::encoder::BUF_SIZE * 2);
 }
 
-
+#[test]
 fn encode_random_config_matches_normal_encode_tiny_input_len() {
     do_encode_random_config_matches_normal_encode(10);
 }
 
-
+#[test]
 fn retrying_writes_that_error_with_interrupted_works() {
     let mut rng = rand::thread_rng();
     let mut orig_data = Vec::<u8>::new();
@@ -370,7 +370,7 @@ fn retrying_writes_that_error_with_interrupted_works() {
     }
 }
 
-
+#[test]
 fn writes_that_only_write_part_of_input_and_sometimes_interrupt_produce_correct_encoded_data() {
     let mut rng = rand::thread_rng();
     let mut orig_data = Vec::<u8>::new();
@@ -432,7 +432,7 @@ fn writes_that_only_write_part_of_input_and_sometimes_interrupt_produce_correct_
 }
 
 /// Retry writes until all the data is written or an error that isn't Interrupted is returned.
-fn retry_interrupted_write_all<W: Write>(w: &mut W, buf: &[u8]) -> io::Result<()> {
+fn retry_interrupted_write_all<W: Write>(w: &mut W, buf: &str) -> io::Result<()> {
     let mut bytes_consumed = 0;
 
     while bytes_consumed < buf.len() {
@@ -505,7 +505,7 @@ struct InterruptingWriter<'a, W: 'a + Write, R: 'a + Rng> {
 }
 
 impl<'a, W: Write, R: Rng> Write for InterruptingWriter<'a, W, R> {
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+    fn write(&mut self, buf: &str) -> io::Result<usize> {
         if self.rng.gen_range(0.0..1.0) <= self.fraction {
             return Err(io::Error::new(io::ErrorKind::Interrupted, "interrupted"));
         }
@@ -533,7 +533,7 @@ struct PartialInterruptingWriter<'a, W: 'a + Write, R: 'a + Rng> {
 }
 
 impl<'a, W: Write, R: Rng> Write for PartialInterruptingWriter<'a, W, R> {
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+    fn write(&mut self, buf: &str) -> io::Result<usize> {
         if self.rng.gen_range(0.0..1.0) > self.no_interrupt_fraction {
             return Err(io::Error::new(io::ErrorKind::Interrupted, "interrupted"));
         }

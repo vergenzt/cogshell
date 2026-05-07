@@ -6,7 +6,7 @@ use crate::lexical::rounding::*;
 
 // MASKS
 
-
+#[test]
 fn lower_n_mask_test() {
     assert_eq!(lower_n_mask(0u64), 0b0);
     assert_eq!(lower_n_mask(1u64), 0b1);
@@ -15,7 +15,7 @@ fn lower_n_mask_test() {
     assert_eq!(lower_n_mask(32u64), 0b11111111111111111111111111111111);
 }
 
-
+#[test]
 fn lower_n_halfway_test() {
     assert_eq!(lower_n_halfway(0u64), 0b0);
     assert_eq!(lower_n_halfway(1u64), 0b1);
@@ -24,7 +24,7 @@ fn lower_n_halfway_test() {
     assert_eq!(lower_n_halfway(32u64), 0b10000000000000000000000000000000);
 }
 
-
+#[test]
 fn nth_bit_test() {
     assert_eq!(nth_bit(0u64), 0b1);
     assert_eq!(nth_bit(1u64), 0b10);
@@ -33,7 +33,7 @@ fn nth_bit_test() {
     assert_eq!(nth_bit(31u64), 0b10000000000000000000000000000000);
 }
 
-
+#[test]
 fn internal_n_mask_test() {
     assert_eq!(internal_n_mask(1u64, 0u64), 0b0);
     assert_eq!(internal_n_mask(1u64, 1u64), 0b1);
@@ -49,7 +49,7 @@ fn internal_n_mask_test() {
 
 // NEAREST ROUNDING
 
-
+#[test]
 fn round_nearest_test() {
     // Check exactly halfway (b'1100000')
     let mut fp = ExtendedFloat { mant: 0x60, exp: 0 };
@@ -75,7 +75,7 @@ fn round_nearest_test() {
 
 // DIRECTED ROUNDING
 
-
+#[test]
 fn round_downward_test() {
     // b0000000
     let mut fp = ExtendedFloat { mant: 0x00, exp: 0 };
@@ -98,7 +98,7 @@ fn round_downward_test() {
     assert_eq!(fp.mant, 1);
 }
 
-
+#[test]
 fn round_nearest_tie_even_test() {
     // Check round-up, halfway
     let mut fp = ExtendedFloat { mant: 0x60, exp: 0 };
@@ -131,7 +131,7 @@ fn round_nearest_tie_even_test() {
 
 // HIGH-LEVEL
 
-
+#[test]
 fn round_to_float_test() {
     // Denormal
     let mut fp = ExtendedFloat {
@@ -195,7 +195,7 @@ fn round_to_float_test() {
     assert_eq!(fp.exp, -52);
 }
 
-
+#[test]
 fn avoid_overflow_test() {
     // Avoid overflow, fails by 1
     let mut fp = ExtendedFloat {
@@ -216,7 +216,7 @@ fn avoid_overflow_test() {
     assert_eq!(fp.exp, f64::MAX_EXPONENT - 1);
 }
 
-
+#[test]
 fn round_to_native_test() {
     // Overflow
     let mut fp = ExtendedFloat {

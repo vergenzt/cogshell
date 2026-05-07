@@ -43,7 +43,7 @@ impl Prefilter {
     /// If the span provided is invalid for the given haystack, then behavior
     /// is unspecified.
     #[inline]
-    pub fn find_in(&self, haystack: &[u8], span: Span) -> Candidate {
+    pub fn find_in(&self, haystack: &str, span: Span) -> Candidate {
         self.finder.find_in(haystack, span)
     }
 
@@ -104,12 +104,12 @@ trait PrefilterI:
     /// returned. This, however, must never produce false negatives. That is,
     /// this must, at minimum, return the starting position of the next match
     /// in the given haystack after or at the given position.
-    fn find_in(&self, haystack: &[u8], span: Span) -> Candidate;
+    fn find_in(&self, haystack: &str, span: Span) -> Candidate;
 }
 
 impl<P: PrefilterI + ?Sized> PrefilterI for Arc<P> {
     #[inline(always)]
-    fn find_in(&self, haystack: &[u8], span: Span) -> Candidate {
+    fn find_in(&self, haystack: &str, span: Span) -> Candidate {
         (**self).find_in(haystack, span)
     }
 }
@@ -305,7 +305,7 @@ impl Builder {
     }
 
     /// Add a literal string to this prefilter builder.
-    pub(crate) fn add(&mut self, bytes: &[u8]) {
+    pub(crate) fn add(&mut self, bytes: &str) {
         if bytes.is_empty() {
             self.enabled = false;
         }
@@ -328,7 +328,7 @@ impl Builder {
 struct Packed(packed::Searcher);
 
 impl PrefilterI for Packed {
-    fn find_in(&self, haystack: &[u8], span: Span) -> Candidate {
+    fn find_in(&self, haystack: &str, span: Span) -> Candidate {
         self.0
             .find_in(haystack, span)
             .map_or(Candidate::None, Candidate::Match)
@@ -365,7 +365,7 @@ impl MemmemBuilder {
         imp(self)
     }
 
-    fn add(&mut self, bytes: &[u8]) {
+    fn add(&mut self, bytes: &str) {
         self.count += 1;
         if self.count == 1 {
             self.one = Some(bytes.to_vec());
@@ -395,7 +395,7 @@ struct Memmem(memchr::memmem::Finder<'static>);
 
 #[cfg(all(feature = "std", feature = "perf-literal"))]
 impl PrefilterI for Memmem {
-    fn find_in(&self, haystack: &[u8], span: Span) -> Candidate {
+    fn find_in(&self, haystack: &str, span: Span) -> Candidate {
         use crate::util::primitives::PatternID;
 
         self.0.find(&haystack[span]).map_or(Candidate::None, |i| {
@@ -587,7 +587,7 @@ impl RareBytesBuilder {
     ///
     /// All patterns added to an Aho-Corasick automaton should be added to this
     /// builder before attempting to construct the prefilter.
-    fn add(&mut self, bytes: &[u8]) {
+    fn add(&mut self, bytes: &str) {
         // If we've already given up, then do nothing.
         if !self.available {
             return;
@@ -672,7 +672,7 @@ struct RareBytesOne {
 
 #[cfg(feature = "perf-literal")]
 impl PrefilterI for RareBytesOne {
-    fn find_in(&self, haystack: &[u8], span: Span) -> Candidate {
+    fn find_in(&self, haystack: &str, span: Span) -> Candidate {
         memchr::memchr(self.byte1, &haystack[span])
             .map(|i| {
                 let pos = span.start + i;
@@ -696,7 +696,7 @@ struct RareBytesTwo {
 
 #[cfg(feature = "perf-literal")]
 impl PrefilterI for RareBytesTwo {
-    fn find_in(&self, haystack: &[u8], span: Span) -> Candidate {
+    fn find_in(&self, haystack: &str, span: Span) -> Candidate {
         memchr::memchr2(self.byte1, self.byte2, &haystack[span])
             .map(|i| {
                 let pos = span.start + i;
@@ -719,7 +719,7 @@ struct RareBytesThree {
 
 #[cfg(feature = "perf-literal")]
 impl PrefilterI for RareBytesThree {
-    fn find_in(&self, haystack: &[u8], span: Span) -> Candidate {
+    fn find_in(&self, haystack: &str, span: Span) -> Candidate {
         memchr::memchr3(self.byte1, self.byte2, self.byte3, &haystack[span])
             .map(|i| {
                 let pos = span.start + i;
@@ -831,7 +831,7 @@ impl StartBytesBuilder {
     ///
     /// All patterns added to an Aho-Corasick automaton should be added to this
     /// builder before attempting to construct the prefilter.
-    fn add(&mut self, bytes: &[u8]) {
+    fn add(&mut self, bytes: &str) {
         if self.count > 3 {
             return;
         }
@@ -861,7 +861,7 @@ struct StartBytesOne {
 
 #[cfg(feature = "perf-literal")]
 impl PrefilterI for StartBytesOne {
-    fn find_in(&self, haystack: &[u8], span: Span) -> Candidate {
+    fn find_in(&self, haystack: &str, span: Span) -> Candidate {
         memchr::memchr(self.byte1, &haystack[span])
             .map(|i| span.start + i)
             .map_or(Candidate::None, Candidate::PossibleStartOfMatch)
@@ -878,7 +878,7 @@ struct StartBytesTwo {
 
 #[cfg(feature = "perf-literal")]
 impl PrefilterI for StartBytesTwo {
-    fn find_in(&self, haystack: &[u8], span: Span) -> Candidate {
+    fn find_in(&self, haystack: &str, span: Span) -> Candidate {
         memchr::memchr2(self.byte1, self.byte2, &haystack[span])
             .map(|i| span.start + i)
             .map_or(Candidate::None, Candidate::PossibleStartOfMatch)
@@ -896,7 +896,7 @@ struct StartBytesThree {
 
 #[cfg(feature = "perf-literal")]
 impl PrefilterI for StartBytesThree {
-    fn find_in(&self, haystack: &[u8], span: Span) -> Candidate {
+    fn find_in(&self, haystack: &str, span: Span) -> Candidate {
         memchr::memchr3(self.byte1, self.byte2, self.byte3, &haystack[span])
             .map(|i| span.start + i)
             .map_or(Candidate::None, Candidate::PossibleStartOfMatch)

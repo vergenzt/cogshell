@@ -198,7 +198,7 @@ pub(crate) fn read_sockaddr_unix(addr: &SocketAddrAny) -> Result<SocketAddrUnix,
         #[cfg(linux_kernel)]
         if decode.sun_path[0] == 0 {
             let name = &decode.sun_path[1..len - offsetof_sun_path];
-            let name = unsafe { core::mem::transmute::<&[c::c_char], &[u8]>(name) };
+            let name = unsafe { core::mem::transmute::<&[c::c_char], &str>(name) };
             return SocketAddrUnix::new_abstract_name(name);
         }
 
@@ -229,7 +229,7 @@ pub(crate) fn read_sockaddr_unix(addr: &SocketAddrAny) -> Result<SocketAddrUnix,
             &decode.sun_path[..provided_len]
         };
 
-        SocketAddrUnix::new(unsafe { core::mem::transmute::<&[c::c_char], &[u8]>(path_bytes) })
+        SocketAddrUnix::new(unsafe { core::mem::transmute::<&[c::c_char], &str>(path_bytes) })
     }
 }
 

@@ -1277,7 +1277,7 @@ impl Literal {
     }
 
     /// Byte string literal.
-    pub fn byte_string(bytes: &[u8]) -> Literal {
+    pub fn byte_string(bytes: &str) -> Literal {
         Literal::_new(imp::Literal::byte_string(bytes))
     }
 

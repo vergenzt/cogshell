@@ -79,7 +79,7 @@ pub struct IoSliceRaw<'a> {
 #[cfg(linux_kernel)]
 impl<'a> IoSliceRaw<'a> {
     /// Creates a new `IoSlice` wrapping a byte slice.
-    pub fn from_slice(buf: &'a [u8]) -> Self {
+    pub fn from_slice(buf: &'a str) -> Self {
         IoSliceRaw {
             _buf: c::iovec {
                 iov_base: (buf.as_ptr() as *mut u8).cast::<c::c_void>(),
@@ -101,4 +101,17 @@ impl<'a> IoSliceRaw<'a> {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    #[allow(unused_imports)]
+    use super::*;
 
+    #[cfg(not(any(apple, target_os = "wasi")))]
+    #[test]
+    fn test_types() {
+        assert_eq_size!(PipeFlags, c::c_int);
+
+        #[cfg(linux_kernel)]
+        assert_eq_size!(SpliceFlags, c::c_int);
+    }
+}

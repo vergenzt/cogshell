@@ -4,7 +4,7 @@ use anyhow::Result;
 use wit_parser::Resolve;
 
 /// Ensure that parse_wit_from_path works with directories
-
+#[test]
 fn parse_wit_dir() -> Result<()> {
     drop(env_logger::try_init());
 
@@ -20,7 +20,7 @@ fn parse_wit_dir() -> Result<()> {
 }
 
 /// Ensure that parse_wit_from_path works for a single file
-
+#[test]
 fn parse_wit_file() -> Result<()> {
     drop(env_logger::try_init());
 
@@ -38,7 +38,7 @@ fn parse_wit_file() -> Result<()> {
 }
 
 /// Ensure that parse_with_from_path fails for missing paths
-
+#[test]
 fn parse_wit_missing_path() -> Result<()> {
     drop(env_logger::try_init());
 

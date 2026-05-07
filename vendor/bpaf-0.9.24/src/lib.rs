@@ -185,7 +185,8 @@ mod meta_help;
 mod meta_youmean;
 pub mod params;
 mod structs;
-
+#[cfg(test)]
+mod tests;
 
 pub mod parsers {
     //! This module exposes parsers that accept further configuration with builder pattern

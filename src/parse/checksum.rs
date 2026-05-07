@@ -1,8 +1,7 @@
-use std::{bstr::ByteStr, sync::LazyLock};
+use std::sync::LazyLock;
 
 use base64::{Engine as _, prelude::BASE64_STANDARD};
-use hex::ToHex;
-use regex::bytes::Regex;
+use regex::Regex;
 
 #[derive(Copy, Clone, Debug)]
 pub enum ChecksumKind {
@@ -11,14 +10,14 @@ pub enum ChecksumKind {
 }
 
 impl ChecksumKind {
-    fn label(&self) -> &'static [u8] {
+    fn label(&self) -> &'static str {
         match self {
-            Self::Md5Hex => ByteStr::new(b"checksum"),
-            Self::Md5Base64Prefix10Chars => ByteStr::new(b"sum"),
+            Self::Md5Hex => "checksum",
+            Self::Md5Base64Prefix10Chars => "sum",
         }
     }
 
-    fn from_label(label: &[u8]) -> Option<ChecksumKind> {
+    fn from_label(label: &str) -> Option<ChecksumKind> {
         match label {
             l if l == Self::Md5Hex.label() => Some(Self::Md5Hex),
             l if l == Self::Md5Base64Prefix10Chars.label() => Some(Self::Md5Base64Prefix10Chars),
@@ -44,20 +43,20 @@ static CHECKSUM_RE: LazyLock<Regex> = LazyLock::new(|| {
 
 pub struct Checksum<'a> {
     kind: ChecksumKind,
-    hash: &'a [u8],
+    hash: &'a str,
 }
 
 impl<'a> Checksum<'a> {
     /// Search for an output hash suffix following a CogShell block, given the str starting immediately after output end mark
-    pub fn from_block_suffix(block_sfx: &'a [u8]) -> Option<Checksum<'a>> {
+    pub fn from_block_suffix(block_sfx: &'a str) -> Option<Checksum<'a>> {
         let caps = CHECKSUM_RE.captures(block_sfx)?;
-        let kind = ChecksumKind::from_label(ByteStr::new(caps.name("kind")?.as_bytes()))?;
-        let hash = ByteStr::new(caps.name("hash")?.as_bytes());
+        let kind = ChecksumKind::from_label(caps.name("kind")?.as_str())?;
+        let hash = caps.name("hash")?.as_str();
         Some(Self { kind, hash })
     }
 
     /// Validate this saved output hash against the output
-    pub fn matches(&self, output: &[u8]) -> bool {
+    pub fn matches(&self, output: &str) -> bool {
         let hash_computed = md5::compute(output);
         let hash_comp_str = match self.kind {
             ChecksumKind::Md5Hex => format!("{:x}", hash_computed),

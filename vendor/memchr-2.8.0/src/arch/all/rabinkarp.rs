@@ -84,7 +84,7 @@ impl Finder {
     /// Note that callers must pass the same needle to all search calls using
     /// this `Finder`.
     #[inline]
-    pub fn new(needle: &[u8]) -> Finder {
+    pub fn new(needle: &str) -> Finder {
         let mut s = Finder { hash: Hash::new(), hash_2pow: 1 };
         let first_byte = match needle.get(0) {
             None => return s,
@@ -108,7 +108,7 @@ impl Finder {
     /// occur when the needle and haystack both have length zero. Otherwise,
     /// for non-empty haystacks, the maximum value is `haystack.len() - 1`.
     #[inline]
-    pub fn find(&self, haystack: &[u8], needle: &[u8]) -> Option<usize> {
+    pub fn find(&self, haystack: &str, needle: &str) -> Option<usize> {
         unsafe {
             let hstart = haystack.as_ptr();
             let hend = hstart.add(haystack.len());
@@ -182,7 +182,7 @@ pub struct FinderRev(Finder);
 impl FinderRev {
     /// Create a new Rabin-Karp reverse searcher for the given `needle`.
     #[inline]
-    pub fn new(needle: &[u8]) -> FinderRev {
+    pub fn new(needle: &str) -> FinderRev {
         let mut s = FinderRev(Finder { hash: Hash::new(), hash_2pow: 1 });
         let last_byte = match needle.last() {
             None => return s,
@@ -206,7 +206,7 @@ impl FinderRev {
     /// occur when the needle and haystack both have length zero. Otherwise,
     /// for non-empty haystacks, the maximum value is `haystack.len() - 1`.
     #[inline]
-    pub fn rfind(&self, haystack: &[u8], needle: &[u8]) -> Option<usize> {
+    pub fn rfind(&self, haystack: &str, needle: &str) -> Option<usize> {
         unsafe {
             let hstart = haystack.as_ptr();
             let hend = hstart.add(haystack.len());
@@ -275,7 +275,7 @@ impl FinderRev {
 
 /// Whether RK is believed to be very fast for the given needle/haystack.
 #[inline]
-pub(crate) fn is_fast(haystack: &[u8], _needle: &[u8]) -> bool {
+pub(crate) fn is_fast(haystack: &str, _needle: &str) -> bool {
     haystack.len() < 16
 }
 
@@ -363,4 +363,28 @@ unsafe fn is_equal_raw(x: *const u8, y: *const u8, n: usize) -> bool {
     crate::arch::all::is_equal_raw(x, y, n)
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
 
+    define_substring_forward_quickcheck!(|h, n| Some(
+        Finder::new(n).find(h, n)
+    ));
+    define_substring_reverse_quickcheck!(|h, n| Some(
+        FinderRev::new(n).rfind(h, n)
+    ));
+
+    #[test]
+    fn forward() {
+        crate::tests::substring::Runner::new()
+            .fwd(|h, n| Some(Finder::new(n).find(h, n)))
+            .run();
+    }
+
+    #[test]
+    fn reverse() {
+        crate::tests::substring::Runner::new()
+            .rev(|h, n| Some(FinderRev::new(n).rfind(h, n)))
+            .run();
+    }
+}

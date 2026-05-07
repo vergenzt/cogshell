@@ -64,7 +64,7 @@ pub(crate) use self::matches::{Matches, WithRecGroup};
 pub struct PackedIndex(u32);
 
 // Assert that we can fit indices up to `MAX_WASM_TYPES` inside `RefType`.
-
+#[test]
 fn can_fit_max_wasm_types_in_packed_index() {
     assert!(PackedIndex::can_represent_index(
         crate::limits::MAX_WASM_TYPES as u32
@@ -1064,7 +1064,7 @@ impl fmt::Display for RefType {
 }
 
 // Assert that we can fit indices up to `MAX_WASM_TYPES` inside `RefType`.
-
+#[test]
 fn can_fit_max_wasm_types_in_ref_type() {
     fn can_roundtrip_index(index: u32) -> bool {
         assert!(RefType::can_represent_type_index(index));

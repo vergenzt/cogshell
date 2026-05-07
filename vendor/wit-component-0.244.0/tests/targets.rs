@@ -23,7 +23,7 @@ use wit_parser::{Resolve, WorldId};
 ///
 /// Each test is effectively executing as:
 /// `wasm-tools component targets -w foobar test.wit test.wat`
-
+#[test]
 fn targets() -> Result<()> {
     drop(env_logger::try_init());
 

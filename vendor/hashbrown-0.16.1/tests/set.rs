@@ -4,7 +4,7 @@ use hashbrown::HashSet;
 use rand::{distr::Alphanumeric, rngs::SmallRng, Rng, SeedableRng};
 use std::iter;
 
-
+#[test]
 fn test_hashset_insert_remove() {
     let mut m: HashSet<Vec<char>> = HashSet::new();
     let seed = u64::from_le_bytes(*b"testseed");

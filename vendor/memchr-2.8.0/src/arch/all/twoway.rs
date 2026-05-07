@@ -111,7 +111,7 @@ impl Finder {
     /// An empty `needle` results in a match at every position in a haystack,
     /// including at `haystack.len()`.
     #[inline]
-    pub fn new(needle: &[u8]) -> Finder {
+    pub fn new(needle: &str) -> Finder {
         let byteset = ApproximateByteSet::new(needle);
         let min_suffix = Suffix::forward(needle, SuffixKind::Minimal);
         let max_suffix = Suffix::forward(needle, SuffixKind::Maximal);
@@ -134,7 +134,7 @@ impl Finder {
     /// An empty `needle` results in a match at every position in a haystack,
     /// including at `haystack.len()`.
     #[inline]
-    pub fn find(&self, haystack: &[u8], needle: &[u8]) -> Option<usize> {
+    pub fn find(&self, haystack: &str, needle: &str) -> Option<usize> {
         self.find_with_prefilter(None, haystack, needle)
     }
 
@@ -151,8 +151,8 @@ impl Finder {
     pub(crate) fn find_with_prefilter(
         &self,
         pre: Option<Pre<'_>>,
-        haystack: &[u8],
-        needle: &[u8],
+        haystack: &str,
+        needle: &str,
     ) -> Option<usize> {
         match self.0.shift {
             Shift::Small { period } => {
@@ -174,8 +174,8 @@ impl Finder {
     fn find_small_imp(
         &self,
         mut pre: Option<Pre<'_>>,
-        haystack: &[u8],
-        needle: &[u8],
+        haystack: &str,
+        needle: &str,
         period: usize,
     ) -> Option<usize> {
         let mut pos = 0;
@@ -226,8 +226,8 @@ impl Finder {
     fn find_large_imp(
         &self,
         mut pre: Option<Pre<'_>>,
-        haystack: &[u8],
-        needle: &[u8],
+        haystack: &str,
+        needle: &str,
         shift: usize,
     ) -> Option<usize> {
         let mut pos = 0;
@@ -275,7 +275,7 @@ impl FinderRev {
     /// An empty `needle` results in a match at every position in a haystack,
     /// including at `haystack.len()`.
     #[inline]
-    pub fn new(needle: &[u8]) -> FinderRev {
+    pub fn new(needle: &str) -> FinderRev {
         let byteset = ApproximateByteSet::new(needle);
         let min_suffix = Suffix::reverse(needle, SuffixKind::Minimal);
         let max_suffix = Suffix::reverse(needle, SuffixKind::Maximal);
@@ -298,7 +298,7 @@ impl FinderRev {
     /// An empty `needle` results in a match at every position in a haystack,
     /// including at `haystack.len()`.
     #[inline]
-    pub fn rfind(&self, haystack: &[u8], needle: &[u8]) -> Option<usize> {
+    pub fn rfind(&self, haystack: &str, needle: &str) -> Option<usize> {
         // For the reverse case, we don't use a prefilter. It's plausible that
         // perhaps we should, but it's a lot of additional code to do it, and
         // it's not clear that it's actually worth it. If you have a really
@@ -316,8 +316,8 @@ impl FinderRev {
     #[inline(always)]
     fn rfind_small_imp(
         &self,
-        haystack: &[u8],
-        needle: &[u8],
+        haystack: &str,
+        needle: &str,
         period: usize,
     ) -> Option<usize> {
         let nlen = needle.len();
@@ -358,8 +358,8 @@ impl FinderRev {
     #[inline(always)]
     fn rfind_large_imp(
         &self,
-        haystack: &[u8],
-        needle: &[u8],
+        haystack: &str,
+        needle: &str,
         shift: usize,
     ) -> Option<usize> {
         let nlen = needle.len();
@@ -438,7 +438,7 @@ impl Shift {
     /// lexicographic suffixes, and choosing the right-most starting position.
     /// The lower bound on the period is then the period of the chosen suffix.
     fn forward(
-        needle: &[u8],
+        needle: &str,
         period_lower_bound: usize,
         critical_pos: usize,
     ) -> Shift {
@@ -461,7 +461,7 @@ impl Shift {
     /// lexicographic suffixes, and choosing the left-most starting position.
     /// The lower bound on the period is then the period of the chosen suffix.
     fn reverse(
-        needle: &[u8],
+        needle: &str,
         period_lower_bound: usize,
         critical_pos: usize,
     ) -> Shift {
@@ -497,7 +497,7 @@ struct Suffix {
 }
 
 impl Suffix {
-    fn forward(needle: &[u8], kind: SuffixKind) -> Suffix {
+    fn forward(needle: &str, kind: SuffixKind) -> Suffix {
         // suffix represents our maximal (or minimal) suffix, along with
         // its period.
         let mut suffix = Suffix { pos: 0, period: 1 };
@@ -545,7 +545,7 @@ impl Suffix {
         suffix
     }
 
-    fn reverse(needle: &[u8], kind: SuffixKind) -> Suffix {
+    fn reverse(needle: &str, kind: SuffixKind) -> Suffix {
         // See the comments in `forward` for how this works.
         let mut suffix = Suffix { pos: needle.len(), period: 1 };
         if needle.len() == 1 {
@@ -652,7 +652,7 @@ struct ApproximateByteSet(u64);
 
 impl ApproximateByteSet {
     /// Create a new set from the given needle.
-    fn new(needle: &[u8]) -> ApproximateByteSet {
+    fn new(needle: &str) -> ApproximateByteSet {
         let mut bits = 0;
         for &b in needle {
             bits |= 1 << (b % 64);
@@ -668,4 +668,210 @@ impl ApproximateByteSet {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use alloc::vec::Vec;
 
+    use super::*;
+
+    /// Convenience wrapper for computing the suffix as a byte string.
+    fn get_suffix_forward(needle: &str, kind: SuffixKind) -> (&str, usize) {
+        let s = Suffix::forward(needle, kind);
+        (&needle[s.pos..], s.period)
+    }
+
+    /// Convenience wrapper for computing the reverse suffix as a byte string.
+    fn get_suffix_reverse(needle: &str, kind: SuffixKind) -> (&str, usize) {
+        let s = Suffix::reverse(needle, kind);
+        (&needle[..s.pos], s.period)
+    }
+
+    /// Return all of the non-empty suffixes in the given byte string.
+    fn suffixes(bytes: &str) -> Vec<&str> {
+        (0..bytes.len()).map(|i| &bytes[i..]).collect()
+    }
+
+    /// Return the lexicographically maximal suffix of the given byte string.
+    fn naive_maximal_suffix_forward(needle: &str) -> &str {
+        let mut sufs = suffixes(needle);
+        sufs.sort();
+        sufs.pop().unwrap()
+    }
+
+    /// Return the lexicographically maximal suffix of the reverse of the given
+    /// byte string.
+    fn naive_maximal_suffix_reverse(needle: &str) -> Vec<u8> {
+        let mut reversed = needle.to_vec();
+        reversed.reverse();
+        let mut got = naive_maximal_suffix_forward(&reversed).to_vec();
+        got.reverse();
+        got
+    }
+
+    define_substring_forward_quickcheck!(|h, n| Some(
+        Finder::new(n).find(h, n)
+    ));
+    define_substring_reverse_quickcheck!(|h, n| Some(
+        FinderRev::new(n).rfind(h, n)
+    ));
+
+    #[test]
+    fn forward() {
+        crate::tests::substring::Runner::new()
+            .fwd(|h, n| Some(Finder::new(n).find(h, n)))
+            .run();
+    }
+
+    #[test]
+    fn reverse() {
+        crate::tests::substring::Runner::new()
+            .rev(|h, n| Some(FinderRev::new(n).rfind(h, n)))
+            .run();
+    }
+
+    #[test]
+    fn suffix_forward() {
+        macro_rules! assert_suffix_min {
+            ($given:expr, $expected:expr, $period:expr) => {
+                let (got_suffix, got_period) =
+                    get_suffix_forward($given.as_bytes(), SuffixKind::Minimal);
+                let got_suffix = core::str::from_utf8(got_suffix).unwrap();
+                assert_eq!(($expected, $period), (got_suffix, got_period));
+            };
+        }
+
+        macro_rules! assert_suffix_max {
+            ($given:expr, $expected:expr, $period:expr) => {
+                let (got_suffix, got_period) =
+                    get_suffix_forward($given.as_bytes(), SuffixKind::Maximal);
+                let got_suffix = core::str::from_utf8(got_suffix).unwrap();
+                assert_eq!(($expected, $period), (got_suffix, got_period));
+            };
+        }
+
+        assert_suffix_min!("a", "a", 1);
+        assert_suffix_max!("a", "a", 1);
+
+        assert_suffix_min!("ab", "ab", 2);
+        assert_suffix_max!("ab", "b", 1);
+
+        assert_suffix_min!("ba", "a", 1);
+        assert_suffix_max!("ba", "ba", 2);
+
+        assert_suffix_min!("abc", "abc", 3);
+        assert_suffix_max!("abc", "c", 1);
+
+        assert_suffix_min!("acb", "acb", 3);
+        assert_suffix_max!("acb", "cb", 2);
+
+        assert_suffix_min!("cba", "a", 1);
+        assert_suffix_max!("cba", "cba", 3);
+
+        assert_suffix_min!("abcabc", "abcabc", 3);
+        assert_suffix_max!("abcabc", "cabc", 3);
+
+        assert_suffix_min!("abcabcabc", "abcabcabc", 3);
+        assert_suffix_max!("abcabcabc", "cabcabc", 3);
+
+        assert_suffix_min!("abczz", "abczz", 5);
+        assert_suffix_max!("abczz", "zz", 1);
+
+        assert_suffix_min!("zzabc", "abc", 3);
+        assert_suffix_max!("zzabc", "zzabc", 5);
+
+        assert_suffix_min!("aaa", "aaa", 1);
+        assert_suffix_max!("aaa", "aaa", 1);
+
+        assert_suffix_min!("foobar", "ar", 2);
+        assert_suffix_max!("foobar", "r", 1);
+    }
+
+    #[test]
+    fn suffix_reverse() {
+        macro_rules! assert_suffix_min {
+            ($given:expr, $expected:expr, $period:expr) => {
+                let (got_suffix, got_period) =
+                    get_suffix_reverse($given.as_bytes(), SuffixKind::Minimal);
+                let got_suffix = core::str::from_utf8(got_suffix).unwrap();
+                assert_eq!(($expected, $period), (got_suffix, got_period));
+            };
+        }
+
+        macro_rules! assert_suffix_max {
+            ($given:expr, $expected:expr, $period:expr) => {
+                let (got_suffix, got_period) =
+                    get_suffix_reverse($given.as_bytes(), SuffixKind::Maximal);
+                let got_suffix = core::str::from_utf8(got_suffix).unwrap();
+                assert_eq!(($expected, $period), (got_suffix, got_period));
+            };
+        }
+
+        assert_suffix_min!("a", "a", 1);
+        assert_suffix_max!("a", "a", 1);
+
+        assert_suffix_min!("ab", "a", 1);
+        assert_suffix_max!("ab", "ab", 2);
+
+        assert_suffix_min!("ba", "ba", 2);
+        assert_suffix_max!("ba", "b", 1);
+
+        assert_suffix_min!("abc", "a", 1);
+        assert_suffix_max!("abc", "abc", 3);
+
+        assert_suffix_min!("acb", "a", 1);
+        assert_suffix_max!("acb", "ac", 2);
+
+        assert_suffix_min!("cba", "cba", 3);
+        assert_suffix_max!("cba", "c", 1);
+
+        assert_suffix_min!("abcabc", "abca", 3);
+        assert_suffix_max!("abcabc", "abcabc", 3);
+
+        assert_suffix_min!("abcabcabc", "abcabca", 3);
+        assert_suffix_max!("abcabcabc", "abcabcabc", 3);
+
+        assert_suffix_min!("abczz", "a", 1);
+        assert_suffix_max!("abczz", "abczz", 5);
+
+        assert_suffix_min!("zzabc", "zza", 3);
+        assert_suffix_max!("zzabc", "zz", 1);
+
+        assert_suffix_min!("aaa", "aaa", 1);
+        assert_suffix_max!("aaa", "aaa", 1);
+    }
+
+    #[cfg(not(miri))]
+    quickcheck::quickcheck! {
+        fn qc_suffix_forward_maximal(bytes: Vec<u8>) -> bool {
+            if bytes.is_empty() {
+                return true;
+            }
+
+            let (got, _) = get_suffix_forward(&bytes, SuffixKind::Maximal);
+            let expected = naive_maximal_suffix_forward(&bytes);
+            got == expected
+        }
+
+        fn qc_suffix_reverse_maximal(bytes: Vec<u8>) -> bool {
+            if bytes.is_empty() {
+                return true;
+            }
+
+            let (got, _) = get_suffix_reverse(&bytes, SuffixKind::Maximal);
+            let expected = naive_maximal_suffix_reverse(&bytes);
+            expected == got
+        }
+    }
+
+    // This is a regression test caught by quickcheck that exercised a bug in
+    // the reverse small period handling. The bug was that we were using 'if j
+    // == shift' to determine if a match occurred, but the correct guard is 'if
+    // j >= shift', which matches the corresponding guard in the forward impl.
+    #[test]
+    fn regression_rev_small_period() {
+        let rfind = |h, n| FinderRev::new(n).rfind(h, n);
+        let haystack = "ababaz";
+        let needle = "abab";
+        assert_eq!(Some(0), rfind(haystack.as_bytes(), needle.as_bytes()));
+    }
+}

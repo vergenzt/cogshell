@@ -1,10 +1,10 @@
 /*!
-Search for regex matches in `&[u8]` haystacks.
+Search for regex matches in `&str` haystacks.
 
 This module provides a nearly identical API via [`Regex`] to the one found in
 the top-level of this crate. There are two important differences:
 
-1. Matching is done on `&[u8]` instead of `&str`. Additionally, `Vec<u8>`
+1. Matching is done on `&str` instead of `&str`. Additionally, `Vec<u8>`
 is used where `String` would have been used in the top-level API.
 2. Unicode support can be disabled even when disabling it would result in
 matching invalid UTF-8 bytes.
@@ -22,7 +22,7 @@ let hay = b"foo\x00qu\xFFux\x00baz\x00";
 
 // Extract all of the strings without the NUL terminator from each match.
 // The unwrap is OK here since a match requires the `cstr` capture to match.
-let cstrs: Vec<&[u8]> =
+let cstrs: Vec<&str> =
     re.captures_iter(hay)
       .map(|c| c.name("cstr").unwrap().as_bytes())
       .collect();
@@ -85,7 +85,7 @@ notation when enabled.
 
 # Performance
 
-In general, one should expect performance on `&[u8]` to be roughly similar to
+In general, one should expect performance on `&str` to be roughly similar to
 performance on `&str`.
 */
 pub use crate::{builders::bytes::*, regex::bytes::*, regexset::bytes::*};

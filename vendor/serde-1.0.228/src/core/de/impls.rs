@@ -603,7 +603,7 @@ impl<'de> Visitor<'de> for StringVisitor {
         Ok(v)
     }
 
-    fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
+    fn visit_bytes<E>(self, v: &str) -> Result<Self::Value, E>
     where
         E: Error,
     {
@@ -652,7 +652,7 @@ impl<'a, 'de> Visitor<'de> for StringInPlaceVisitor<'a> {
         Ok(())
     }
 
-    fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
+    fn visit_bytes<E>(self, v: &str) -> Result<Self::Value, E>
     where
         E: Error,
     {
@@ -719,7 +719,7 @@ impl<'a> Visitor<'a> for StrVisitor {
         Ok(v) // so easy
     }
 
-    fn visit_borrowed_bytes<E>(self, v: &'a [u8]) -> Result<Self::Value, E>
+    fn visit_borrowed_bytes<E>(self, v: &'a str) -> Result<Self::Value, E>
     where
         E: Error,
     {
@@ -741,13 +741,13 @@ impl<'de: 'a, 'a> Deserialize<'de> for &'a str {
 struct BytesVisitor;
 
 impl<'a> Visitor<'a> for BytesVisitor {
-    type Value = &'a [u8];
+    type Value = &'a str;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         formatter.write_str("a borrowed byte array")
     }
 
-    fn visit_borrowed_bytes<E>(self, v: &'a [u8]) -> Result<Self::Value, E>
+    fn visit_borrowed_bytes<E>(self, v: &'a str) -> Result<Self::Value, E>
     where
         E: Error,
     {
@@ -762,7 +762,7 @@ impl<'a> Visitor<'a> for BytesVisitor {
     }
 }
 
-impl<'de: 'a, 'a> Deserialize<'de> for &'a [u8] {
+impl<'de: 'a, 'a> Deserialize<'de> for &'a str {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
@@ -798,7 +798,7 @@ impl<'de> Visitor<'de> for CStringVisitor {
         CString::new(values).map_err(Error::custom)
     }
 
-    fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
+    fn visit_bytes<E>(self, v: &str) -> Result<Self::Value, E>
     where
         E: Error,
     {
@@ -1641,7 +1641,7 @@ macro_rules! variant_identifier {
                         }
                     }
 
-                    fn visit_bytes<E>(self, value: &[u8]) -> Result<Self::Value, E>
+                    fn visit_bytes<E>(self, value: &str) -> Result<Self::Value, E>
                     where
                         E: Error,
                     {
@@ -1799,7 +1799,7 @@ impl<'a> Visitor<'a> for PathVisitor {
         Ok(v.as_ref())
     }
 
-    fn visit_borrowed_bytes<E>(self, v: &'a [u8]) -> Result<Self::Value, E>
+    fn visit_borrowed_bytes<E>(self, v: &'a str) -> Result<Self::Value, E>
     where
         E: Error,
     {
@@ -1845,7 +1845,7 @@ impl<'de> Visitor<'de> for PathBufVisitor {
         Ok(From::from(v))
     }
 
-    fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
+    fn visit_bytes<E>(self, v: &str) -> Result<Self::Value, E>
     where
         E: Error,
     {
@@ -2165,7 +2165,7 @@ impl<'de> Deserialize<'de> for Duration {
                         }
                     }
 
-                    fn visit_bytes<E>(self, value: &[u8]) -> Result<Self::Value, E>
+                    fn visit_bytes<E>(self, value: &str) -> Result<Self::Value, E>
                     where
                         E: Error,
                     {
@@ -2304,7 +2304,7 @@ impl<'de> Deserialize<'de> for SystemTime {
                         }
                     }
 
-                    fn visit_bytes<E>(self, value: &[u8]) -> Result<Self::Value, E>
+                    fn visit_bytes<E>(self, value: &str) -> Result<Self::Value, E>
                     where
                         E: Error,
                     {
@@ -2502,7 +2502,7 @@ mod range {
                     }
                 }
 
-                fn visit_bytes<E>(self, value: &[u8]) -> Result<Self::Value, E>
+                fn visit_bytes<E>(self, value: &str) -> Result<Self::Value, E>
                 where
                     E: Error,
                 {
@@ -2659,7 +2659,7 @@ mod range_from {
                     }
                 }
 
-                fn visit_bytes<E>(self, value: &[u8]) -> Result<Self::Value, E>
+                fn visit_bytes<E>(self, value: &str) -> Result<Self::Value, E>
                 where
                     E: Error,
                 {
@@ -2798,7 +2798,7 @@ mod range_to {
                     }
                 }
 
-                fn visit_bytes<E>(self, value: &[u8]) -> Result<Self::Value, E>
+                fn visit_bytes<E>(self, value: &str) -> Result<Self::Value, E>
                 where
                     E: Error,
                 {
@@ -2923,7 +2923,7 @@ where
                         }
                     }
 
-                    fn visit_bytes<E>(self, value: &[u8]) -> Result<Self::Value, E>
+                    fn visit_bytes<E>(self, value: &str) -> Result<Self::Value, E>
                     where
                         E: Error,
                     {
@@ -3034,7 +3034,7 @@ where
                         }
                     }
 
-                    fn visit_bytes<E>(self, value: &[u8]) -> Result<Self::Value, E>
+                    fn visit_bytes<E>(self, value: &str) -> Result<Self::Value, E>
                     where
                         E: Error,
                     {

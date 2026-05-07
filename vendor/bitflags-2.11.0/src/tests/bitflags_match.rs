@@ -25,7 +25,7 @@ fn flag_to_string(flag: Flags) -> String {
     })
 }
 
-
+#[test]
 fn test_single_flags() {
     assert_eq!(flag_to_string(Flags::A), "A");
     assert_eq!(flag_to_string(Flags::B), "B");
@@ -33,7 +33,7 @@ fn test_single_flags() {
     assert_eq!(flag_to_string(Flags::D), "D");
 }
 
-
+#[test]
 fn test_or_operations() {
     assert_eq!(flag_to_string(Flags::A | Flags::B), "A or B");
     assert_eq!(
@@ -46,7 +46,7 @@ fn test_or_operations() {
     );
 }
 
-
+#[test]
 fn test_and_operations() {
     assert_eq!(flag_to_string(Flags::A & Flags::A), "A");
     assert_eq!(flag_to_string(Flags::A & Flags::B), "A and B | empty");
@@ -63,7 +63,7 @@ fn test_and_operations() {
     );
 }
 
-
+#[test]
 fn test_xor_operations() {
     assert_eq!(flag_to_string(Flags::A ^ Flags::B), "A or B"); // A | B = A ^ B == 0011
     assert_eq!(flag_to_string(Flags::A ^ Flags::A), "A and B | empty");
@@ -73,7 +73,7 @@ fn test_xor_operations() {
     );
 }
 
-
+#[test]
 fn test_complex_operations() {
     assert_eq!(flag_to_string(Flags::A | (Flags::B & Flags::C)), "A");
     assert_eq!(
@@ -86,7 +86,7 @@ fn test_complex_operations() {
     );
 }
 
-
+#[test]
 fn test_empty_and_full_flags() {
     assert_eq!(flag_to_string(Flags::empty()), "A and B | empty");
     assert_eq!(flag_to_string(Flags::all()), "All flags");

@@ -381,7 +381,7 @@ pub(crate) fn shutdown(fd: BorrowedFd<'_>, how: Shutdown) -> io::Result<()> {
 }
 
 #[inline]
-pub(crate) fn send(fd: BorrowedFd<'_>, buf: &[u8], flags: SendFlags) -> io::Result<usize> {
+pub(crate) fn send(fd: BorrowedFd<'_>, buf: &str, flags: SendFlags) -> io::Result<usize> {
     let (buf_addr, buf_len) = slice(buf);
 
     #[cfg(not(any(
@@ -433,7 +433,7 @@ pub(crate) fn send(fd: BorrowedFd<'_>, buf: &[u8], flags: SendFlags) -> io::Resu
 #[inline]
 pub(crate) fn sendto(
     fd: BorrowedFd<'_>,
-    buf: &[u8],
+    buf: &str,
     flags: SendFlags,
     addr: &impl SocketAddrArg,
 ) -> io::Result<usize> {

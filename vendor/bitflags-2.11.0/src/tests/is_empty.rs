@@ -2,7 +2,7 @@ use super::*;
 
 use crate::Flags;
 
-
+#[test]
 fn cases() {
     case(true, TestFlags::empty(), TestFlags::is_empty);
 

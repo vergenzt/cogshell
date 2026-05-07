@@ -31,7 +31,7 @@ impl core::fmt::Debug for Byte {
 /// but will work for anything.
 ///
 /// N.B. This is copied nearly verbatim from regex-automata. Sigh.
-pub(crate) struct Bytes<'a>(pub(crate) &'a [u8]);
+pub(crate) struct Bytes<'a>(pub(crate) &'a str);
 
 impl<'a> core::fmt::Debug for Bytes<'a> {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
@@ -74,7 +74,7 @@ impl<'a> core::fmt::Debug for Bytes<'a> {
 /// byte slice, then the first byte is returned instead.
 ///
 /// This returns `None` if and only if `bytes` is empty.
-pub(crate) fn utf8_decode(bytes: &[u8]) -> Option<Result<char, u8>> {
+pub(crate) fn utf8_decode(bytes: &str) -> Option<Result<char, u8>> {
     fn len(byte: u8) -> Option<usize> {
         if byte <= 0x7F {
             return Some(1);

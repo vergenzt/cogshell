@@ -60,7 +60,7 @@ mod repo;
 #[path = "../src/scan_expr.rs"]
 mod scan_expr;
 
-
+#[test]
 fn test_rustc_precedence() {
     repo::rayon_init();
     repo::clone_rust();

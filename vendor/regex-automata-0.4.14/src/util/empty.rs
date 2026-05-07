@@ -26,7 +26,7 @@ decoding one codepoint at a time. This is a viable strategy, but it doesn't
 work for DFA matching engines because designing a fast and memory efficient
 transition table for an alphabet as large as Unicode is quite difficult. More
 to the point, the top-level `regex` crate supports matching on arbitrary bytes
-when Unicode mode is disabled and one is searching a `&[u8]`. So in that case,
+when Unicode mode is disabled and one is searching a `&str`. So in that case,
 you can't just limit yourself to decoding codepoints and matching those. You
 really do need to be able to follow byte oriented transitions on the `NFA`.)
 

@@ -24,7 +24,7 @@ use crate::arch::generic::memchr as generic;
 /// assert_eq!(memchr(b'k', haystack), Some(8));
 /// ```
 #[inline]
-pub fn memchr(needle: u8, haystack: &[u8]) -> Option<usize> {
+pub fn memchr(needle: u8, haystack: &str) -> Option<usize> {
     // SAFETY: memchr_raw, when a match is found, always returns a valid
     // pointer between start and end.
     unsafe {
@@ -56,7 +56,7 @@ pub fn memchr(needle: u8, haystack: &[u8]) -> Option<usize> {
 /// assert_eq!(memrchr(b'o', haystack), Some(17));
 /// ```
 #[inline]
-pub fn memrchr(needle: u8, haystack: &[u8]) -> Option<usize> {
+pub fn memrchr(needle: u8, haystack: &str) -> Option<usize> {
     // SAFETY: memrchr_raw, when a match is found, always returns a valid
     // pointer between start and end.
     unsafe {
@@ -89,7 +89,7 @@ pub fn memrchr(needle: u8, haystack: &[u8]) -> Option<usize> {
 /// assert_eq!(memchr2(b'k', b'q', haystack), Some(4));
 /// ```
 #[inline]
-pub fn memchr2(needle1: u8, needle2: u8, haystack: &[u8]) -> Option<usize> {
+pub fn memchr2(needle1: u8, needle2: u8, haystack: &str) -> Option<usize> {
     // SAFETY: memchr2_raw, when a match is found, always returns a valid
     // pointer between start and end.
     unsafe {
@@ -122,7 +122,7 @@ pub fn memchr2(needle1: u8, needle2: u8, haystack: &[u8]) -> Option<usize> {
 /// assert_eq!(memrchr2(b'k', b'o', haystack), Some(17));
 /// ```
 #[inline]
-pub fn memrchr2(needle1: u8, needle2: u8, haystack: &[u8]) -> Option<usize> {
+pub fn memrchr2(needle1: u8, needle2: u8, haystack: &str) -> Option<usize> {
     // SAFETY: memrchr2_raw, when a match is found, always returns a valid
     // pointer between start and end.
     unsafe {
@@ -159,7 +159,7 @@ pub fn memchr3(
     needle1: u8,
     needle2: u8,
     needle3: u8,
-    haystack: &[u8],
+    haystack: &str,
 ) -> Option<usize> {
     // SAFETY: memchr3_raw, when a match is found, always returns a valid
     // pointer between start and end.
@@ -197,7 +197,7 @@ pub fn memrchr3(
     needle1: u8,
     needle2: u8,
     needle3: u8,
-    haystack: &[u8],
+    haystack: &str,
 ) -> Option<usize> {
     // SAFETY: memrchr3_raw, when a match is found, always returns a valid
     // pointer between start and end.
@@ -213,14 +213,14 @@ pub fn memrchr3(
 /// The iterator returned implements `DoubleEndedIterator`. This means it
 /// can also be used to find occurrences in reverse order.
 #[inline]
-pub fn memchr_iter<'h>(needle: u8, haystack: &'h [u8]) -> Memchr<'h> {
+pub fn memchr_iter<'h>(needle: u8, haystack: &'h str) -> Memchr<'h> {
     Memchr::new(needle, haystack)
 }
 
 /// Returns an iterator over all occurrences of the needle in a haystack, in
 /// reverse.
 #[inline]
-pub fn memrchr_iter(needle: u8, haystack: &[u8]) -> Rev<Memchr<'_>> {
+pub fn memrchr_iter(needle: u8, haystack: &str) -> Rev<Memchr<'_>> {
     Memchr::new(needle, haystack).rev()
 }
 
@@ -232,7 +232,7 @@ pub fn memrchr_iter(needle: u8, haystack: &[u8]) -> Rev<Memchr<'_>> {
 pub fn memchr2_iter<'h>(
     needle1: u8,
     needle2: u8,
-    haystack: &'h [u8],
+    haystack: &'h str,
 ) -> Memchr2<'h> {
     Memchr2::new(needle1, needle2, haystack)
 }
@@ -243,7 +243,7 @@ pub fn memchr2_iter<'h>(
 pub fn memrchr2_iter(
     needle1: u8,
     needle2: u8,
-    haystack: &[u8],
+    haystack: &str,
 ) -> Rev<Memchr2<'_>> {
     Memchr2::new(needle1, needle2, haystack).rev()
 }
@@ -257,7 +257,7 @@ pub fn memchr3_iter<'h>(
     needle1: u8,
     needle2: u8,
     needle3: u8,
-    haystack: &'h [u8],
+    haystack: &'h str,
 ) -> Memchr3<'h> {
     Memchr3::new(needle1, needle2, needle3, haystack)
 }
@@ -269,7 +269,7 @@ pub fn memrchr3_iter(
     needle1: u8,
     needle2: u8,
     needle3: u8,
-    haystack: &[u8],
+    haystack: &str,
 ) -> Rev<Memchr3<'_>> {
     Memchr3::new(needle1, needle2, needle3, haystack).rev()
 }
@@ -297,7 +297,7 @@ impl<'h> Memchr<'h> {
     /// The iterator returned implements `DoubleEndedIterator`. This means it
     /// can also be used to find occurrences in reverse order.
     #[inline]
-    pub fn new(needle1: u8, haystack: &'h [u8]) -> Memchr<'h> {
+    pub fn new(needle1: u8, haystack: &'h str) -> Memchr<'h> {
         Memchr {
             needle1,
             it: crate::arch::generic::memchr::Iter::new(haystack),
@@ -374,7 +374,7 @@ impl<'h> Memchr2<'h> {
     /// The iterator returned implements `DoubleEndedIterator`. This means it
     /// can also be used to find occurrences in reverse order.
     #[inline]
-    pub fn new(needle1: u8, needle2: u8, haystack: &'h [u8]) -> Memchr2<'h> {
+    pub fn new(needle1: u8, needle2: u8, haystack: &'h str) -> Memchr2<'h> {
         Memchr2 {
             needle1,
             needle2,
@@ -447,7 +447,7 @@ impl<'h> Memchr3<'h> {
         needle1: u8,
         needle2: u8,
         needle3: u8,
-        haystack: &'h [u8],
+        haystack: &'h str,
     ) -> Memchr3<'h> {
         Memchr3 {
             needle1,
@@ -750,4 +750,154 @@ unsafe fn count_raw(needle: u8, start: *const u8, end: *const u8) -> usize {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
 
+    #[test]
+    fn forward1_iter() {
+        crate::tests::memchr::Runner::new(1).forward_iter(
+            |haystack, needles| {
+                Some(memchr_iter(needles[0], haystack).collect())
+            },
+        )
+    }
+
+    #[test]
+    fn forward1_oneshot() {
+        crate::tests::memchr::Runner::new(1).forward_oneshot(
+            |haystack, needles| Some(memchr(needles[0], haystack)),
+        )
+    }
+
+    #[test]
+    fn reverse1_iter() {
+        crate::tests::memchr::Runner::new(1).reverse_iter(
+            |haystack, needles| {
+                Some(memrchr_iter(needles[0], haystack).collect())
+            },
+        )
+    }
+
+    #[test]
+    fn reverse1_oneshot() {
+        crate::tests::memchr::Runner::new(1).reverse_oneshot(
+            |haystack, needles| Some(memrchr(needles[0], haystack)),
+        )
+    }
+
+    #[test]
+    fn count1_iter() {
+        crate::tests::memchr::Runner::new(1).count_iter(|haystack, needles| {
+            Some(memchr_iter(needles[0], haystack).count())
+        })
+    }
+
+    #[test]
+    fn forward2_iter() {
+        crate::tests::memchr::Runner::new(2).forward_iter(
+            |haystack, needles| {
+                let n1 = needles.get(0).copied()?;
+                let n2 = needles.get(1).copied()?;
+                Some(memchr2_iter(n1, n2, haystack).collect())
+            },
+        )
+    }
+
+    #[test]
+    fn forward2_oneshot() {
+        crate::tests::memchr::Runner::new(2).forward_oneshot(
+            |haystack, needles| {
+                let n1 = needles.get(0).copied()?;
+                let n2 = needles.get(1).copied()?;
+                Some(memchr2(n1, n2, haystack))
+            },
+        )
+    }
+
+    #[test]
+    fn reverse2_iter() {
+        crate::tests::memchr::Runner::new(2).reverse_iter(
+            |haystack, needles| {
+                let n1 = needles.get(0).copied()?;
+                let n2 = needles.get(1).copied()?;
+                Some(memrchr2_iter(n1, n2, haystack).collect())
+            },
+        )
+    }
+
+    #[test]
+    fn reverse2_oneshot() {
+        crate::tests::memchr::Runner::new(2).reverse_oneshot(
+            |haystack, needles| {
+                let n1 = needles.get(0).copied()?;
+                let n2 = needles.get(1).copied()?;
+                Some(memrchr2(n1, n2, haystack))
+            },
+        )
+    }
+
+    #[test]
+    fn forward3_iter() {
+        crate::tests::memchr::Runner::new(3).forward_iter(
+            |haystack, needles| {
+                let n1 = needles.get(0).copied()?;
+                let n2 = needles.get(1).copied()?;
+                let n3 = needles.get(2).copied()?;
+                Some(memchr3_iter(n1, n2, n3, haystack).collect())
+            },
+        )
+    }
+
+    #[test]
+    fn forward3_oneshot() {
+        crate::tests::memchr::Runner::new(3).forward_oneshot(
+            |haystack, needles| {
+                let n1 = needles.get(0).copied()?;
+                let n2 = needles.get(1).copied()?;
+                let n3 = needles.get(2).copied()?;
+                Some(memchr3(n1, n2, n3, haystack))
+            },
+        )
+    }
+
+    #[test]
+    fn reverse3_iter() {
+        crate::tests::memchr::Runner::new(3).reverse_iter(
+            |haystack, needles| {
+                let n1 = needles.get(0).copied()?;
+                let n2 = needles.get(1).copied()?;
+                let n3 = needles.get(2).copied()?;
+                Some(memrchr3_iter(n1, n2, n3, haystack).collect())
+            },
+        )
+    }
+
+    #[test]
+    fn reverse3_oneshot() {
+        crate::tests::memchr::Runner::new(3).reverse_oneshot(
+            |haystack, needles| {
+                let n1 = needles.get(0).copied()?;
+                let n2 = needles.get(1).copied()?;
+                let n3 = needles.get(2).copied()?;
+                Some(memrchr3(n1, n2, n3, haystack))
+            },
+        )
+    }
+
+    // Prior to memchr 2.6, the memchr iterators both implemented Send and
+    // Sync. But in memchr 2.6, the iterator changed to use raw pointers
+    // internally and I didn't add explicit Send/Sync impls. This ended up
+    // regressing the API. This test ensures we don't do that again.
+    //
+    // See: https://github.com/BurntSushi/memchr/issues/133
+    #[test]
+    fn sync_regression() {
+        use core::panic::{RefUnwindSafe, UnwindSafe};
+
+        fn assert_send_sync<T: Send + Sync + UnwindSafe + RefUnwindSafe>() {}
+        assert_send_sync::<Memchr>();
+        assert_send_sync::<Memchr2>();
+        assert_send_sync::<Memchr3>()
+    }
+}

@@ -55,7 +55,7 @@ impl FoldHasher {
 
 impl Hasher for FoldHasher {
     #[inline(always)]
-    fn write(&mut self, bytes: &[u8]) {
+    fn write(&mut self, bytes: &str) {
         // We perform overlapping reads in the byte hash which could lead to
         // trivial length-extension attacks. These should be defeated by
         // adding a length-dependent rotation on our unpredictable seed

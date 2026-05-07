@@ -2,11 +2,11 @@ use base64::{
     alphabet::URL_SAFE, engine::general_purpose::PAD, engine::general_purpose::STANDARD, *,
 };
 
-fn compare_encode(expected: &str, target: &[u8]) {
+fn compare_encode(expected: &str, target: &str) {
     assert_eq!(expected, STANDARD.encode(target));
 }
 
-
+#[test]
 fn encode_all_ascii() {
     let ascii: Vec<u8> = (0..=127).collect();
 
@@ -18,7 +18,7 @@ fn encode_all_ascii() {
     );
 }
 
-
+#[test]
 fn encode_all_bytes() {
     let bytes: Vec<u8> = (0..=255).collect();
 
@@ -31,7 +31,7 @@ fn encode_all_bytes() {
     );
 }
 
-
+#[test]
 fn encode_all_bytes_url() {
     let bytes: Vec<u8> = (0..=255).collect();
 
@@ -45,7 +45,7 @@ fn encode_all_bytes_url() {
     );
 }
 
-
+#[test]
 fn encoded_len_unpadded() {
     assert_eq!(0, encoded_len(0, false).unwrap());
     assert_eq!(2, encoded_len(1, false).unwrap());
@@ -57,7 +57,7 @@ fn encoded_len_unpadded() {
     assert_eq!(10, encoded_len(7, false).unwrap());
 }
 
-
+#[test]
 fn encoded_len_padded() {
     assert_eq!(0, encoded_len(0, true).unwrap());
     assert_eq!(4, encoded_len(1, true).unwrap());
@@ -68,7 +68,7 @@ fn encoded_len_padded() {
     assert_eq!(8, encoded_len(6, true).unwrap());
     assert_eq!(12, encoded_len(7, true).unwrap());
 }
-
+#[test]
 fn encoded_len_overflow() {
     let max_size = usize::MAX / 4 * 3 + 2;
     assert_eq!(2, max_size % 3);

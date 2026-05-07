@@ -461,4 +461,19 @@ impl Doc {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
 
+    #[test]
+    fn transitions_are_okay() {
+        let mut doc = Doc::default();
+
+        doc.emphasis("Usage: "); // bold
+        doc.literal("my_program"); // bold + tt
+
+        let r = doc.render_html(true, false);
+
+        assert_eq!(r, "<b>Usage: </b><tt><b>my_program</b></tt>")
+    }
+}

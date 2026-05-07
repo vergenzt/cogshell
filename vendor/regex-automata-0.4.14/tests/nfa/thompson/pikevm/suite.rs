@@ -17,7 +17,7 @@ use {
 use crate::{create_input, suite, testify_captures, untestify_kind};
 
 /// Tests the default configuration of the hybrid NFA/DFA.
-
+#[test]
 fn default() -> Result<()> {
     let builder = PikeVM::builder();
     let mut runner = TestRunner::new()?;
@@ -27,7 +27,7 @@ fn default() -> Result<()> {
 }
 
 /// Tests the PikeVM with prefilters enabled.
-
+#[test]
 fn prefilter() -> Result<()> {
     let my_compiler = |test: &RegexTest, regexes: &[String]| {
         // Parse regexes as HIRs so we can get literals to build a prefilter.

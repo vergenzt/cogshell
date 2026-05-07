@@ -607,7 +607,7 @@ assert_eq!(subs, vec!["ΔδΔ𐅌ΔδΔ"]);
 
 ### Opt out of Unicode support
 
-The [`bytes::Regex`] type that can be used to search `&[u8]` haystacks. By
+The [`bytes::Regex`] type that can be used to search `&str` haystacks. By
 default, haystacks are conventionally treated as UTF-8 just like it is with the
 main `Regex` type. However, this behavior can be disabled by turning off the
 `u` flag, even if doing so could result in matching invalid UTF-8. For example,

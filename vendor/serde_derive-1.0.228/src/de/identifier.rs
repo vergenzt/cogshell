@@ -7,7 +7,7 @@ use crate::internals::ast::{Style, Variant};
 use crate::internals::attr;
 use crate::private;
 use proc_macro2::{Literal, TokenStream};
-use quote::{quote, ToTokens};
+use quote::{ToTokens, quote};
 
 // Generates `Deserialize::deserialize` body for an enum with
 // `serde(field_identifier)` or `serde(variant_identifier)` attribute.
@@ -420,7 +420,7 @@ fn deserialize_identifier(
                 }
             }
 
-            fn visit_borrowed_bytes<__E>(self, __value: &'de [u8]) -> _serde::#private::Result<Self::Value, __E>
+            fn visit_borrowed_bytes<__E>(self, __value: &'de str) -> _serde::#private::Result<Self::Value, __E>
             where
                 __E: _serde::de::Error,
             {
@@ -458,7 +458,7 @@ fn deserialize_identifier(
             }
         }
 
-        fn visit_bytes<__E>(self, __value: &[u8]) -> _serde::#private::Result<Self::Value, __E>
+        fn visit_bytes<__E>(self, __value: &str) -> _serde::#private::Result<Self::Value, __E>
         where
             __E: _serde::de::Error,
         {

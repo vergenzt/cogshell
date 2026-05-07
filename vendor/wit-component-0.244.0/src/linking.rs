@@ -174,7 +174,7 @@ fn write_u32(buffer: &mut Vec<u8>, value: u32) {
     buffer.extend(value.to_le_bytes());
 }
 
-fn write_bytes_padded(buffer: &mut Vec<u8>, bytes: &[u8]) {
+fn write_bytes_padded(buffer: &mut Vec<u8>, bytes: &str) {
     buffer.extend(bytes);
 
     let len = u32::try_from(bytes.len()).unwrap();
@@ -1339,7 +1339,7 @@ impl Linker {
     ///
     /// If `dl_openable` is true, all of the libraries exports will be added to the `dlopen`/`dlsym` lookup table
     /// for runtime resolution.
-    pub fn library(mut self, name: &str, module: &[u8], dl_openable: bool) -> Result<Self> {
+    pub fn library(mut self, name: &str, module: &str, dl_openable: bool) -> Result<Self> {
         self.libraries
             .push((name.to_owned(), module.to_vec(), dl_openable));
 
@@ -1349,7 +1349,7 @@ impl Linker {
     /// Add an adapter to this linker.
     ///
     /// See [crate::encoding::ComponentEncoder::adapter] for details.
-    pub fn adapter(mut self, name: &str, module: &[u8]) -> Result<Self> {
+    pub fn adapter(mut self, name: &str, module: &str) -> Result<Self> {
         self.adapters.push((name.to_owned(), module.to_vec()));
 
         Ok(self)

@@ -21,7 +21,7 @@ impl Log for Logger {
     fn flush(&self) {}
 }
 
-
+#[test]
 fn no_args() {
     let logger = Logger;
 
@@ -52,7 +52,7 @@ fn no_args() {
     all_log_macros!(logger: logger, target: "my_target", "hello",);
 }
 
-
+#[test]
 fn anonymous_args() {
     for lvl in log::Level::iter() {
         log!(lvl, "hello {}", "world");
@@ -80,7 +80,7 @@ fn anonymous_args() {
     all_log_macros!(logger: logger, target: "my_target", "hello {}", "world",);
 }
 
-
+#[test]
 fn named_args() {
     for lvl in log::Level::iter() {
         log!(lvl, "hello {world}", world = "world");
@@ -108,7 +108,7 @@ fn named_args() {
     all_log_macros!(logger: logger, target: "my_target", "hello {world}", world = "world",);
 }
 
-
+#[test]
 fn inlined_args() {
     let world = "world";
 
@@ -138,7 +138,7 @@ fn inlined_args() {
     all_log_macros!(logger: logger, target: "my_target", "hello {world}",);
 }
 
-
+#[test]
 fn enabled() {
     let logger = Logger;
 
@@ -150,7 +150,7 @@ fn enabled() {
     }
 }
 
-
+#[test]
 fn expr() {
     let logger = Logger;
 
@@ -161,7 +161,7 @@ fn expr() {
     }
 }
 
-
+#[test]
 #[cfg(feature = "kv")]
 fn kv_no_args() {
     let logger = Logger;
@@ -182,7 +182,7 @@ fn kv_no_args() {
     all_log_macros!(logger: logger, target: "my_target", cat_1 = "chashu", cat_2 = "nori", cat_count = 2; "hello");
 }
 
-
+#[test]
 #[cfg(feature = "kv")]
 fn kv_expr_args() {
     let logger = Logger;
@@ -208,7 +208,7 @@ fn kv_expr_args() {
     all_log_macros!(logger: logger, cat_math = { let mut x = 0; x += 1; x + 1 }; "hello");
 }
 
-
+#[test]
 #[cfg(feature = "kv")]
 fn kv_anonymous_args() {
     let logger = Logger;
@@ -234,7 +234,7 @@ fn kv_anonymous_args() {
     all_log_macros!(logger: logger, cat_1 = "chashu", cat_2 = "nori", cat_count = 2; "hello {}", "world");
 }
 
-
+#[test]
 #[cfg(feature = "kv")]
 fn kv_named_args() {
     let logger = Logger;
@@ -260,7 +260,7 @@ fn kv_named_args() {
     all_log_macros!(logger: logger, cat_1 = "chashu", cat_2 = "nori", cat_count = 2; "hello {world}", world = "world");
 }
 
-
+#[test]
 #[cfg(feature = "kv")]
 fn kv_ident() {
     let cat_1 = "chashu";
@@ -269,7 +269,7 @@ fn kv_ident() {
     all_log_macros!(cat_1, cat_2:%, cat_count = 2; "hello {world}", world = "world");
 }
 
-
+#[test]
 #[cfg(feature = "kv")]
 fn kv_expr_context() {
     match "chashu" {
@@ -279,7 +279,7 @@ fn kv_expr_context() {
     };
 }
 
-
+#[test]
 fn implicit_named_args() {
     let world = "world";
 
@@ -306,7 +306,7 @@ fn implicit_named_args() {
     all_log_macros!(target = "my_target"; "hello {world}",);
 }
 
-
+#[test]
 #[cfg(feature = "kv")]
 fn kv_implicit_named_args() {
     let world = "world";
@@ -322,7 +322,7 @@ fn kv_implicit_named_args() {
     all_log_macros!(cat_1 = "chashu", cat_2 = "nori", cat_count = 2; "hello {world}");
 }
 
-
+#[test]
 #[cfg(feature = "kv")]
 fn kv_string_keys() {
     for lvl in log::Level::iter() {
@@ -332,7 +332,7 @@ fn kv_string_keys() {
     all_log_macros!(target: "my_target", "also dogs" = "Fílos", "key/that-can't/be/an/ident" = "hi"; "hello {world}", world = "world");
 }
 
-
+#[test]
 #[cfg(feature = "kv")]
 fn kv_common_value_types() {
     all_log_macros!(
@@ -354,7 +354,7 @@ fn kv_common_value_types() {
     );
 }
 
-
+#[test]
 #[cfg(feature = "kv")]
 fn kv_debug() {
     all_log_macros!(
@@ -364,7 +364,7 @@ fn kv_debug() {
     );
 }
 
-
+#[test]
 #[cfg(feature = "kv")]
 fn kv_display() {
     all_log_macros!(
@@ -374,7 +374,7 @@ fn kv_display() {
     );
 }
 
-
+#[test]
 #[cfg(feature = "kv_std")]
 fn kv_error() {
     all_log_macros!(
@@ -383,7 +383,7 @@ fn kv_error() {
     );
 }
 
-
+#[test]
 #[cfg(feature = "kv_sval")]
 fn kv_sval() {
     all_log_macros!(
@@ -392,7 +392,7 @@ fn kv_sval() {
     );
 }
 
-
+#[test]
 #[cfg(feature = "kv_serde")]
 fn kv_serde() {
     all_log_macros!(
@@ -401,13 +401,13 @@ fn kv_serde() {
     );
 }
 
-
+#[test]
 fn logger_short_lived() {
     all_log_macros!(logger: Logger, "hello");
     all_log_macros!(logger: &Logger, "hello");
 }
 
-
+#[test]
 fn logger_expr() {
     all_log_macros!(logger: {
         let logger = Logger;
@@ -422,7 +422,7 @@ enum Type {
     None,
 }
 
-
+#[test]
 fn regression_issue_494() {
     use self::Type::*;
     all_log_macros!("some message: {:?}, {:?}", None, Some);

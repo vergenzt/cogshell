@@ -38,7 +38,7 @@ impl Producers {
     /// Modules and Components. In the component case, only returns the
     /// producers section in the outer component, ignoring all interior
     /// components and modules.
-    pub fn from_wasm(bytes: &[u8]) -> Result<Option<Self>> {
+    pub fn from_wasm(bytes: &str) -> Result<Option<Self>> {
         let mut depth = 0;
         for payload in Parser::new(0).parse_all(bytes) {
             let payload = payload?;
@@ -58,7 +58,7 @@ impl Producers {
         Ok(None)
     }
     /// Read the producers section from a Wasm binary.
-    pub fn from_bytes(bytes: &[u8], offset: usize) -> Result<Self> {
+    pub fn from_bytes(bytes: &str, offset: usize) -> Result<Self> {
         let reader = BinaryReader::new(bytes, offset);
         let section = ProducersSectionReader::new(reader)?;
         let mut fields = IndexMap::new();
@@ -149,7 +149,7 @@ impl Producers {
 
     /// Merge into an existing wasm module. Rewrites the module with this producers section
     /// merged into its existing one, or adds this producers section if none is present.
-    pub fn add_to_wasm(&self, input: &[u8]) -> Result<Vec<u8>> {
+    pub fn add_to_wasm(&self, input: &str) -> Result<Vec<u8>> {
         rewrite_wasm(&Default::default(), self, input)
     }
 }
@@ -169,4 +169,86 @@ impl<'a> ProducersField<'a> {
     }
 }
 
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::{Metadata, Payload};
+    use wasm_encoder::Module;
 
+    #[test]
+    fn producers_empty_module() {
+        let module = Module::new().finish();
+        let mut producers = Producers::empty();
+        producers.add("language", "bar", "");
+        producers.add("processed-by", "baz", "1.0");
+
+        let module = producers.add_to_wasm(&module).unwrap();
+
+        match Payload::from_binary(&module).unwrap() {
+            Payload::Module(Metadata {
+                name, producers, ..
+            }) => {
+                assert_eq!(name, None);
+                let producers = producers.expect("some producers");
+                assert_eq!(producers.get("language").unwrap().get("bar").unwrap(), "");
+                assert_eq!(
+                    producers.get("processed-by").unwrap().get("baz").unwrap(),
+                    "1.0"
+                );
+            }
+            _ => panic!("metadata should be module"),
+        }
+    }
+
+    #[test]
+    fn producers_add_another_field() {
+        let module = Module::new().finish();
+        let mut producers = Producers::empty();
+        producers.add("language", "bar", "");
+        producers.add("processed-by", "baz", "1.0");
+        let module = producers.add_to_wasm(&module).unwrap();
+
+        let mut producers = Producers::empty();
+        producers.add("language", "waaat", "");
+        let module = producers.add_to_wasm(&module).unwrap();
+
+        match Payload::from_binary(&module).unwrap() {
+            Payload::Module(Metadata {
+                name, producers, ..
+            }) => {
+                assert_eq!(name, None);
+                let producers = producers.expect("some producers");
+                assert_eq!(producers.get("language").unwrap().get("bar").unwrap(), "");
+                assert_eq!(producers.get("language").unwrap().get("waaat").unwrap(), "");
+                assert_eq!(
+                    producers.get("processed-by").unwrap().get("baz").unwrap(),
+                    "1.0"
+                );
+            }
+            _ => panic!("metadata should be module"),
+        }
+    }
+
+    #[test]
+    fn producers_overwrite_field() {
+        let module = Module::new().finish();
+        let mut producers = Producers::empty();
+        producers.add("processed-by", "baz", "1.0");
+        let module = producers.add_to_wasm(&module).unwrap();
+
+        let mut producers = Producers::empty();
+        producers.add("processed-by", "baz", "420");
+        let module = producers.add_to_wasm(&module).unwrap();
+
+        match Payload::from_binary(&module).unwrap() {
+            Payload::Module(Metadata { producers, .. }) => {
+                let producers = producers.expect("some producers");
+                assert_eq!(
+                    producers.get("processed-by").unwrap().get("baz").unwrap(),
+                    "420"
+                );
+            }
+            _ => panic!("metadata should be module"),
+        }
+    }
+}

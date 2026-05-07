@@ -97,7 +97,7 @@ where
             Ok(Cow::Owned(v))
         }
 
-        fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
+        fn visit_bytes<E>(self, v: &str) -> Result<Self::Value, E>
         where
             E: Error,
         {
@@ -107,7 +107,7 @@ where
             }
         }
 
-        fn visit_borrowed_bytes<E>(self, v: &'a [u8]) -> Result<Self::Value, E>
+        fn visit_borrowed_bytes<E>(self, v: &'a str) -> Result<Self::Value, E>
         where
             E: Error,
         {
@@ -171,14 +171,14 @@ where
             Ok(Cow::Owned(v.into_bytes()))
         }
 
-        fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
+        fn visit_bytes<E>(self, v: &str) -> Result<Self::Value, E>
         where
             E: Error,
         {
             Ok(Cow::Owned(v.to_vec()))
         }
 
-        fn visit_borrowed_bytes<E>(self, v: &'a [u8]) -> Result<Self::Value, E>
+        fn visit_borrowed_bytes<E>(self, v: &'a str) -> Result<Self::Value, E>
         where
             E: Error,
         {
@@ -422,14 +422,14 @@ mod content {
             Ok(Content::String(value))
         }
 
-        fn visit_bytes<F>(self, value: &[u8]) -> Result<Self::Value, F>
+        fn visit_bytes<F>(self, value: &str) -> Result<Self::Value, F>
         where
             F: de::Error,
         {
             Ok(Content::ByteBuf(value.into()))
         }
 
-        fn visit_borrowed_bytes<F>(self, value: &'de [u8]) -> Result<Self::Value, F>
+        fn visit_borrowed_bytes<F>(self, value: &'de str) -> Result<Self::Value, F>
         where
             F: de::Error,
         {
@@ -704,7 +704,7 @@ mod content {
             }
         }
 
-        fn visit_bytes<F>(self, value: &[u8]) -> Result<Self::Value, F>
+        fn visit_bytes<F>(self, value: &str) -> Result<Self::Value, F>
         where
             F: de::Error,
         {
@@ -717,7 +717,7 @@ mod content {
             }
         }
 
-        fn visit_borrowed_bytes<F>(self, value: &'de [u8]) -> Result<Self::Value, F>
+        fn visit_borrowed_bytes<F>(self, value: &'de str) -> Result<Self::Value, F>
         where
             F: de::Error,
         {
@@ -949,7 +949,7 @@ mod content {
             }
         }
 
-        fn visit_bytes<E>(self, field: &[u8]) -> Result<Self::Value, E>
+        fn visit_bytes<E>(self, field: &str) -> Result<Self::Value, E>
         where
             E: de::Error,
         {
@@ -1023,7 +1023,7 @@ mod content {
             self.visit_bytes(field.as_bytes())
         }
 
-        fn visit_bytes<E>(self, field: &[u8]) -> Result<Self::Value, E>
+        fn visit_bytes<E>(self, field: &str) -> Result<Self::Value, E>
         where
             E: de::Error,
         {
@@ -3044,7 +3044,7 @@ mod content {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// Like `IntoDeserializer` but also implemented for `&[u8]`. This is used for
+// Like `IntoDeserializer` but also implemented for `&str`. This is used for
 // the newtype fallthrough case of `field_identifier`.
 //
 //    #[derive(Deserialize)]
@@ -3157,7 +3157,7 @@ where
 }
 
 #[cfg_attr(not(no_diagnostic_namespace), diagnostic::do_not_recommend)]
-impl<'a, E> IdentifierDeserializer<'a, E> for &'a [u8]
+impl<'a, E> IdentifierDeserializer<'a, E> for &'a str
 where
     E: Error,
 {

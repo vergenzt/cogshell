@@ -10,14 +10,14 @@ fn all_valid_chars() -> impl Iterator<Item = char> {
     })
 }
 
-
+#[test]
 fn all_valid_chars_do_not_panic_for_is_xid_start() {
     for c in all_valid_chars() {
         let _ = UnicodeXID::is_xid_start(c);
     }
 }
 
-
+#[test]
 fn all_valid_chars_do_not_panic_for_is_xid_continue() {
     for c in all_valid_chars() {
         let _ = UnicodeXID::is_xid_continue(c);

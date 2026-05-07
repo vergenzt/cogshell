@@ -166,7 +166,7 @@ fn initialize_inner(state: &AtomicU8, init: &mut dyn FnMut() -> bool) {
     }
 }
 
-
+#[test]
 fn test_size() {
     use std::mem::size_of;
 

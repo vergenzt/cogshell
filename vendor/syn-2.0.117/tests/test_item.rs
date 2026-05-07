@@ -14,7 +14,7 @@ use proc_macro2::{Delimiter, Group, Ident, Span, TokenStream, TokenTree};
 use quote::quote;
 use syn::{Item, ItemTrait};
 
-
+#[test]
 fn test_macro_variable_attr() {
     // mimics the token stream corresponding to `$attr fn f() {}`
     let tokens = TokenStream::from_iter([
@@ -52,7 +52,7 @@ fn test_macro_variable_attr() {
     "#);
 }
 
-
+#[test]
 fn test_negative_impl() {
     #[cfg(any())]
     impl ! {}
@@ -103,7 +103,7 @@ fn test_negative_impl() {
     "#);
 }
 
-
+#[test]
 fn test_macro_variable_impl() {
     // mimics the token stream corresponding to `impl $trait for $ty {}`
     let tokens = TokenStream::from_iter([
@@ -142,7 +142,7 @@ fn test_macro_variable_impl() {
     "#);
 }
 
-
+#[test]
 fn test_supertraits() {
     // Rustc parses all of the following.
 
@@ -221,7 +221,7 @@ fn test_supertraits() {
     "#);
 }
 
-
+#[test]
 fn test_type_empty_bounds() {
     #[rustfmt::skip]
     let tokens = quote! {
@@ -246,7 +246,7 @@ fn test_type_empty_bounds() {
     "#);
 }
 
-
+#[test]
 fn test_impl_visibility() {
     let tokens = quote! {
         pub default unsafe impl union {}
@@ -255,7 +255,7 @@ fn test_impl_visibility() {
     snapshot!(tokens as Item, @"Item::Verbatim(`pub default unsafe impl union { }`)");
 }
 
-
+#[test]
 fn test_impl_type_parameter_defaults() {
     #[cfg(any())]
     impl<T = ()> () {}
@@ -280,7 +280,7 @@ fn test_impl_type_parameter_defaults() {
     "#);
 }
 
-
+#[test]
 fn test_impl_trait_trailing_plus() {
     let tokens = quote! {
         fn f() -> impl Sized + {}
@@ -317,7 +317,7 @@ fn test_impl_trait_trailing_plus() {
 }
 
 // Regression test for issue https://github.com/dtolnay/syn/issues/1967
-
+#[test]
 fn test_nested_receiver_classification() {
     let tokens = quote! {
         fn foo(

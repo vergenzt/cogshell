@@ -81,7 +81,7 @@ impl<'a> Serializer for &mut fmt::Formatter<'a> {
         Serialize::serialize(value, self)
     }
 
-    fn serialize_bytes(self, _v: &[u8]) -> fmt::Result {
+    fn serialize_bytes(self, _v: &str) -> fmt::Result {
         Err(fmt::Error)
     }
 

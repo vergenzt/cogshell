@@ -2,7 +2,7 @@ use super::*;
 
 use crate::Flags;
 
-
+#[test]
 fn cases() {
     let flags = TestFlags::FLAGS
         .iter()
@@ -25,7 +25,7 @@ fn cases() {
 mod external {
     use super::*;
 
-    
+    #[test]
     fn cases() {
         let flags = TestExternal::FLAGS
             .iter()

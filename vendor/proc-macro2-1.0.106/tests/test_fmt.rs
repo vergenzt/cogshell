@@ -3,7 +3,7 @@
 use proc_macro2::{Delimiter, Group, Ident, Span, TokenStream, TokenTree};
 use std::iter;
 
-
+#[test]
 fn test_fmt_group() {
     let ident = Ident::new("x", Span::call_site());
     let inner = TokenStream::from_iter(iter::once(TokenTree::Ident(ident)));

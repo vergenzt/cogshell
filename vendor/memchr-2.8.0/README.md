@@ -22,7 +22,7 @@ Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org/).
 * The `memmem` sub-module provides forward and reverse substring search
   routines.
 
-In all such cases, routines operate on `&[u8]` without regard to encoding. This
+In all such cases, routines operate on `&str` without regard to encoding. This
 is exactly what you want when searching either UTF-8 or arbitrary bytes.
 
 ### Compiling without the standard library
@@ -184,8 +184,8 @@ substring search routine requires that both the needle and haystack have type
 `&str`. Unless you can assume that your data is valid UTF-8, building a `&str`
 will come with the overhead of UTF-8 validation. This may in turn result in
 overall slower searching depending on your workload. In contrast, the `memchr`
-crate permits both the needle and the haystack to have type `&[u8]`, where
-`&[u8]` can be created from a `&str` with zero cost. Therefore, the substring
+crate permits both the needle and the haystack to have type `&str`, where
+`&str` can be created from a `&str` with zero cost. Therefore, the substring
 search in this crate is strictly more flexible than what the standard library
 provides.
 

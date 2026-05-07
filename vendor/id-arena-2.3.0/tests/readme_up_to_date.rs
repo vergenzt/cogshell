@@ -1,7 +1,7 @@
 use std::fs;
 use std::process::Command;
 
-
+#[test]
 fn cargo_readme_up_to_date() {
     println!("Checking that `cargo readme > README.md` is up to date...");
 

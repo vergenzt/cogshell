@@ -169,7 +169,7 @@ impl serde::Serializer for Serializer {
         Ok(Value::String(value.to_owned()))
     }
 
-    fn serialize_bytes(self, value: &[u8]) -> Result<Value> {
+    fn serialize_bytes(self, value: &str) -> Result<Value> {
         let vec = value.iter().map(|&b| Value::Number(b.into())).collect();
         Ok(Value::Array(vec))
     }
@@ -559,7 +559,7 @@ impl serde::Serializer for MapKeySerializer {
         Ok(value.to_owned())
     }
 
-    fn serialize_bytes(self, _value: &[u8]) -> Result<String> {
+    fn serialize_bytes(self, _value: &str) -> Result<String> {
         Err(key_must_be_a_string())
     }
 
@@ -788,7 +788,7 @@ impl serde::ser::Serializer for NumberValueEmitter {
         Ok(Value::Number(n))
     }
 
-    fn serialize_bytes(self, _value: &[u8]) -> Result<Value> {
+    fn serialize_bytes(self, _value: &str) -> Result<Value> {
         Err(invalid_number())
     }
 
@@ -958,7 +958,7 @@ impl serde::ser::Serializer for RawValueEmitter {
         crate::from_str(value)
     }
 
-    fn serialize_bytes(self, _value: &[u8]) -> Result<Value> {
+    fn serialize_bytes(self, _value: &str) -> Result<Value> {
         Err(invalid_raw_value())
     }
 

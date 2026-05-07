@@ -163,7 +163,7 @@ pub(crate) fn fsconfig_set_string(
 pub(crate) fn fsconfig_set_binary(
     fs_fd: BorrowedFd<'_>,
     key: &CStr,
-    value: &[u8],
+    value: &str,
 ) -> io::Result<()> {
     unsafe {
         ret(fsconfig(

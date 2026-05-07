@@ -17,8 +17,8 @@ use crate::{
 /// Concatenate the elements given by the iterator together into a single
 /// `Vec<u8>`.
 ///
-/// The elements may be any type that can be cheaply converted into an `&[u8]`.
-/// This includes, but is not limited to, `&str`, `&BStr` and `&[u8]` itself.
+/// The elements may be any type that can be cheaply converted into an `&str`.
+/// This includes, but is not limited to, `&str`, `&BStr` and `&str` itself.
 ///
 /// # Examples
 ///
@@ -47,8 +47,8 @@ where
 /// single `Vec<u8>`.
 ///
 /// Both the separator and the elements may be any type that can be cheaply
-/// converted into an `&[u8]`. This includes, but is not limited to,
-/// `&str`, `&BStr` and `&[u8]` itself.
+/// converted into an `&str`. This includes, but is not limited to,
+/// `&str`, `&BStr` and `&str` itself.
 ///
 /// # Examples
 ///
@@ -444,8 +444,8 @@ pub trait ByteVec: private::Sealed {
     }
 
     /// Appends the given slice to the end of this byte string. This accepts
-    /// any type that be converted to a `&[u8]`. This includes, but is not
-    /// limited to, `&str`, `&BStr`, and of course, `&[u8]` itself.
+    /// any type that be converted to a `&str`. This includes, but is not
+    /// limited to, `&str`, `&BStr`, and of course, `&str` itself.
     ///
     /// # Examples
     ///
@@ -882,8 +882,8 @@ pub trait ByteVec: private::Sealed {
     /// byte string proportional to its length.
     ///
     /// The given byte string may be any type that can be cheaply converted
-    /// into a `&[u8]`. This includes, but is not limited to, `&str` and
-    /// `&[u8]`.
+    /// into a `&str`. This includes, but is not limited to, `&str` and
+    /// `&str`.
     ///
     /// # Panics
     ///
@@ -1097,7 +1097,7 @@ impl FromUtf8Error {
     /// assert_eq!(err.as_bytes(), B(b"foo\xFFbar"));
     /// ```
     #[inline]
-    pub fn as_bytes(&self) -> &[u8] {
+    pub fn as_bytes(&self) -> &str {
         &self.original
     }
 
@@ -1160,4 +1160,65 @@ impl fmt::Display for FromUtf8Error {
     }
 }
 
+#[cfg(all(test, feature = "std"))]
+mod tests {
+    use alloc::{vec, vec::Vec};
 
+    use crate::ext_vec::ByteVec;
+
+    #[test]
+    fn insert() {
+        let mut s = vec![];
+        s.insert_str(0, "foo");
+        assert_eq!(s, "foo".as_bytes());
+
+        let mut s = Vec::from("a");
+        s.insert_str(0, "foo");
+        assert_eq!(s, "fooa".as_bytes());
+
+        let mut s = Vec::from("a");
+        s.insert_str(1, "foo");
+        assert_eq!(s, "afoo".as_bytes());
+
+        let mut s = Vec::from("foobar");
+        s.insert_str(3, "quux");
+        assert_eq!(s, "fooquuxbar".as_bytes());
+
+        let mut s = Vec::from("foobar");
+        s.insert_str(3, "x");
+        assert_eq!(s, "fooxbar".as_bytes());
+
+        let mut s = Vec::from("foobar");
+        s.insert_str(0, "x");
+        assert_eq!(s, "xfoobar".as_bytes());
+
+        let mut s = Vec::from("foobar");
+        s.insert_str(6, "x");
+        assert_eq!(s, "foobarx".as_bytes());
+
+        let mut s = Vec::from("foobar");
+        s.insert_str(3, "quuxbazquux");
+        assert_eq!(s, "fooquuxbazquuxbar".as_bytes());
+    }
+
+    #[test]
+    #[should_panic]
+    fn insert_fail1() {
+        let mut s = vec![];
+        s.insert_str(1, "foo");
+    }
+
+    #[test]
+    #[should_panic]
+    fn insert_fail2() {
+        let mut s = Vec::from("a");
+        s.insert_str(2, "foo");
+    }
+
+    #[test]
+    #[should_panic]
+    fn insert_fail3() {
+        let mut s = Vec::from("foobar");
+        s.insert_str(7, "foo");
+    }
+}

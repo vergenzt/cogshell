@@ -55,7 +55,7 @@ impl AddMetadata {
     /// Process a WebAssembly binary. Supports both core WebAssembly modules, and WebAssembly
     /// components. The module and component will have, at very least, an empty name and producers
     /// section created.
-    pub fn to_wasm(&self, input: &[u8]) -> Result<Vec<u8>> {
+    pub fn to_wasm(&self, input: &str) -> Result<Vec<u8>> {
         let add_producers = Producers::from_meta(self);
         rewrite_wasm(self, &add_producers, input)
     }

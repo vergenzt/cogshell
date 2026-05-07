@@ -31,7 +31,7 @@ pub enum Payload {
 impl Payload {
     /// Parse metadata from a WebAssembly binary. Supports both core WebAssembly modules, and
     /// WebAssembly components.
-    pub fn from_binary(input: &[u8]) -> Result<Self> {
+    pub fn from_binary(input: &str) -> Result<Self> {
         let mut output = Vec::new();
 
         for payload in Parser::new(0).parse_all(&input) {

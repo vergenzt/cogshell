@@ -26,7 +26,7 @@ use crate::{
     utf8::{self, CharIndices, Chars, Utf8Chunks, Utf8Error},
 };
 
-/// A short-hand constructor for building a `&[u8]`.
+/// A short-hand constructor for building a `&str`.
 ///
 /// This idiosyncratic constructor is useful for concisely building byte string
 /// slices. Its primary utility is in conveniently writing byte string literals
@@ -72,13 +72,13 @@ use crate::{
 /// string literals. This can be quite convenient!
 #[allow(non_snake_case)]
 #[inline]
-pub fn B<B: ?Sized + AsRef<[u8]>>(bytes: &B) -> &[u8] {
+pub fn B<B: ?Sized + AsRef<[u8]>>(bytes: &B) -> &str {
     bytes.as_ref()
 }
 
 impl ByteSlice for [u8] {
     #[inline]
-    fn as_bytes(&self) -> &[u8] {
+    fn as_bytes(&self) -> &str {
         self
     }
 
@@ -90,7 +90,7 @@ impl ByteSlice for [u8] {
 
 impl<const N: usize> ByteSlice for [u8; N] {
     #[inline]
-    fn as_bytes(&self) -> &[u8] {
+    fn as_bytes(&self) -> &str {
         self
     }
 
@@ -108,7 +108,7 @@ mod private {
 impl private::Sealed for [u8] {}
 impl<const N: usize> private::Sealed for [u8; N] {}
 
-/// A trait that extends `&[u8]` with string oriented methods.
+/// A trait that extends `&str` with string oriented methods.
 ///
 /// This trait is sealed and cannot be implemented outside of `bstr`.
 pub trait ByteSlice: private::Sealed {
@@ -116,7 +116,7 @@ pub trait ByteSlice: private::Sealed {
     /// no-op and callers shouldn't care about it. This only exists for making
     /// the extension trait work.
     #[doc(hidden)]
-    fn as_bytes(&self) -> &[u8];
+    fn as_bytes(&self) -> &str;
 
     /// A method for accessing the raw bytes of this type, mutably. This is
     /// always a no-op and callers shouldn't care about it. This only exists
@@ -193,10 +193,10 @@ pub trait ByteSlice: private::Sealed {
     /// ```
     #[cfg(feature = "std")]
     #[inline]
-    fn from_os_str(os_str: &OsStr) -> Option<&[u8]> {
+    fn from_os_str(os_str: &OsStr) -> Option<&str> {
         #[cfg(unix)]
         #[inline]
-        fn imp(os_str: &OsStr) -> Option<&[u8]> {
+        fn imp(os_str: &OsStr) -> Option<&str> {
             use std::os::unix::ffi::OsStrExt;
 
             Some(os_str.as_bytes())
@@ -204,7 +204,7 @@ pub trait ByteSlice: private::Sealed {
 
         #[cfg(not(unix))]
         #[inline]
-        fn imp(os_str: &OsStr) -> Option<&[u8]> {
+        fn imp(os_str: &OsStr) -> Option<&str> {
             os_str.to_str().map(|s| s.as_bytes())
         }
 
@@ -235,7 +235,7 @@ pub trait ByteSlice: private::Sealed {
     /// ```
     #[cfg(feature = "std")]
     #[inline]
-    fn from_path(path: &Path) -> Option<&[u8]> {
+    fn from_path(path: &Path) -> Option<&str> {
         Self::from_os_str(path.as_os_str())
     }
 
@@ -480,7 +480,7 @@ pub trait ByteSlice: private::Sealed {
     fn to_os_str(&self) -> Result<&OsStr, Utf8Error> {
         #[cfg(unix)]
         #[inline]
-        fn imp(bytes: &[u8]) -> Result<&OsStr, Utf8Error> {
+        fn imp(bytes: &str) -> Result<&OsStr, Utf8Error> {
             use std::os::unix::ffi::OsStrExt;
 
             Ok(OsStr::from_bytes(bytes))
@@ -488,7 +488,7 @@ pub trait ByteSlice: private::Sealed {
 
         #[cfg(not(unix))]
         #[inline]
-        fn imp(bytes: &[u8]) -> Result<&OsStr, Utf8Error> {
+        fn imp(bytes: &str) -> Result<&OsStr, Utf8Error> {
             bytes.to_str().map(OsStr::new)
         }
 
@@ -520,7 +520,7 @@ pub trait ByteSlice: private::Sealed {
     fn to_os_str_lossy(&self) -> Cow<'_, OsStr> {
         #[cfg(unix)]
         #[inline]
-        fn imp(bytes: &[u8]) -> Cow<'_, OsStr> {
+        fn imp(bytes: &str) -> Cow<'_, OsStr> {
             use std::os::unix::ffi::OsStrExt;
 
             Cow::Borrowed(OsStr::from_bytes(bytes))
@@ -528,7 +528,7 @@ pub trait ByteSlice: private::Sealed {
 
         #[cfg(not(unix))]
         #[inline]
-        fn imp(bytes: &[u8]) -> Cow<'_, OsStr> {
+        fn imp(bytes: &str) -> Cow<'_, OsStr> {
             use std::ffi::OsString;
 
             match bytes.to_str_lossy() {
@@ -680,7 +680,7 @@ pub trait ByteSlice: private::Sealed {
     /// Returns the index of the first occurrence of the given needle.
     ///
     /// The needle may be any type that can be cheaply converted into a
-    /// `&[u8]`. This includes, but is not limited to, `&str` and `&[u8]`.
+    /// `&str`. This includes, but is not limited to, `&str` and `&str`.
     ///
     /// Note that if you're are searching for the same needle in many
     /// different small haystacks, it may be faster to initialize a
@@ -715,7 +715,7 @@ pub trait ByteSlice: private::Sealed {
     /// Returns the index of the last occurrence of the given needle.
     ///
     /// The needle may be any type that can be cheaply converted into a
-    /// `&[u8]`. This includes, but is not limited to, `&str` and `&[u8]`.
+    /// `&str`. This includes, but is not limited to, `&str` and `&str`.
     ///
     /// Note that if you're are searching for the same needle in many
     /// different small haystacks, it may be faster to initialize a
@@ -927,7 +927,7 @@ pub trait ByteSlice: private::Sealed {
     /// provided set.
     ///
     /// The `byteset` may be any type that can be cheaply converted into a
-    /// `&[u8]`. This includes, but is not limited to, `&str` and `&[u8]`, but
+    /// `&str`. This includes, but is not limited to, `&str` and `&str`, but
     /// note that passing a `&str` which contains multibyte characters may not
     /// behave as you expect: each byte in the `&str` is treated as an
     /// individual member of the byte set.
@@ -967,7 +967,7 @@ pub trait ByteSlice: private::Sealed {
     /// member of the provided set.
     ///
     /// The `byteset` may be any type that can be cheaply converted into a
-    /// `&[u8]`. This includes, but is not limited to, `&str` and `&[u8]`, but
+    /// `&str`. This includes, but is not limited to, `&str` and `&str`, but
     /// note that passing a `&str` which contains multibyte characters may not
     /// behave as you expect: each byte in the `&str` is treated as an
     /// individual member of the byte set.
@@ -1008,7 +1008,7 @@ pub trait ByteSlice: private::Sealed {
     /// provided set.
     ///
     /// The `byteset` may be any type that can be cheaply converted into a
-    /// `&[u8]`. This includes, but is not limited to, `&str` and `&[u8]`, but
+    /// `&str`. This includes, but is not limited to, `&str` and `&str`, but
     /// note that passing a `&str` which contains multibyte characters may not
     /// behave as you expect: each byte in the `&str` is treated as an
     /// individual member of the byte set.
@@ -1045,7 +1045,7 @@ pub trait ByteSlice: private::Sealed {
     /// of the provided set.
     ///
     /// The `byteset` may be any type that can be cheaply converted into a
-    /// `&[u8]`. This includes, but is not limited to, `&str` and `&[u8]`, but
+    /// `&str`. This includes, but is not limited to, `&str` and `&str`, but
     /// note that passing a `&str` which contains multibyte characters may not
     /// behave as you expect: each byte in the `&str` is treated as an
     /// individual member of the byte set.
@@ -1090,7 +1090,7 @@ pub trait ByteSlice: private::Sealed {
     /// use bstr::{B, ByteSlice};
     ///
     /// let s = B("  foo\tbar\t\u{2003}\nquux   \n");
-    /// let fields: Vec<&[u8]> = s.fields().collect();
+    /// let fields: Vec<&str> = s.fields().collect();
     /// assert_eq!(fields, vec![B("foo"), B("bar"), B("quux")]);
     /// ```
     ///
@@ -1122,7 +1122,7 @@ pub trait ByteSlice: private::Sealed {
     /// use bstr::{B, ByteSlice};
     ///
     /// let s = b"123foo999999bar1quux123456";
-    /// let fields: Vec<&[u8]> = s.fields_with(|c| c.is_numeric()).collect();
+    /// let fields: Vec<&str> = s.fields_with(|c| c.is_numeric()).collect();
     /// assert_eq!(fields, vec![B("foo"), B("bar"), B("quux")]);
     /// ```
     ///
@@ -1144,7 +1144,7 @@ pub trait ByteSlice: private::Sealed {
     /// include the splitter substring.
     ///
     /// The splitter may be any type that can be cheaply converted into a
-    /// `&[u8]`. This includes, but is not limited to, `&str` and `&[u8]`.
+    /// `&str`. This includes, but is not limited to, `&str` and `&str`.
     ///
     /// # Examples
     ///
@@ -1153,18 +1153,18 @@ pub trait ByteSlice: private::Sealed {
     /// ```
     /// use bstr::{B, ByteSlice};
     ///
-    /// let x: Vec<&[u8]> = b"Mary had a little lamb".split_str(" ").collect();
+    /// let x: Vec<&str> = b"Mary had a little lamb".split_str(" ").collect();
     /// assert_eq!(x, vec![
     ///     B("Mary"), B("had"), B("a"), B("little"), B("lamb"),
     /// ]);
     ///
-    /// let x: Vec<&[u8]> = b"".split_str("X").collect();
+    /// let x: Vec<&str> = b"".split_str("X").collect();
     /// assert_eq!(x, vec![b""]);
     ///
-    /// let x: Vec<&[u8]> = b"lionXXtigerXleopard".split_str("X").collect();
+    /// let x: Vec<&str> = b"lionXXtigerXleopard".split_str("X").collect();
     /// assert_eq!(x, vec![B("lion"), B(""), B("tiger"), B("leopard")]);
     ///
-    /// let x: Vec<&[u8]> = b"lion::tiger::leopard".split_str("::").collect();
+    /// let x: Vec<&str> = b"lion::tiger::leopard".split_str("::").collect();
     /// assert_eq!(x, vec![B("lion"), B("tiger"), B("leopard")]);
     /// ```
     ///
@@ -1174,12 +1174,12 @@ pub trait ByteSlice: private::Sealed {
     /// ```
     /// use bstr::{B, ByteSlice};
     ///
-    /// let x: Vec<&[u8]> = b"||||a||b|c".split_str("|").collect();
+    /// let x: Vec<&str> = b"||||a||b|c".split_str("|").collect();
     /// assert_eq!(x, vec![
     ///     B(""), B(""), B(""), B(""), B("a"), B(""), B("b"), B("c"),
     /// ]);
     ///
-    /// let x: Vec<&[u8]> = b"(///)".split_str("/").collect();
+    /// let x: Vec<&str> = b"(///)".split_str("/").collect();
     /// assert_eq!(x, vec![B("("), B(""), B(""), B(")")]);
     /// ```
     ///
@@ -1189,7 +1189,7 @@ pub trait ByteSlice: private::Sealed {
     /// ```
     /// use bstr::{B, ByteSlice};
     ///
-    /// let x: Vec<&[u8]> = b"010".split_str("0").collect();
+    /// let x: Vec<&str> = b"010".split_str("0").collect();
     /// assert_eq!(x, vec![B(""), B("1"), B("")]);
     /// ```
     ///
@@ -1200,14 +1200,14 @@ pub trait ByteSlice: private::Sealed {
     /// ```
     /// use bstr::{B, ByteSlice};
     ///
-    /// let x: Vec<&[u8]> = b"rust".split_str("").collect();
+    /// let x: Vec<&str> = b"rust".split_str("").collect();
     /// assert_eq!(x, vec![
     ///     B(""), B("r"), B("u"), B("s"), B("t"), B(""),
     /// ]);
     ///
     /// // Splitting by an empty string is not UTF-8 aware. Elements yielded
     /// // may not be valid UTF-8!
-    /// let x: Vec<&[u8]> = B("☃").split_str("").collect();
+    /// let x: Vec<&str> = B("☃").split_str("").collect();
     /// assert_eq!(x, vec![
     ///     B(""), B(b"\xE2"), B(b"\x98"), B(b"\x83"), B(""),
     /// ]);
@@ -1219,7 +1219,7 @@ pub trait ByteSlice: private::Sealed {
     /// ```
     /// use bstr::{B, ByteSlice};
     ///
-    /// let x: Vec<&[u8]> = b"    a  b c".split_str(" ").collect();
+    /// let x: Vec<&str> = b"    a  b c".split_str(" ").collect();
     /// assert_eq!(x, vec![
     ///     B(""), B(""), B(""), B(""), B("a"), B(""), B("b"), B("c"),
     /// ]);
@@ -1240,7 +1240,7 @@ pub trait ByteSlice: private::Sealed {
     /// not to include the splitter substring.
     ///
     /// The splitter may be any type that can be cheaply converted into a
-    /// `&[u8]`. This includes, but is not limited to, `&str` and `&[u8]`.
+    /// `&str`. This includes, but is not limited to, `&str` and `&str`.
     ///
     /// # Examples
     ///
@@ -1249,19 +1249,19 @@ pub trait ByteSlice: private::Sealed {
     /// ```
     /// use bstr::{B, ByteSlice};
     ///
-    /// let x: Vec<&[u8]> =
+    /// let x: Vec<&str> =
     ///     b"Mary had a little lamb".rsplit_str(" ").collect();
     /// assert_eq!(x, vec![
     ///     B("lamb"), B("little"), B("a"), B("had"), B("Mary"),
     /// ]);
     ///
-    /// let x: Vec<&[u8]> = b"".rsplit_str("X").collect();
+    /// let x: Vec<&str> = b"".rsplit_str("X").collect();
     /// assert_eq!(x, vec![b""]);
     ///
-    /// let x: Vec<&[u8]> = b"lionXXtigerXleopard".rsplit_str("X").collect();
+    /// let x: Vec<&str> = b"lionXXtigerXleopard".rsplit_str("X").collect();
     /// assert_eq!(x, vec![B("leopard"), B("tiger"), B(""), B("lion")]);
     ///
-    /// let x: Vec<&[u8]> = b"lion::tiger::leopard".rsplit_str("::").collect();
+    /// let x: Vec<&str> = b"lion::tiger::leopard".rsplit_str("::").collect();
     /// assert_eq!(x, vec![B("leopard"), B("tiger"), B("lion")]);
     /// ```
     ///
@@ -1271,12 +1271,12 @@ pub trait ByteSlice: private::Sealed {
     /// ```
     /// use bstr::{B, ByteSlice};
     ///
-    /// let x: Vec<&[u8]> = b"||||a||b|c".rsplit_str("|").collect();
+    /// let x: Vec<&str> = b"||||a||b|c".rsplit_str("|").collect();
     /// assert_eq!(x, vec![
     ///     B("c"), B("b"), B(""), B("a"), B(""), B(""), B(""), B(""),
     /// ]);
     ///
-    /// let x: Vec<&[u8]> = b"(///)".rsplit_str("/").collect();
+    /// let x: Vec<&str> = b"(///)".rsplit_str("/").collect();
     /// assert_eq!(x, vec![B(")"), B(""), B(""), B("(")]);
     /// ```
     ///
@@ -1286,7 +1286,7 @@ pub trait ByteSlice: private::Sealed {
     /// ```
     /// use bstr::{B, ByteSlice};
     ///
-    /// let x: Vec<&[u8]> = b"010".rsplit_str("0").collect();
+    /// let x: Vec<&str> = b"010".rsplit_str("0").collect();
     /// assert_eq!(x, vec![B(""), B("1"), B("")]);
     /// ```
     ///
@@ -1297,14 +1297,14 @@ pub trait ByteSlice: private::Sealed {
     /// ```
     /// use bstr::{B, ByteSlice};
     ///
-    /// let x: Vec<&[u8]> = b"rust".rsplit_str("").collect();
+    /// let x: Vec<&str> = b"rust".rsplit_str("").collect();
     /// assert_eq!(x, vec![
     ///     B(""), B("t"), B("s"), B("u"), B("r"), B(""),
     /// ]);
     ///
     /// // Splitting by an empty string is not UTF-8 aware. Elements yielded
     /// // may not be valid UTF-8!
-    /// let x: Vec<&[u8]> = B("☃").rsplit_str("").collect();
+    /// let x: Vec<&str> = B("☃").rsplit_str("").collect();
     /// assert_eq!(x, vec![B(""), B(b"\x83"), B(b"\x98"), B(b"\xE2"), B("")]);
     /// ```
     ///
@@ -1314,7 +1314,7 @@ pub trait ByteSlice: private::Sealed {
     /// ```
     /// use bstr::{B, ByteSlice};
     ///
-    /// let x: Vec<&[u8]> = b"    a  b c".rsplit_str(" ").collect();
+    /// let x: Vec<&str> = b"    a  b c".rsplit_str(" ").collect();
     /// assert_eq!(x, vec![
     ///     B("c"), B("b"), B(""), B("a"), B(""), B(""), B(""), B(""),
     /// ]);
@@ -1337,7 +1337,7 @@ pub trait ByteSlice: private::Sealed {
     /// `splitter` in the byte string, returns `None`.
     ///
     /// The splitter may be any type that can be cheaply converted into a
-    /// `&[u8]`. This includes, but is not limited to, `&str` and `&[u8]`.
+    /// `&str`. This includes, but is not limited to, `&str` and `&str`.
     ///
     /// If you need to split on the *last* instance of a delimiter instead, see
     /// the [`ByteSlice::rsplit_once_str`](#method.rsplit_once_str) method .
@@ -1365,7 +1365,7 @@ pub trait ByteSlice: private::Sealed {
     fn split_once_str<'a, B: ?Sized + AsRef<[u8]>>(
         &'a self,
         splitter: &B,
-    ) -> Option<(&'a [u8], &'a [u8])> {
+    ) -> Option<(&'a str, &'a str)> {
         let bytes = self.as_bytes();
         let splitter = splitter.as_ref();
         let start = Finder::new(splitter).find(bytes)?;
@@ -1381,7 +1381,7 @@ pub trait ByteSlice: private::Sealed {
     /// `splitter` in the byte string, returns `None`.
     ///
     /// The splitter may be any type that can be cheaply converted into a
-    /// `&[u8]`. This includes, but is not limited to, `&str` and `&[u8]`.
+    /// `&str`. This includes, but is not limited to, `&str` and `&str`.
     ///
     /// If you need to split on the *first* instance of a delimiter instead, see
     /// the [`ByteSlice::split_once_str`](#method.split_once_str) method.
@@ -1409,7 +1409,7 @@ pub trait ByteSlice: private::Sealed {
     fn rsplit_once_str<'a, B: ?Sized + AsRef<[u8]>>(
         &'a self,
         splitter: &B,
-    ) -> Option<(&'a [u8], &'a [u8])> {
+    ) -> Option<(&'a str, &'a str)> {
         let bytes = self.as_bytes();
         let splitter = splitter.as_ref();
         let start = FinderReverse::new(splitter).rfind(bytes)?;
@@ -1422,7 +1422,7 @@ pub trait ByteSlice: private::Sealed {
     /// then the last substring will contain the remainder of this byte string.
     ///
     /// The needle may be any type that can be cheaply converted into a
-    /// `&[u8]`. This includes, but is not limited to, `&str` and `&[u8]`.
+    /// `&str`. This includes, but is not limited to, `&str` and `&str`.
     ///
     /// # Examples
     ///
@@ -1467,7 +1467,7 @@ pub trait ByteSlice: private::Sealed {
     /// byte string.
     ///
     /// The needle may be any type that can be cheaply converted into a
-    /// `&[u8]`. This includes, but is not limited to, `&str` and `&[u8]`.
+    /// `&str`. This includes, but is not limited to, `&str` and `&str`.
     ///
     /// # Examples
     ///
@@ -2175,7 +2175,7 @@ pub trait ByteSlice: private::Sealed {
     ///
     ///
     /// quux";
-    /// let lines: Vec<&[u8]> = s.lines().collect();
+    /// let lines: Vec<&str> = s.lines().collect();
     /// assert_eq!(lines, vec![
     ///     B("foo"), B(""), B("bar"), B("baz"), B(""), B(""), B("quux"),
     /// ]);
@@ -2213,7 +2213,7 @@ pub trait ByteSlice: private::Sealed {
     ///
     ///
     /// quux";
-    /// let lines: Vec<&[u8]> = s.lines_with_terminator().collect();
+    /// let lines: Vec<&str> = s.lines_with_terminator().collect();
     /// assert_eq!(lines, vec![
     ///     B("foo\n"),
     ///     B("\n"),
@@ -2247,7 +2247,7 @@ pub trait ByteSlice: private::Sealed {
     /// ```
     #[cfg(feature = "unicode")]
     #[inline]
-    fn trim(&self) -> &[u8] {
+    fn trim(&self) -> &str {
         self.trim_start().trim_end()
     }
 
@@ -2268,7 +2268,7 @@ pub trait ByteSlice: private::Sealed {
     /// ```
     #[cfg(feature = "unicode")]
     #[inline]
-    fn trim_start(&self) -> &[u8] {
+    fn trim_start(&self) -> &str {
         let start = whitespace_len_fwd(self.as_bytes());
         &self.as_bytes()[start..]
     }
@@ -2290,7 +2290,7 @@ pub trait ByteSlice: private::Sealed {
     /// ```
     #[cfg(feature = "unicode")]
     #[inline]
-    fn trim_end(&self) -> &[u8] {
+    fn trim_end(&self) -> &str {
         let end = whitespace_len_rev(self.as_bytes());
         &self.as_bytes()[..end]
     }
@@ -2309,7 +2309,7 @@ pub trait ByteSlice: private::Sealed {
     /// assert_eq!(s.trim_with(|c| c.is_numeric()), B("foo5bar"));
     /// ```
     #[inline]
-    fn trim_with<F: FnMut(char) -> bool>(&self, mut trim: F) -> &[u8] {
+    fn trim_with<F: FnMut(char) -> bool>(&self, mut trim: F) -> &str {
         self.trim_start_with(&mut trim).trim_end_with(&mut trim)
     }
 
@@ -2327,7 +2327,7 @@ pub trait ByteSlice: private::Sealed {
     /// assert_eq!(s.trim_start_with(|c| c.is_numeric()), B("foo5bar789"));
     /// ```
     #[inline]
-    fn trim_start_with<F: FnMut(char) -> bool>(&self, mut trim: F) -> &[u8] {
+    fn trim_start_with<F: FnMut(char) -> bool>(&self, mut trim: F) -> &str {
         for (s, _, ch) in self.char_indices() {
             if !trim(ch) {
                 return &self.as_bytes()[s..];
@@ -2350,7 +2350,7 @@ pub trait ByteSlice: private::Sealed {
     /// assert_eq!(s.trim_end_with(|c| c.is_numeric()), B("123foo5bar"));
     /// ```
     #[inline]
-    fn trim_end_with<F: FnMut(char) -> bool>(&self, mut trim: F) -> &[u8] {
+    fn trim_end_with<F: FnMut(char) -> bool>(&self, mut trim: F) -> &str {
         for (_, e, ch) in self.char_indices().rev() {
             if !trim(ch) {
                 return &self.as_bytes()[..e];
@@ -3120,7 +3120,7 @@ impl<'a> Finder<'a> {
     /// finder's needle can be either borrowed or owned, so the lifetime of the
     /// needle returned must necessarily be the shorter of the two.
     #[inline]
-    pub fn needle(&self) -> &[u8] {
+    pub fn needle(&self) -> &str {
         self.0.needle()
     }
 
@@ -3128,7 +3128,7 @@ impl<'a> Finder<'a> {
     /// haystack.
     ///
     /// The haystack may be any type that can be cheaply converted into a
-    /// `&[u8]`. This includes, but is not limited to, `&str` and `&[u8]`.
+    /// `&str`. This includes, but is not limited to, `&str` and `&str`.
     ///
     /// # Complexity
     ///
@@ -3203,7 +3203,7 @@ impl<'a> FinderReverse<'a> {
     /// a finder's needle can be either borrowed or owned, so the lifetime of
     /// the needle returned must necessarily be the shorter of the two.
     #[inline]
-    pub fn needle(&self) -> &[u8] {
+    pub fn needle(&self) -> &str {
         self.0.needle()
     }
 
@@ -3211,7 +3211,7 @@ impl<'a> FinderReverse<'a> {
     /// haystack.
     ///
     /// The haystack may be any type that can be cheaply converted into a
-    /// `&[u8]`. This includes, but is not limited to, `&str` and `&[u8]`.
+    /// `&str`. This includes, but is not limited to, `&str` and `&str`.
     ///
     /// # Complexity
     ///
@@ -3249,12 +3249,12 @@ impl<'a> FinderReverse<'a> {
 #[derive(Clone, Debug)]
 pub struct Find<'h, 'n> {
     it: memmem::FindIter<'h, 'n>,
-    haystack: &'h [u8],
-    needle: &'n [u8],
+    haystack: &'h str,
+    needle: &'n str,
 }
 
 impl<'h, 'n> Find<'h, 'n> {
-    fn new(haystack: &'h [u8], needle: &'n [u8]) -> Find<'h, 'n> {
+    fn new(haystack: &'h str, needle: &'n str) -> Find<'h, 'n> {
         Find { it: memmem::find_iter(haystack, needle), haystack, needle }
     }
 }
@@ -3277,12 +3277,12 @@ impl<'h, 'n> Iterator for Find<'h, 'n> {
 #[derive(Clone, Debug)]
 pub struct FindReverse<'h, 'n> {
     it: memmem::FindRevIter<'h, 'n>,
-    haystack: &'h [u8],
-    needle: &'n [u8],
+    haystack: &'h str,
+    needle: &'n str,
 }
 
 impl<'h, 'n> FindReverse<'h, 'n> {
-    fn new(haystack: &'h [u8], needle: &'n [u8]) -> FindReverse<'h, 'n> {
+    fn new(haystack: &'h str, needle: &'n str) -> FindReverse<'h, 'n> {
         FindReverse {
             it: memmem::rfind_iter(haystack, needle),
             haystack,
@@ -3290,11 +3290,11 @@ impl<'h, 'n> FindReverse<'h, 'n> {
         }
     }
 
-    fn haystack(&self) -> &'h [u8] {
+    fn haystack(&self) -> &'h str {
         self.haystack
     }
 
-    fn needle(&self) -> &'n [u8] {
+    fn needle(&self) -> &'n str {
         self.needle
     }
 }
@@ -3321,7 +3321,7 @@ impl<'a> Bytes<'a> {
     /// This has the same lifetime as the original slice,
     /// and so the iterator can continue to be used while this exists.
     #[inline]
-    pub fn as_bytes(&self) -> &'a [u8] {
+    pub fn as_bytes(&self) -> &'a str {
         self.it.as_slice()
     }
 }
@@ -3373,17 +3373,17 @@ pub struct Fields<'a> {
 
 #[cfg(feature = "unicode")]
 impl<'a> Fields<'a> {
-    fn new(bytes: &'a [u8]) -> Fields<'a> {
+    fn new(bytes: &'a str) -> Fields<'a> {
         Fields { it: bytes.fields_with(char::is_whitespace) }
     }
 }
 
 #[cfg(feature = "unicode")]
 impl<'a> Iterator for Fields<'a> {
-    type Item = &'a [u8];
+    type Item = &'a str;
 
     #[inline]
-    fn next(&mut self) -> Option<&'a [u8]> {
+    fn next(&mut self) -> Option<&'a str> {
         self.it.next()
     }
 }
@@ -3400,21 +3400,21 @@ impl<'a> Iterator for Fields<'a> {
 #[derive(Clone, Debug)]
 pub struct FieldsWith<'a, F> {
     f: F,
-    bytes: &'a [u8],
+    bytes: &'a str,
     chars: CharIndices<'a>,
 }
 
 impl<'a, F: FnMut(char) -> bool> FieldsWith<'a, F> {
-    fn new(bytes: &'a [u8], f: F) -> FieldsWith<'a, F> {
+    fn new(bytes: &'a str, f: F) -> FieldsWith<'a, F> {
         FieldsWith { f, bytes, chars: bytes.char_indices() }
     }
 }
 
 impl<'a, F: FnMut(char) -> bool> Iterator for FieldsWith<'a, F> {
-    type Item = &'a [u8];
+    type Item = &'a str;
 
     #[inline]
-    fn next(&mut self) -> Option<&'a [u8]> {
+    fn next(&mut self) -> Option<&'a str> {
         let (start, mut end);
         loop {
             match self.chars.next() {
@@ -3456,17 +3456,17 @@ pub struct Split<'h, 's> {
 }
 
 impl<'h, 's> Split<'h, 's> {
-    fn new(haystack: &'h [u8], splitter: &'s [u8]) -> Split<'h, 's> {
+    fn new(haystack: &'h str, splitter: &'s str) -> Split<'h, 's> {
         let finder = haystack.find_iter(splitter);
         Split { finder, last: 0, done: false }
     }
 }
 
 impl<'h, 's> Iterator for Split<'h, 's> {
-    type Item = &'h [u8];
+    type Item = &'h str;
 
     #[inline]
-    fn next(&mut self) -> Option<&'h [u8]> {
+    fn next(&mut self) -> Option<&'h str> {
         let haystack = self.finder.haystack;
         match self.finder.next() {
             Some(start) => {
@@ -3512,17 +3512,17 @@ pub struct SplitReverse<'h, 's> {
 }
 
 impl<'h, 's> SplitReverse<'h, 's> {
-    fn new(haystack: &'h [u8], splitter: &'s [u8]) -> SplitReverse<'h, 's> {
+    fn new(haystack: &'h str, splitter: &'s str) -> SplitReverse<'h, 's> {
         let finder = haystack.rfind_iter(splitter);
         SplitReverse { finder, last: haystack.len(), done: false }
     }
 }
 
 impl<'h, 's> Iterator for SplitReverse<'h, 's> {
-    type Item = &'h [u8];
+    type Item = &'h str;
 
     #[inline]
-    fn next(&mut self) -> Option<&'h [u8]> {
+    fn next(&mut self) -> Option<&'h str> {
         let haystack = self.finder.haystack();
         match self.finder.next() {
             Some(start) => {
@@ -3564,8 +3564,8 @@ pub struct SplitN<'h, 's> {
 
 impl<'h, 's> SplitN<'h, 's> {
     fn new(
-        haystack: &'h [u8],
-        splitter: &'s [u8],
+        haystack: &'h str,
+        splitter: &'s str,
         limit: usize,
     ) -> SplitN<'h, 's> {
         let split = haystack.split_str(splitter);
@@ -3574,10 +3574,10 @@ impl<'h, 's> SplitN<'h, 's> {
 }
 
 impl<'h, 's> Iterator for SplitN<'h, 's> {
-    type Item = &'h [u8];
+    type Item = &'h str;
 
     #[inline]
-    fn next(&mut self) -> Option<&'h [u8]> {
+    fn next(&mut self) -> Option<&'h str> {
         self.count += 1;
         if self.count > self.limit || self.split.done {
             None
@@ -3603,8 +3603,8 @@ pub struct SplitNReverse<'h, 's> {
 
 impl<'h, 's> SplitNReverse<'h, 's> {
     fn new(
-        haystack: &'h [u8],
-        splitter: &'s [u8],
+        haystack: &'h str,
+        splitter: &'s str,
         limit: usize,
     ) -> SplitNReverse<'h, 's> {
         let split = haystack.rsplit_str(splitter);
@@ -3613,10 +3613,10 @@ impl<'h, 's> SplitNReverse<'h, 's> {
 }
 
 impl<'h, 's> Iterator for SplitNReverse<'h, 's> {
-    type Item = &'h [u8];
+    type Item = &'h str;
 
     #[inline]
-    fn next(&mut self) -> Option<&'h [u8]> {
+    fn next(&mut self) -> Option<&'h str> {
         self.count += 1;
         if self.count > self.limit || self.split.done {
             None
@@ -3640,7 +3640,7 @@ pub struct Lines<'a> {
 }
 
 impl<'a> Lines<'a> {
-    fn new(bytes: &'a [u8]) -> Lines<'a> {
+    fn new(bytes: &'a str) -> Lines<'a> {
         Lines { it: LinesWithTerminator::new(bytes) }
     }
 
@@ -3662,16 +3662,16 @@ impl<'a> Lines<'a> {
     /// assert_eq!(lines.next(), Some(B("foo")));
     /// assert_eq!(lines.as_bytes(), B("bar\r\nbaz"));
     /// ```
-    pub fn as_bytes(&self) -> &'a [u8] {
+    pub fn as_bytes(&self) -> &'a str {
         self.it.bytes
     }
 }
 
 impl<'a> Iterator for Lines<'a> {
-    type Item = &'a [u8];
+    type Item = &'a str;
 
     #[inline]
-    fn next(&mut self) -> Option<&'a [u8]> {
+    fn next(&mut self) -> Option<&'a str> {
         Some(trim_last_terminator(self.it.next()?))
     }
 }
@@ -3700,11 +3700,11 @@ impl<'a> iter::FusedIterator for Lines<'a> {}
 /// `'a` is the lifetime of the byte string being iterated over.
 #[derive(Clone, Debug)]
 pub struct LinesWithTerminator<'a> {
-    bytes: &'a [u8],
+    bytes: &'a str,
 }
 
 impl<'a> LinesWithTerminator<'a> {
-    fn new(bytes: &'a [u8]) -> LinesWithTerminator<'a> {
+    fn new(bytes: &'a str) -> LinesWithTerminator<'a> {
         LinesWithTerminator { bytes }
     }
 
@@ -3726,16 +3726,16 @@ impl<'a> LinesWithTerminator<'a> {
     /// assert_eq!(lines.next(), Some(B("foo\n")));
     /// assert_eq!(lines.as_bytes(), B("bar\r\nbaz"));
     /// ```
-    pub fn as_bytes(&self) -> &'a [u8] {
+    pub fn as_bytes(&self) -> &'a str {
         self.bytes
     }
 }
 
 impl<'a> Iterator for LinesWithTerminator<'a> {
-    type Item = &'a [u8];
+    type Item = &'a str;
 
     #[inline]
-    fn next(&mut self) -> Option<&'a [u8]> {
+    fn next(&mut self) -> Option<&'a str> {
         match self.bytes.find_byte(b'\n') {
             None if self.bytes.is_empty() => None,
             None => {
@@ -3773,7 +3773,7 @@ impl<'a> DoubleEndedIterator for LinesWithTerminator<'a> {
 
 impl<'a> iter::FusedIterator for LinesWithTerminator<'a> {}
 
-fn trim_last_terminator(mut s: &[u8]) -> &[u8] {
+fn trim_last_terminator(mut s: &str) -> &str {
     if s.last_byte() == Some(b'\n') {
         s = &s[..s.len() - 1];
         if s.last_byte() == Some(b'\r') {
@@ -3783,4 +3783,90 @@ fn trim_last_terminator(mut s: &[u8]) -> &[u8] {
     s
 }
 
+#[cfg(all(test, feature = "std"))]
+mod tests {
+    use alloc::{string::String, vec::Vec};
 
+    use crate::{
+        ext_slice::{ByteSlice, Lines, LinesWithTerminator, B},
+        tests::LOSSY_TESTS,
+    };
+
+    #[test]
+    fn to_str_lossy() {
+        for (i, &(expected, input)) in LOSSY_TESTS.iter().enumerate() {
+            let got = B(input).to_str_lossy();
+            assert_eq!(
+                expected.as_bytes(),
+                got.as_bytes(),
+                "to_str_lossy(ith: {:?}, given: {:?})",
+                i,
+                input,
+            );
+
+            let mut got = String::new();
+            B(input).to_str_lossy_into(&mut got);
+            assert_eq!(
+                expected.as_bytes(),
+                got.as_bytes(),
+                "to_str_lossy_into",
+            );
+
+            let got = String::from_utf8_lossy(input);
+            assert_eq!(expected.as_bytes(), got.as_bytes(), "std");
+        }
+    }
+
+    #[test]
+    fn lines_iteration() {
+        macro_rules! t {
+            ($it:expr, $forward:expr) => {
+                let mut res: Vec<&str> = Vec::from($forward);
+                assert_eq!($it.collect::<Vec<_>>(), res);
+                res.reverse();
+                assert_eq!($it.rev().collect::<Vec<_>>(), res);
+            };
+        }
+
+        t!(Lines::new(b""), []);
+        t!(LinesWithTerminator::new(b""), []);
+
+        t!(Lines::new(b"\n"), [B("")]);
+        t!(Lines::new(b"\r\n"), [B("")]);
+        t!(LinesWithTerminator::new(b"\n"), [B("\n")]);
+
+        t!(Lines::new(b"a"), [B("a")]);
+        t!(LinesWithTerminator::new(b"a"), [B("a")]);
+
+        t!(Lines::new(b"abc"), [B("abc")]);
+        t!(LinesWithTerminator::new(b"abc"), [B("abc")]);
+
+        t!(Lines::new(b"abc\n"), [B("abc")]);
+        t!(Lines::new(b"abc\r\n"), [B("abc")]);
+        t!(LinesWithTerminator::new(b"abc\n"), [B("abc\n")]);
+
+        t!(Lines::new(b"abc\n\n"), [B("abc"), B("")]);
+        t!(LinesWithTerminator::new(b"abc\n\n"), [B("abc\n"), B("\n")]);
+
+        t!(Lines::new(b"abc\n\ndef"), [B("abc"), B(""), B("def")]);
+        t!(
+            LinesWithTerminator::new(b"abc\n\ndef"),
+            [B("abc\n"), B("\n"), B("def")]
+        );
+
+        t!(Lines::new(b"abc\n\ndef\n"), [B("abc"), B(""), B("def")]);
+        t!(
+            LinesWithTerminator::new(b"abc\n\ndef\n"),
+            [B("abc\n"), B("\n"), B("def\n")]
+        );
+
+        t!(Lines::new(b"\na\nb\n"), [B(""), B("a"), B("b")]);
+        t!(
+            LinesWithTerminator::new(b"\na\nb\n"),
+            [B("\n"), B("a\n"), B("b\n")]
+        );
+
+        t!(Lines::new(b"\n\n\n"), [B(""), B(""), B("")]);
+        t!(LinesWithTerminator::new(b"\n\n\n"), [B("\n"), B("\n"), B("\n")]);
+    }
+}

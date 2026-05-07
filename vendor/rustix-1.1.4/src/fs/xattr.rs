@@ -113,7 +113,7 @@ pub fn fgetxattr<Fd: AsFd, Name: path::Arg, Buf: Buffer<u8>>(
 pub fn setxattr<P: path::Arg, Name: path::Arg>(
     path: P,
     name: Name,
-    value: &[u8],
+    value: &str,
     flags: XattrFlags,
 ) -> io::Result<()> {
     path.into_with_c_str(|path| {
@@ -133,7 +133,7 @@ pub fn setxattr<P: path::Arg, Name: path::Arg>(
 pub fn lsetxattr<P: path::Arg, Name: path::Arg>(
     path: P,
     name: Name,
-    value: &[u8],
+    value: &str,
     flags: XattrFlags,
 ) -> io::Result<()> {
     path.into_with_c_str(|path| {
@@ -154,7 +154,7 @@ pub fn lsetxattr<P: path::Arg, Name: path::Arg>(
 pub fn fsetxattr<Fd: AsFd, Name: path::Arg>(
     fd: Fd,
     name: Name,
-    value: &[u8],
+    value: &str,
     flags: XattrFlags,
 ) -> io::Result<()> {
     name.into_with_c_str(|name| backend::fs::syscalls::fsetxattr(fd.as_fd(), name, value, flags))

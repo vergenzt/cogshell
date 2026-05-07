@@ -8,7 +8,7 @@ use std::{
 
 use once_cell::race::{OnceBool, OnceNonZeroUsize};
 
-
+#[test]
 fn once_non_zero_usize_smoke_test() {
     let cnt = AtomicUsize::new(0);
     let cell = OnceNonZeroUsize::new();
@@ -38,7 +38,7 @@ fn once_non_zero_usize_smoke_test() {
     assert_eq!(cnt.load(SeqCst), 1);
 }
 
-
+#[test]
 fn once_non_zero_usize_set() {
     let val1 = NonZeroUsize::new(92).unwrap();
     let val2 = NonZeroUsize::new(62).unwrap();
@@ -53,7 +53,7 @@ fn once_non_zero_usize_set() {
 }
 
 #[cfg(feature = "std")]
-
+#[test]
 fn once_non_zero_usize_first_wins() {
     let val1 = NonZeroUsize::new(92).unwrap();
     let val2 = NonZeroUsize::new(62).unwrap();
@@ -87,7 +87,7 @@ fn once_non_zero_usize_first_wins() {
     assert_eq!(cell.get(), Some(val1));
 }
 
-
+#[test]
 fn once_bool_smoke_test() {
     let cnt = AtomicUsize::new(0);
     let cell = OnceBool::new();
@@ -116,7 +116,7 @@ fn once_bool_smoke_test() {
     assert_eq!(cnt.load(SeqCst), 1);
 }
 
-
+#[test]
 fn once_bool_set() {
     let cell = OnceBool::new();
 
@@ -127,7 +127,7 @@ fn once_bool_set() {
     assert_eq!(cell.get(), Some(false));
 }
 
-
+#[test]
 fn get_unchecked() {
     let cell = OnceNonZeroUsize::new();
     cell.set(NonZeroUsize::new(92).unwrap()).unwrap();

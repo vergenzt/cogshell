@@ -15,7 +15,7 @@ use quote::quote;
 use syn::parse::{ParseStream, Parser as _, Result};
 use syn::{Meta, MetaList, MetaNameValue, Token};
 
-
+#[test]
 fn test_parse_meta_item_word() {
     let input = "hello";
 
@@ -30,7 +30,7 @@ fn test_parse_meta_item_word() {
     "#);
 }
 
-
+#[test]
 fn test_parse_meta_name_value() {
     let input = "foo = 5";
     let (inner, meta) = (input, input);
@@ -68,7 +68,7 @@ fn test_parse_meta_name_value() {
     assert_eq!(meta, Meta::NameValue(inner));
 }
 
-
+#[test]
 fn test_parse_meta_item_list_lit() {
     let input = "foo(5)";
     let (inner, meta) = (input, input);
@@ -104,7 +104,7 @@ fn test_parse_meta_item_list_lit() {
     assert_eq!(meta, Meta::List(inner));
 }
 
-
+#[test]
 fn test_parse_meta_item_multiple() {
     let input = "foo(word, name = 5, list(name2 = 6), word2)";
     let (inner, meta) = (input, input);
@@ -140,7 +140,7 @@ fn test_parse_meta_item_multiple() {
     assert_eq!(meta, Meta::List(inner));
 }
 
-
+#[test]
 fn test_parse_path() {
     let input = "::serde::Serialize";
     snapshot!(input as Meta, @r#"
@@ -159,7 +159,7 @@ fn test_parse_path() {
     "#);
 }
 
-
+#[test]
 fn test_fat_arrow_after_meta() {
     fn parse(input: ParseStream) -> Result<()> {
         while !input.is_empty() {

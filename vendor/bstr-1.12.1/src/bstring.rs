@@ -67,7 +67,7 @@ impl BString {
     }
 
     #[inline]
-    pub(crate) fn as_bytes(&self) -> &[u8] {
+    pub(crate) fn as_bytes(&self) -> &str {
         &self.bytes
     }
 

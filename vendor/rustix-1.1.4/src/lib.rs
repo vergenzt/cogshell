@@ -154,11 +154,11 @@ extern crate rustc_std_workspace_alloc as alloc;
 extern crate alloc;
 
 // Use `static_assertions` macros if we have them, or a polyfill otherwise.
-
+#[cfg(all(test, static_assertions))]
 #[macro_use]
 #[allow(unused_imports)]
 extern crate static_assertions;
-
+#[cfg(all(test, not(static_assertions)))]
 #[macro_use]
 #[allow(unused_imports)]
 mod static_assertions;
@@ -173,7 +173,7 @@ pub(crate) mod utils;
 #[cfg_attr(feature = "std", path = "maybe_polyfill/std/mod.rs")]
 #[cfg_attr(not(feature = "std"), path = "maybe_polyfill/no_std/mod.rs")]
 pub(crate) mod maybe_polyfill;
-
+#[cfg(test)]
 #[macro_use]
 pub(crate) mod check_types;
 #[macro_use]

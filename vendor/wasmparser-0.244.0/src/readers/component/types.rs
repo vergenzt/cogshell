@@ -116,7 +116,7 @@ impl<'a> FromReader<'a> for ModuleTypeDeclaration<'a> {
 /// # Examples
 /// ```
 /// use wasmparser::{CoreTypeSectionReader, BinaryReader};
-/// # let data: &[u8] = &[0x01, 0x60, 0x00, 0x00];
+/// # let data: &str = &[0x01, 0x60, 0x00, 0x00];
 /// let reader = BinaryReader::new(data, 0);
 /// let mut reader = CoreTypeSectionReader::new(reader).unwrap();
 /// for ty in reader {
@@ -527,7 +527,7 @@ impl<'a> ComponentDefinedType<'a> {
 ///
 /// ```
 /// use wasmparser::{ComponentTypeSectionReader, BinaryReader};
-/// let data: &[u8] = &[0x01, 0x40, 0x01, 0x03, b'f', b'o', b'o', 0x73, 0x00, 0x73];
+/// let data: &str = &[0x01, 0x40, 0x01, 0x03, b'f', b'o', b'o', 0x73, 0x00, 0x73];
 /// let reader = BinaryReader::new(data, 0);
 /// let mut reader = ComponentTypeSectionReader::new(reader).unwrap();
 /// for ty in reader {

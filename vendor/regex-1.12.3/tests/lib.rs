@@ -22,7 +22,7 @@ fn suite() -> anyhow::Result<regex_test::RegexTests> {
     let mut tests = regex_test::RegexTests::new();
     macro_rules! load {
         ($name:expr) => {{
-            const DATA: &[u8] =
+            const DATA: &str =
                 include_bytes!(concat!("../testdata/", $name, ".toml"));
             tests.load_slice($name, DATA)?;
         }};

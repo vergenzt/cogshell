@@ -2,7 +2,7 @@ use super::*;
 
 use crate::Flags;
 
-
+#[test]
 fn cases() {
     case(0, TestFlags::all(), TestFlags::complement);
     case(0, TestFlags::from_bits_retain(!0), TestFlags::complement);

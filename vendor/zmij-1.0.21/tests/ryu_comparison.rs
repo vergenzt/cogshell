@@ -9,7 +9,7 @@ const N: usize = if cfg!(miri) {
     100_000_000
 };
 
-
+#[test]
 fn ryu_comparison() {
     let mut ryu_buffer = ryu::Buffer::new();
     let mut zmij_buffer = zmij::Buffer::new();

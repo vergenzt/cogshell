@@ -34,7 +34,7 @@ impl Hasher for RandomStateHasher {
         self.0.finish()
     }
     #[inline]
-    fn write(&mut self, bytes: &[u8]) {
+    fn write(&mut self, bytes: &str) {
         self.0.write(bytes)
     }
     #[inline]

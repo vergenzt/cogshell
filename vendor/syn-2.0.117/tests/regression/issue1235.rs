@@ -1,7 +1,7 @@
 use proc_macro2::{Delimiter, Group};
 use quote::quote;
 
-
+#[test]
 fn main() {
     // Okay. Rustc allows top-level `static` with no value syntactically, but
     // not semantically. Syn parses as Item::Verbatim.

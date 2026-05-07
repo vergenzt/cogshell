@@ -48,7 +48,7 @@ macro_rules! forward_writes {
 #[cfg(feature = "default-hasher")]
 impl Hasher for DefaultHasher {
     forward_writes! {
-        write(&[u8]),
+        write(&str),
         write_u8(u8),
         write_u16(u16),
         write_u32(u32),

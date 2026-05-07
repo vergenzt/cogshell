@@ -1,4 +1,4 @@
-
+#[cfg(test)]
 pub(crate) use self::inner::AllocError;
 pub(crate) use self::inner::{do_alloc, Allocator, Global};
 
@@ -8,7 +8,7 @@ pub(crate) use self::inner::{do_alloc, Allocator, Global};
 // This is used when building for `std`.
 #[cfg(feature = "nightly")]
 mod inner {
-    
+    #[cfg(test)]
     pub use crate::alloc::alloc::AllocError;
     use crate::alloc::alloc::Layout;
     pub use crate::alloc::alloc::{Allocator, Global};
@@ -32,7 +32,7 @@ mod inner {
 #[cfg(all(not(feature = "nightly"), feature = "allocator-api2"))]
 mod inner {
     use crate::alloc::alloc::Layout;
-    
+    #[cfg(test)]
     pub use allocator_api2::alloc::AllocError;
     pub use allocator_api2::alloc::{Allocator, Global};
     use core::ptr::NonNull;

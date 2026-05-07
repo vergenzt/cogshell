@@ -175,4 +175,75 @@ impl fmt::Display for Error {
 
 impl std::error::Error for Error {}
 
+#[cfg(test)]
+mod tests {
+    use super::*;
 
+    fn id(name: &str) -> Id<'_> {
+        Id {
+            name,
+            span: Span { start: 0, end: 0 },
+        }
+    }
+
+    #[test]
+    fn smoke() {
+        let empty: Vec<&str> = Vec::new();
+        assert_eq!(toposort("", &IndexMap::new()).unwrap(), empty);
+
+        let mut nonexistent = IndexMap::new();
+        nonexistent.insert("a", vec![id("b")]);
+        assert!(matches!(
+            toposort("", &nonexistent),
+            Err(Error::NonexistentDep { .. })
+        ));
+
+        let mut one = IndexMap::new();
+        one.insert("a", vec![]);
+        assert_eq!(toposort("", &one).unwrap(), ["a"]);
+
+        let mut two = IndexMap::new();
+        two.insert("a", vec![]);
+        two.insert("b", vec![id("a")]);
+        assert_eq!(toposort("", &two).unwrap(), ["a", "b"]);
+
+        let mut two = IndexMap::new();
+        two.insert("a", vec![id("b")]);
+        two.insert("b", vec![]);
+        assert_eq!(toposort("", &two).unwrap(), ["b", "a"]);
+    }
+
+    #[test]
+    fn cycles() {
+        let mut cycle = IndexMap::new();
+        cycle.insert("a", vec![id("a")]);
+        assert!(matches!(toposort("", &cycle), Err(Error::Cycle { .. })));
+
+        let mut cycle = IndexMap::new();
+        cycle.insert("a", vec![id("b")]);
+        cycle.insert("b", vec![id("c")]);
+        cycle.insert("c", vec![id("a")]);
+        assert!(matches!(toposort("", &cycle), Err(Error::Cycle { .. })));
+    }
+
+    #[test]
+    fn depend_twice() {
+        let mut two = IndexMap::new();
+        two.insert("b", vec![id("a"), id("a")]);
+        two.insert("a", vec![]);
+        assert_eq!(toposort("", &two).unwrap(), ["a", "b"]);
+    }
+
+    #[test]
+    fn preserve_order() {
+        let mut order = IndexMap::new();
+        order.insert("a", vec![]);
+        order.insert("b", vec![]);
+        assert_eq!(toposort("", &order).unwrap(), ["a", "b"]);
+
+        let mut order = IndexMap::new();
+        order.insert("b", vec![]);
+        order.insert("a", vec![]);
+        assert_eq!(toposort("", &order).unwrap(), ["b", "a"]);
+    }
+}

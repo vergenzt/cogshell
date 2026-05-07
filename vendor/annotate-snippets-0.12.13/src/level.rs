@@ -180,7 +180,7 @@ impl<'a> Level<'a> {
     /// ```rust
     /// # use annotate_snippets::{Group, Snippet, AnnotationKind, Level};
     ///let source = r#"fn main() {
-    ///     let b: &[u8] = include_str!("file.txt");    //~ ERROR mismatched types
+    ///     let b: &str = include_str!("file.txt");    //~ ERROR mismatched types
     ///     let s: &str = include_bytes!("file.txt");   //~ ERROR mismatched types
     /// }"#;
     /// let report = &[

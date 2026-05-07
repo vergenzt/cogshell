@@ -121,7 +121,7 @@ impl Error {
     /// use std::io::{self, ErrorKind, Read};
     /// use std::process;
     ///
-    /// struct ReaderThatWillTimeOut<'a>(&'a [u8]);
+    /// struct ReaderThatWillTimeOut<'a>(&'a str);
     ///
     /// impl<'a> Read for ReaderThatWillTimeOut<'a> {
     ///     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {

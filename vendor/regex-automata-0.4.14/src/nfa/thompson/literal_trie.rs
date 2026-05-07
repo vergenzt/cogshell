@@ -107,7 +107,7 @@ impl LiteralTrie {
     /// If the literal could not be added because the `StateID` space was
     /// exhausted, then an error is returned. If an error returns, the trie
     /// is in an unspecified state.
-    pub(crate) fn add(&mut self, bytes: &[u8]) -> Result<(), BuildError> {
+    pub(crate) fn add(&mut self, bytes: &str) -> Result<(), BuildError> {
         let mut prev = StateID::ZERO;
         let mut it = bytes.iter().copied();
         while let Some(b) = if self.rev { it.next_back() } else { it.next() } {
@@ -240,7 +240,7 @@ impl LiteralTrie {
     /// We don't actually use this, but it's useful for tests. In particular,
     /// it provides a (somewhat) human readable representation of the trie
     /// itself.
-    
+    #[cfg(test)]
     fn compile_to_hir(&self) -> regex_syntax::hir::Hir {
         self.compile_state_to_hir(StateID::ZERO)
     }
@@ -250,7 +250,7 @@ impl LiteralTrie {
     /// Notice how simple this is compared to 'compile' above. 'compile' could
     /// be similarly simple, but we opt to not use recursion in order to avoid
     /// overflowing the stack in the case of a longer literal.
-    
+    #[cfg(test)]
     fn compile_state_to_hir(&self, sid: StateID) -> regex_syntax::hir::Hir {
         use regex_syntax::hir::Hir;
 
@@ -479,4 +479,50 @@ impl core::fmt::Debug for Transition {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use bstr::B;
+    use regex_syntax::hir::Hir;
 
+    use super::*;
+
+    #[test]
+    fn zap() {
+        let mut trie = LiteralTrie::forward();
+        trie.add(b"zapper").unwrap();
+        trie.add(b"z").unwrap();
+        trie.add(b"zap").unwrap();
+
+        let got = trie.compile_to_hir();
+        let expected = Hir::concat(vec![
+            Hir::literal(B("z")),
+            Hir::alternation(vec![
+                Hir::literal(B("apper")),
+                Hir::empty(),
+                Hir::literal(B("ap")),
+            ]),
+        ]);
+        assert_eq!(expected, got);
+    }
+
+    #[test]
+    fn maker() {
+        let mut trie = LiteralTrie::forward();
+        trie.add(b"make").unwrap();
+        trie.add(b"maple").unwrap();
+        trie.add(b"maker").unwrap();
+
+        let got = trie.compile_to_hir();
+        let expected = Hir::concat(vec![
+            Hir::literal(B("ma")),
+            Hir::alternation(vec![
+                Hir::concat(vec![
+                    Hir::literal(B("ke")),
+                    Hir::alternation(vec![Hir::empty(), Hir::literal(B("r"))]),
+                ]),
+                Hir::literal(B("ple")),
+            ]),
+        ]);
+        assert_eq!(expected, got);
+    }
+}

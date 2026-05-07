@@ -23,7 +23,7 @@ macro_rules! assert_width {
     }};
 }
 
-
+#[test]
 fn test_str() {
     assert_width!("ｈｅｌｌｏ", 10, 10);
     assert_width!("\0\0\0\x01\x01", 5, 5);
@@ -31,7 +31,7 @@ fn test_str() {
     assert_width!("\u{2081}\u{2082}\u{2083}\u{2084}", 4, 8);
 }
 
-
+#[test]
 fn test_emoji() {
     assert_width!("👩", 2, 2); // Woman
     assert_width!("🔬", 2, 2); // Microscope
@@ -39,14 +39,14 @@ fn test_emoji() {
 }
 
 // From README
-
+#[test]
 fn test_bad_devanagari() {
     assert_eq!("क".width(), 1); // Devanagari letter Ka
     assert_eq!("ष".width(), 1); // Devanagari letter Ssa
     assert_eq!("क्ष".width(), 2); // Ka + Virama + Ssa
 }
 
-
+#[test]
 fn test_char() {
     assert_width!('ｈ', Some(2), Some(2));
     assert_width!('\x00', None, None);
@@ -54,7 +54,7 @@ fn test_char() {
     assert_width!('\u{2081}', Some(1), Some(2));
 }
 
-
+#[test]
 fn test_char2() {
     assert_width!('\x0A', None, None);
     assert_width!('w', Some(1), Some(1));
@@ -65,12 +65,12 @@ fn test_char2() {
     assert_width!('\u{300}', Some(0), Some(0));
 }
 
-
+#[test]
 fn unicode_12() {
     assert_width!('\u{1F971}', Some(2), Some(2));
 }
 
-
+#[test]
 fn test_default_ignorable() {
     assert_width!('\u{1160}', Some(0), Some(0));
     assert_width!('\u{3164}', Some(0), Some(0));
@@ -78,7 +78,7 @@ fn test_default_ignorable() {
     assert_width!('\u{E0000}', Some(0), Some(0));
 }
 
-
+#[test]
 fn test_ambiguous() {
     assert_width!("\u{B7}", 1, 2);
     assert_width!("\u{0387}", 1, 2);
@@ -86,7 +86,7 @@ fn test_ambiguous() {
     assert_width!("\u{02C9}", 1, 1);
 }
 
-
+#[test]
 fn test_jamo() {
     assert_width!('\u{1100}', Some(2), Some(2));
     assert_width!('\u{A97C}', Some(2), Some(2));
@@ -98,7 +98,7 @@ fn test_jamo() {
     assert_width!('\u{D7FB}', Some(0), Some(0));
 }
 
-
+#[test]
 fn test_prepended_concatenation_marks() {
     for c in [
         '\u{0600}',
@@ -118,27 +118,27 @@ fn test_prepended_concatenation_marks() {
     }
 }
 
-
+#[test]
 fn test_gcb_prepend() {
     assert_width!("ൎഉ", 1, 1);
     assert_width!("\u{11A89}", 0, 0);
 }
 
-
+#[test]
 fn test_interlinear_annotation_chars() {
     assert_width!('\u{FFF9}', Some(1), Some(1));
     assert_width!('\u{FFFA}', Some(1), Some(1));
     assert_width!('\u{FFFB}', Some(1), Some(1));
 }
 
-
+#[test]
 fn test_hieroglyph_format_controls() {
     assert_width!('\u{13430}', Some(1), Some(1));
     assert_width!('\u{13436}', Some(1), Some(1));
     assert_width!('\u{1343C}', Some(1), Some(1));
 }
 
-
+#[test]
 fn test_marks() {
     // Nonspacing marks have 0 width
     assert_width!('\u{0301}', Some(0), Some(0));
@@ -150,12 +150,12 @@ fn test_marks() {
     assert_width!('\u{09BE}', Some(0), Some(0));
 }
 
-
+#[test]
 fn test_devanagari_caret() {
     assert_width!('\u{A8FA}', Some(0), Some(0));
 }
 
-
+#[test]
 fn test_solidus_overlay() {
     assert_width!("<\u{338}", 1, 2);
     assert_width!("=\u{338}", 1, 2);
@@ -175,7 +175,7 @@ fn test_solidus_overlay() {
     assert_width!("=\u{338}\u{0627}", 2, 3);
 }
 
-
+#[test]
 fn test_emoji_presentation() {
     assert_width!('\u{0023}', Some(1), Some(1));
     assert_width!('\u{FE0F}', Some(0), Some(0));
@@ -194,7 +194,7 @@ fn test_emoji_presentation() {
     assert_width!("\u{002A}\u{FE0E}\u{FE0F}", 1, 1);
 }
 
-
+#[test]
 fn test_text_presentation() {
     assert_width!('\u{FE0E}', Some(0), Some(0));
     assert_width!('\u{2648}', Some(2), Some(2));
@@ -209,7 +209,7 @@ fn test_text_presentation() {
     assert_width!("\u{2648}\u{200D}\u{FE0E}", 2, 2);
 }
 
-
+#[test]
 fn test_control_line_break() {
     assert_width!('\u{2028}', Some(1), Some(1));
     assert_width!('\u{2029}', Some(1), Some(1));
@@ -224,7 +224,7 @@ fn test_control_line_break() {
     assert_width!("\r\u{200D}\n", 2, 2);
 }
 
-
+#[test]
 fn char_str_consistent() {
     let mut s = String::with_capacity(4);
     for c in '\0'..=char::MAX {
@@ -236,7 +236,7 @@ fn char_str_consistent() {
     }
 }
 
-
+#[test]
 fn test_lisu_tones() {
     for c in '\u{A4F8}'..='\u{A4FD}' {
         assert_width!(c, Some(1), Some(1));
@@ -264,7 +264,7 @@ fn test_lisu_tones() {
     assert_width!("ꓪꓼꓼ", 3, 3);
 }
 
-
+#[test]
 fn test_hebrew_alef_lamed() {
     assert_width!("\u{05D0}", 1, 1);
     assert_width!("\u{05DC}", 1, 1);
@@ -285,7 +285,7 @@ fn test_hebrew_alef_lamed() {
     assert_width!("\u{05D0}\u{FE0E}\u{200D}\u{FE0E}\u{05DC}\u{FE0E}", 1, 1);
 }
 
-
+#[test]
 fn test_arabic_lam_alef() {
     assert_width!("\u{0644}", 1, 1);
     assert_width!("\u{06B8}", 1, 1);
@@ -323,7 +323,7 @@ fn test_arabic_lam_alef() {
     assert_width!("\u{06B8}\u{1E94B}\u{0627}", 3, 3);
 }
 
-
+#[test]
 fn test_buginese_a_i_ya() {
     assert_width!("\u{1A15}", 1, 1);
     assert_width!("\u{1A17}", 0, 0);
@@ -362,7 +362,7 @@ fn test_buginese_a_i_ya() {
     assert_width!("\u{1A15}\u{1A17}\u{338}\u{200D}\u{1A10}", 2, 2);
 }
 
-
+#[test]
 fn test_tifinagh_biconsonants() {
     assert_width!("\u{2D4F}", 1, 1);
     assert_width!("\u{2D3E}", 1, 1);
@@ -386,7 +386,7 @@ fn test_tifinagh_biconsonants() {
     assert_width!("\u{2D66}\u{2D7F}\u{2D3E}", 3, 3);
 }
 
-
+#[test]
 fn test_old_turkic_ligature() {
     assert_width!("\u{10C32}", 1, 1);
     assert_width!("\u{10C03}", 1, 1);
@@ -401,7 +401,7 @@ fn test_old_turkic_ligature() {
     assert_width!("\u{200D}\u{10C32}", 1, 1);
 }
 
-
+#[test]
 fn test_khmer_coeng() {
     assert_width!("ល", 1, 1);
     assert_width!("ង", 1, 1);
@@ -429,19 +429,19 @@ fn test_khmer_coeng() {
     }
 }
 
-
+#[test]
 fn test_khmer_qaa() {
     assert_width!("\u{17A4}", 2, 2);
     assert_width!("\u{17A2}\u{17A6}", 2, 2);
 }
 
-
+#[test]
 fn test_khmer_sign_beyyal() {
     assert_width!("\u{17D8}", 3, 3);
     assert_width!("\u{17D4}\u{179B}\u{17D4}", 3, 3);
 }
 
-
+#[test]
 fn test_emoji_modifier() {
     assert_width!("\u{1F46A}", 2, 2);
     assert_width!("\u{1F3FB}", 2, 2);
@@ -449,7 +449,7 @@ fn test_emoji_modifier() {
     assert_width!("\u{1F46A}\u{200D}\u{200D}\u{1F3FB}", 4, 4);
 }
 
-
+#[test]
 fn test_emoji_zwj() {
     assert_width!("🧑‍🤝‍🧑", 2, 2);
 
@@ -564,7 +564,7 @@ fn test_emoji_zwj() {
     );
 }
 
-
+#[test]
 fn emoji_test_file() {
     let norm_file = BufReader::new(
         File::open("tests/emoji-test.txt")
@@ -590,14 +590,14 @@ fn emoji_test_file() {
     }
 }
 
-
+#[test]
 fn ambiguous_line_break() {
     assert_width!("\u{24EA}", 1, 2);
     assert_width!("\u{2616}", 1, 2);
     assert_width!("\u{2780}", 1, 2);
 }
 
-
+#[test]
 fn test_vs1_vs2_vs3() {
     assert_width!('\u{FE00}', Some(0), Some(0));
     assert_width!('\u{FE01}', Some(0), Some(0));

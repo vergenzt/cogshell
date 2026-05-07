@@ -1001,4 +1001,119 @@ impl_fmt_traits! {
     Braced<>
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
 
+    #[test]
+    fn hyphenated_trailing() {
+        let mut buf = [b'x'; 100];
+        let len = Uuid::nil().hyphenated().encode_lower(&mut buf).len();
+        assert_eq!(len, super::Hyphenated::LENGTH);
+        assert!(buf[len..].iter().all(|x| *x == b'x'));
+    }
+
+    #[test]
+    fn hyphenated_ref_trailing() {
+        let mut buf = [b'x'; 100];
+        let len = Uuid::nil().as_hyphenated().encode_lower(&mut buf).len();
+        assert_eq!(len, super::Hyphenated::LENGTH);
+        assert!(buf[len..].iter().all(|x| *x == b'x'));
+    }
+
+    #[test]
+    fn simple_trailing() {
+        let mut buf = [b'x'; 100];
+        let len = Uuid::nil().simple().encode_lower(&mut buf).len();
+        assert_eq!(len, super::Simple::LENGTH);
+        assert!(buf[len..].iter().all(|x| *x == b'x'));
+    }
+
+    #[test]
+    fn simple_ref_trailing() {
+        let mut buf = [b'x'; 100];
+        let len = Uuid::nil().as_simple().encode_lower(&mut buf).len();
+        assert_eq!(len, super::Simple::LENGTH);
+        assert!(buf[len..].iter().all(|x| *x == b'x'));
+    }
+
+    #[test]
+    fn urn_trailing() {
+        let mut buf = [b'x'; 100];
+        let len = Uuid::nil().urn().encode_lower(&mut buf).len();
+        assert_eq!(len, super::Urn::LENGTH);
+        assert!(buf[len..].iter().all(|x| *x == b'x'));
+    }
+
+    #[test]
+    fn urn_ref_trailing() {
+        let mut buf = [b'x'; 100];
+        let len = Uuid::nil().as_urn().encode_lower(&mut buf).len();
+        assert_eq!(len, super::Urn::LENGTH);
+        assert!(buf[len..].iter().all(|x| *x == b'x'));
+    }
+
+    #[test]
+    fn braced_trailing() {
+        let mut buf = [b'x'; 100];
+        let len = Uuid::nil().braced().encode_lower(&mut buf).len();
+        assert_eq!(len, super::Braced::LENGTH);
+        assert!(buf[len..].iter().all(|x| *x == b'x'));
+    }
+
+    #[test]
+    fn braced_ref_trailing() {
+        let mut buf = [b'x'; 100];
+        let len = Uuid::nil().as_braced().encode_lower(&mut buf).len();
+        assert_eq!(len, super::Braced::LENGTH);
+        assert!(buf[len..].iter().all(|x| *x == b'x'));
+    }
+
+    #[test]
+    #[should_panic]
+    fn hyphenated_too_small() {
+        Uuid::nil().hyphenated().encode_lower(&mut [0; 35]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn simple_too_small() {
+        Uuid::nil().simple().encode_lower(&mut [0; 31]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn urn_too_small() {
+        Uuid::nil().urn().encode_lower(&mut [0; 44]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn braced_too_small() {
+        Uuid::nil().braced().encode_lower(&mut [0; 37]);
+    }
+
+    #[test]
+    fn hyphenated_to_inner() {
+        let hyphenated = Uuid::nil().hyphenated();
+        assert_eq!(Uuid::from(hyphenated), Uuid::nil());
+    }
+
+    #[test]
+    fn simple_to_inner() {
+        let simple = Uuid::nil().simple();
+        assert_eq!(Uuid::from(simple), Uuid::nil());
+    }
+
+    #[test]
+    fn urn_to_inner() {
+        let urn = Uuid::nil().urn();
+        assert_eq!(Uuid::from(urn), Uuid::nil());
+    }
+
+    #[test]
+    fn braced_to_inner() {
+        let braced = Uuid::nil().braced();
+        assert_eq!(Uuid::from(braced), Uuid::nil());
+    }
+}

@@ -757,7 +757,7 @@ impl Serialize for net::IpAddr {
 }
 
 #[cfg(any(feature = "std", not(no_core_net)))]
-const DEC_DIGITS_LUT: &[u8] = b"\
+const DEC_DIGITS_LUT: &str = b"\
       0001020304050607080910111213141516171819\
       2021222324252627282930313233343536373839\
       4041424344454647484950515253545556575859\
@@ -786,7 +786,7 @@ fn format_u8(mut n: u8, out: &mut [u8]) -> usize {
 }
 
 #[cfg(any(feature = "std", not(no_core_net)))]
-
+#[test]
 fn test_format_u8() {
     let mut i = 0u8;
 

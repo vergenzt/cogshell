@@ -109,7 +109,7 @@ pub(crate) fn read_sockaddr_unix(addr: &SocketAddrAny) -> Result<SocketAddrUnix,
         if decode.sun_path[0] == 0 {
             let bytes = &decode.sun_path[1..len - offsetof_sun_path];
 
-            // SAFETY: Convert `&[c_char]` to `&[u8]`.
+            // SAFETY: Convert `&[c_char]` to `&str`.
             let bytes = unsafe { slice::from_raw_parts(bytes.as_ptr().cast::<u8>(), bytes.len()) };
 
             return SocketAddrUnix::new_abstract_name(bytes);
@@ -118,7 +118,7 @@ pub(crate) fn read_sockaddr_unix(addr: &SocketAddrAny) -> Result<SocketAddrUnix,
         // Otherwise we expect a NUL-terminated filesystem path.
         let bytes = &decode.sun_path[..len - 1 - offsetof_sun_path];
 
-        // SAFETY: Convert `&[c_char]` to `&[u8]`.
+        // SAFETY: Convert `&[c_char]` to `&str`.
         let bytes = unsafe { slice::from_raw_parts(bytes.as_ptr().cast::<u8>(), bytes.len()) };
 
         assert_eq!(decode.sun_path[len - 1 - offsetof_sun_path], 0);

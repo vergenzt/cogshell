@@ -27,7 +27,7 @@ const BLACKLIST: &[&str] = &[
 ];
 
 /// Tests the default configuration of the meta regex engine.
-
+#[test]
 fn default() -> Result<()> {
     let builder = Regex::builder();
     let mut runner = TestRunner::new()?;
@@ -40,7 +40,7 @@ fn default() -> Result<()> {
 }
 
 /// Tests the default configuration minus the full DFA.
-
+#[test]
 fn no_dfa() -> Result<()> {
     let mut builder = Regex::builder();
     builder.configure(Regex::config().dfa(false));
@@ -54,7 +54,7 @@ fn no_dfa() -> Result<()> {
 }
 
 /// Tests the default configuration minus the full DFA and lazy DFA.
-
+#[test]
 fn no_dfa_hybrid() -> Result<()> {
     let mut builder = Regex::builder();
     builder.configure(Regex::config().dfa(false).hybrid(false));
@@ -69,7 +69,7 @@ fn no_dfa_hybrid() -> Result<()> {
 
 /// Tests the default configuration minus the full DFA, lazy DFA and one-pass
 /// DFA.
-
+#[test]
 fn no_dfa_hybrid_onepass() -> Result<()> {
     let mut builder = Regex::builder();
     builder.configure(Regex::config().dfa(false).hybrid(false).onepass(false));
@@ -84,7 +84,7 @@ fn no_dfa_hybrid_onepass() -> Result<()> {
 
 /// Tests the default configuration minus the full DFA, lazy DFA, one-pass
 /// DFA and backtracker.
-
+#[test]
 fn no_dfa_hybrid_onepass_backtrack() -> Result<()> {
     let mut builder = Regex::builder();
     builder.configure(

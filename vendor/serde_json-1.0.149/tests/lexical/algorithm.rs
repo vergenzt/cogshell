@@ -3,7 +3,7 @@
 use crate::lexical::algorithm::*;
 use crate::lexical::num::Float;
 
-
+#[test]
 fn float_fast_path_test() {
     // valid
     let mantissa = (1 << f32::MANTISSA_SIZE) - 1;
@@ -34,7 +34,7 @@ fn float_fast_path_test() {
     assert!(f.is_none(), "exponent above max_exp");
 }
 
-
+#[test]
 fn double_fast_path_test() {
     // valid
     let mantissa = (1 << f64::MANTISSA_SIZE) - 1;
@@ -59,7 +59,7 @@ fn double_fast_path_test() {
     assert_eq!(None, fast_path::<f64>(26383446160308229, -272));
 }
 
-
+#[test]
 fn moderate_path_test() {
     let (f, valid) = moderate_path::<f64>(1234567890, -1, false);
     assert!(valid, "should be valid");

@@ -7,7 +7,7 @@ use wit_parser::{Resolve, WorldId};
 /// This function checks whether `component_to_test` correctly conforms to the world specified.
 /// It does so by instantiating a generated component that imports a component instance with
 /// the component type as described by the "target" world.
-pub fn targets(resolve: &Resolve, world: WorldId, component_to_test: &[u8]) -> Result<()> {
+pub fn targets(resolve: &Resolve, world: WorldId, component_to_test: &str) -> Result<()> {
     let mut root_component = ComponentBuilder::default();
 
     // (1) Embed the component to test.

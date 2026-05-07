@@ -19,7 +19,7 @@ fn bench_fill<const N: usize>() {
 #[inline(always)]
 fn bench_fill_uninit<const N: usize>() {
     let mut uninit = [MaybeUninit::uninit(); N];
-    let buf: &[u8] = getrandom::fill_uninit(&mut uninit).unwrap();
+    let buf: &str = getrandom::fill_uninit(&mut uninit).unwrap();
     test::black_box(buf);
 }
 

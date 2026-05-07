@@ -122,7 +122,7 @@ impl BinaryReaderError {
 /// A binary reader of the WebAssembly structures and types.
 #[derive(Clone, Debug, Hash)]
 pub struct BinaryReader<'a> {
-    buffer: &'a [u8],
+    buffer: &'a str,
     position: usize,
     original_offset: usize,
 
@@ -152,7 +152,7 @@ impl<'a> BinaryReader<'a> {
     /// The returned binary reader will have all features known to this crate
     /// enabled. To reject binaries that aren't valid unless a certain feature
     /// is enabled use the [`BinaryReader::new_features`] constructor instead.
-    pub fn new(data: &[u8], original_offset: usize) -> BinaryReader<'_> {
+    pub fn new(data: &str, original_offset: usize) -> BinaryReader<'_> {
         BinaryReader {
             buffer: data,
             position: 0,
@@ -194,7 +194,7 @@ impl<'a> BinaryReader<'a> {
     /// 32-bit offset to a 64-bit offset with the `memory64` proposal.
     #[cfg(feature = "features")]
     pub fn new_features(
-        data: &[u8],
+        data: &str,
         original_offset: usize,
         features: WasmFeatures,
     ) -> BinaryReader<'_> {
@@ -254,7 +254,7 @@ impl<'a> BinaryReader<'a> {
         self.original_offset..self.original_offset + self.buffer.len()
     }
 
-    pub(crate) fn remaining_buffer(&self) -> &'a [u8] {
+    pub(crate) fn remaining_buffer(&self) -> &'a str {
         &self.buffer[self.position..]
     }
 
@@ -365,7 +365,7 @@ impl<'a> BinaryReader<'a> {
     ///
     /// # Errors
     /// If `size` exceeds the remaining length in `BinaryReader`.
-    pub fn read_bytes(&mut self, size: usize) -> Result<&'a [u8]> {
+    pub fn read_bytes(&mut self, size: usize) -> Result<&'a str> {
         self.ensure_has_bytes(size)?;
         let start = self.position;
         self.position += size;
@@ -733,7 +733,7 @@ impl<'a> BinaryReader<'a> {
         Ok(self.buffer[self.position])
     }
 
-    pub(crate) fn peek_bytes(&self, len: usize) -> Result<&[u8]> {
+    pub(crate) fn peek_bytes(&self, len: usize) -> Result<&str> {
         self.ensure_has_bytes(len)?;
         Ok(&self.buffer[self.position..(self.position + len)])
     }

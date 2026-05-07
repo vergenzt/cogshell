@@ -1,6 +1,6 @@
 // Tests that we can call the PikeVM with more slots
 // than is actually in the compiled regex.
-
+#[test]
 fn too_many_slots_normal_pattern() {
     use regex_automata::{
         nfa::thompson::pikevm::PikeVM, util::primitives::NonMaxUsize,

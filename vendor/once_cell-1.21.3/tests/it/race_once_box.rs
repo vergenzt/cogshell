@@ -35,7 +35,7 @@ impl Heap {
 }
 
 #[cfg(feature = "std")]
-
+#[test]
 fn once_box_smoke_test() {
     use std::thread::scope;
 
@@ -72,7 +72,7 @@ fn once_box_smoke_test() {
     assert_eq!(heap.total(), 0);
 }
 
-
+#[test]
 fn once_box_set() {
     let heap = Heap::default();
     let cell = OnceBox::new();
@@ -91,7 +91,7 @@ fn once_box_set() {
 }
 
 #[cfg(feature = "std")]
-
+#[test]
 fn once_box_first_wins() {
     use std::thread::scope;
 
@@ -126,7 +126,7 @@ fn once_box_first_wins() {
     assert_eq!(cell.get(), Some(&val1));
 }
 
-
+#[test]
 fn once_box_reentrant() {
     let cell = OnceBox::new();
     let res = cell.get_or_init(|| {
@@ -136,7 +136,7 @@ fn once_box_reentrant() {
     assert_eq!(res, "hello");
 }
 
-
+#[test]
 fn once_box_default() {
     struct Foo;
 
@@ -144,13 +144,13 @@ fn once_box_default() {
     assert!(cell.get().is_none());
 }
 
-
+#[test]
 fn onece_box_with_value() {
     let cell = OnceBox::with_value(Box::new(92));
     assert_eq!(cell.get(), Some(&92));
 }
 
-
+#[test]
 fn onece_box_clone() {
     let cell1 = OnceBox::new();
     let cell2 = cell1.clone();

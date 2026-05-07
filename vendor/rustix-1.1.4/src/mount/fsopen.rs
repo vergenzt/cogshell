@@ -142,7 +142,7 @@ pub fn fsconfig_set_string<Key: path::Arg, Value: path::Arg, Fd: AsFd>(
 pub fn fsconfig_set_binary<Key: path::Arg, Fd: AsFd>(
     fs_fd: Fd,
     key: Key,
-    value: &[u8],
+    value: &str,
 ) -> io::Result<()> {
     let fs_fd = fs_fd.as_fd();
     key.into_with_c_str(|key| backend::mount::syscalls::fsconfig_set_binary(fs_fd, key, value))

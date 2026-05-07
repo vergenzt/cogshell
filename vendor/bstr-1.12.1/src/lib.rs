@@ -9,7 +9,7 @@ byte strings is for handling arbitrary bytes that are mostly UTF-8.
 # Overview
 
 This crate provides two important traits that provide string oriented methods
-on `&[u8]` and `Vec<u8>` types:
+on `&str` and `Vec<u8>` types:
 
 * [`ByteSlice`](trait.ByteSlice.html) extends the `[u8]` type with additional
   string oriented methods.
@@ -29,10 +29,10 @@ hand for writing byte string literals.
 
 # Quick examples
 
-Byte strings build on the existing APIs for `Vec<u8>` and `&[u8]`, with
+Byte strings build on the existing APIs for `Vec<u8>` and `&str`, with
 additional string oriented methods. Operations such as iterating over
 graphemes, searching for substrings, replacing substrings, trimming and case
-conversion are examples of things not provided on the standard library `&[u8]`
+conversion are examples of things not provided on the standard library `&str`
 APIs but are provided by this crate. For example, this code iterates over all
 of occurrences of a substring:
 
@@ -98,7 +98,7 @@ will output `"\xFFello β"`.
 
 This example works because the
 [`ByteSlice::as_bstr`](trait.ByteSlice.html#method.as_bstr)
-method converts any `&[u8]` to a `&BStr`.
+method converts any `&str` to a `&BStr`.
 
 # When should I use byte strings?
 
@@ -108,18 +108,18 @@ off in some circumstances than guaranteed UTF-8.
 The first time this idea hit me was in the implementation of Rust's regex
 engine. In particular, very little of the internal implementation cares at all
 about searching valid UTF-8 encoded strings. Indeed, internally, the
-implementation converts `&str` from the API to `&[u8]` fairly quickly and
+implementation converts `&str` from the API to `&str` fairly quickly and
 just deals with raw bytes. UTF-8 match boundaries are then guaranteed by the
 finite state machine itself rather than any specific string type. This makes it
-possible to not only run regexes on `&str` values, but also on `&[u8]` values.
+possible to not only run regexes on `&str` values, but also on `&str` values.
 
-Why would you ever want to run a regex on a `&[u8]` though? Well, `&[u8]` is
+Why would you ever want to run a regex on a `&str` though? Well, `&str` is
 the fundamental way at which one reads data from all sorts of streams, via the
 standard library's [`Read`](https://doc.rust-lang.org/std/io/trait.Read.html)
 trait. In particular, there is no platform independent way to determine whether
 what you're reading from is some binary file or a human readable text file.
 Therefore, if you're writing a program to search files, you probably need to
-deal with `&[u8]` directly unless you're okay with first converting it to a
+deal with `&str` directly unless you're okay with first converting it to a
 `&str` and dropping any bytes that aren't valid UTF-8. (Or otherwise determine
 the encoding---which is often impractical---and perform a transcoding step.)
 Often, the simplest and most robust way to approach this is to simply treat the
@@ -128,7 +128,7 @@ UTF-8 untouched. This may not be the most correct approach though!
 
 One case in particular exacerbates these issues, and that's memory mapping
 a file. When you memory map a file, that file may be gigabytes big, but all
-you get is a `&[u8]`. Converting that to a `&str` all in one go is generally
+you get is a `&str`. Converting that to a `&str` all in one go is generally
 not a good idea because of the costs associated with doing so, and also
 because it generally causes one to do two passes over the data instead of
 one, which is quite undesirable. It is of course usually possible to do it an
@@ -202,7 +202,7 @@ splitting. There are, however, some differences:
 * Some routines provided by this crate, such as `starts_with_str`, have a
   `_str` suffix to differentiate them from similar routines already defined
   on the `[u8]` type. The difference is that `starts_with` requires its
-  parameter to be a `&[u8]`, where as `starts_with_str` permits its parameter
+  parameter to be a `&str`, where as `starts_with_str` permits its parameter
   to by anything that implements `AsRef<[u8]>`, which is more flexible. This
   means you can write `bytes.starts_with_str("☃")` instead of
   `bytes.starts_with("☃".as_bytes())`.
@@ -274,7 +274,7 @@ assert_eq!(vec![(0, 1, 'a'), (1, 3, '\u{FFFD}'), (3, 4, 'z')], chars);
 
 // Thus, getting the original raw bytes is as simple as slicing the original
 // byte string:
-let chars: Vec<&[u8]> = bs.char_indices().map(|(s, e, _)| &bs[s..e]).collect();
+let chars: Vec<&str> = bs.char_indices().map(|(s, e, _)| &bs[s..e]).collect();
 assert_eq!(vec![B("a"), B(b"\xE2\x98"), B("z")], chars);
 ```
 
@@ -435,9 +435,40 @@ mod ext_vec;
 mod impls;
 #[cfg(feature = "std")]
 pub mod io;
-
+#[cfg(all(test, feature = "std"))]
+mod tests;
 #[cfg(feature = "unicode")]
 mod unicode;
 mod utf8;
 
+#[cfg(all(test, feature = "std"))]
+mod apitests {
+    use crate::{
+        bstr::BStr,
+        bstring::BString,
+        ext_slice::{Finder, FinderReverse},
+    };
 
+    #[test]
+    fn oibits() {
+        use std::panic::{RefUnwindSafe, UnwindSafe};
+
+        fn assert_send<T: Send>() {}
+        fn assert_sync<T: Sync>() {}
+        fn assert_unwind_safe<T: RefUnwindSafe + UnwindSafe>() {}
+
+        assert_send::<&BStr>();
+        assert_sync::<&BStr>();
+        assert_unwind_safe::<&BStr>();
+        assert_send::<BString>();
+        assert_sync::<BString>();
+        assert_unwind_safe::<BString>();
+
+        assert_send::<Finder<'_>>();
+        assert_sync::<Finder<'_>>();
+        assert_unwind_safe::<Finder<'_>>();
+        assert_send::<FinderReverse<'_>>();
+        assert_sync::<FinderReverse<'_>>();
+        assert_unwind_safe::<FinderReverse<'_>>();
+    }
+}

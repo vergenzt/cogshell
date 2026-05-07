@@ -58,19 +58,19 @@ fn lit_of_doc_comment(tokens: &TokenStream, inner: bool) -> Literal {
     }
 }
 
-
+#[test]
 fn closed_immediately() {
     let stream = "/**/".parse::<TokenStream>().unwrap();
     let tokens = stream.into_iter().collect::<Vec<_>>();
     assert!(tokens.is_empty(), "not empty -- {:?}", tokens);
 }
 
-
+#[test]
 fn incomplete() {
     assert!("/*/".parse::<TokenStream>().is_err());
 }
 
-
+#[test]
 fn lit() {
     let stream = "/// doc".parse::<TokenStream>().unwrap();
     let lit = lit_of_outer_doc_comment(&stream);
@@ -89,7 +89,7 @@ fn lit() {
     assert_eq!(lit.to_string(), "\" doc \"");
 }
 
-
+#[test]
 fn carriage_return() {
     let stream = "///\r\n".parse::<TokenStream>().unwrap();
     let lit = lit_of_outer_doc_comment(&stream);

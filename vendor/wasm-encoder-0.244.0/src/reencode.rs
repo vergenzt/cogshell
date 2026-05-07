@@ -509,7 +509,7 @@ pub trait Reencode {
         &mut self,
         module: &mut crate::Module,
         id: u8,
-        contents: &[u8],
+        contents: &str,
     ) -> Result<(), Error<Self::Error>> {
         utils::parse_unknown_section(self, module, id, contents)
     }
@@ -544,7 +544,7 @@ pub trait Reencode {
         &mut self,
         module: &mut crate::Module,
         parser: wasmparser::Parser,
-        data: &[u8],
+        data: &str,
     ) -> Result<(), Error<Self::Error>> {
         utils::parse_core_module(self, module, parser, data)
     }
@@ -666,7 +666,7 @@ pub mod utils {
         reencoder: &mut T,
         module: &mut crate::Module,
         parser: wasmparser::Parser,
-        data: &[u8],
+        data: &str,
     ) -> Result<(), Error<T::Error>> {
         fn handle_intersperse_section_hook<T: ?Sized + Reencode>(
             reencoder: &mut T,
@@ -1834,7 +1834,7 @@ pub mod utils {
         _reencoder: &mut T,
         module: &mut crate::Module,
         id: u8,
-        contents: &[u8],
+        contents: &str,
     ) -> Result<(), Error<T::Error>> {
         module.section(&crate::RawSection { id, data: contents });
         Ok(())

@@ -11,7 +11,7 @@ use core::cell::Cell;
 
 use once_cell::sync::{Lazy, OnceCell};
 
-
+#[test]
 fn once_cell() {
     let c = OnceCell::new();
     assert!(c.get().is_none());
@@ -25,13 +25,13 @@ fn once_cell() {
     assert_eq!(c.get(), Some(&92));
 }
 
-
+#[test]
 fn once_cell_with_value() {
     static CELL: OnceCell<i32> = OnceCell::with_value(12);
     assert_eq!(CELL.get(), Some(&12));
 }
 
-
+#[test]
 fn once_cell_get_mut() {
     let mut c = OnceCell::new();
     assert!(c.get_mut().is_none());
@@ -40,7 +40,7 @@ fn once_cell_get_mut() {
     assert_eq!(c.get_mut(), Some(&mut 92));
 }
 
-
+#[test]
 fn once_cell_get_unchecked() {
     let c = OnceCell::new();
     c.set(92).unwrap();
@@ -49,7 +49,7 @@ fn once_cell_get_unchecked() {
     }
 }
 
-
+#[test]
 fn once_cell_drop() {
     static DROP_CNT: AtomicUsize = AtomicUsize::new(0);
     struct Dropper;
@@ -70,13 +70,13 @@ fn once_cell_drop() {
     assert_eq!(DROP_CNT.load(SeqCst), 1);
 }
 
-
+#[test]
 fn once_cell_drop_empty() {
     let x = OnceCell::<String>::new();
     drop(x);
 }
 
-
+#[test]
 fn clone() {
     let s = OnceCell::new();
     let c = s.clone();
@@ -87,7 +87,7 @@ fn clone() {
     assert_eq!(c.get().map(String::as_str), Some("hello"));
 }
 
-
+#[test]
 fn get_or_try_init() {
     let cell: OnceCell<String> = OnceCell::new();
     assert!(cell.get().is_none());
@@ -103,7 +103,7 @@ fn get_or_try_init() {
 }
 
 #[cfg(feature = "std")]
-
+#[test]
 fn wait() {
     let cell: OnceCell<String> = OnceCell::new();
     scope(|s| {
@@ -114,7 +114,7 @@ fn wait() {
 }
 
 #[cfg(feature = "std")]
-
+#[test]
 fn get_or_init_stress() {
     let n_threads = if cfg!(miri) { 30 } else { 1_000 };
     let n_cells = if cfg!(miri) { 30 } else { 1_000 };
@@ -135,13 +135,13 @@ fn get_or_init_stress() {
     });
 }
 
-
+#[test]
 fn from_impl() {
     assert_eq!(OnceCell::from("value").get(), Some(&"value"));
     assert_ne!(OnceCell::from("foo").get(), Some(&"bar"));
 }
 
-
+#[test]
 fn partialeq_impl() {
     assert!(OnceCell::from("value") == OnceCell::from("value"));
     assert!(OnceCell::from("foo") != OnceCell::from("bar"));
@@ -150,7 +150,7 @@ fn partialeq_impl() {
     assert!(OnceCell::<String>::new() != OnceCell::from("value".to_owned()));
 }
 
-
+#[test]
 fn into_inner() {
     let cell: OnceCell<String> = OnceCell::new();
     assert_eq!(cell.into_inner(), None);
@@ -159,7 +159,7 @@ fn into_inner() {
     assert_eq!(cell.into_inner(), Some("hello".to_string()));
 }
 
-
+#[test]
 fn debug_impl() {
     let cell = OnceCell::new();
     assert_eq!(format!("{:#?}", cell), "OnceCell(Uninit)");
@@ -175,7 +175,7 @@ fn debug_impl() {
     );
 }
 
-
+#[test]
 #[cfg_attr(miri, ignore)] // miri doesn't support processes
 #[cfg(feature = "std")]
 fn reentrant_init() {
@@ -206,7 +206,7 @@ fn reentrant_init() {
 }
 
 #[cfg(not(feature = "std"))]
-
+#[test]
 #[should_panic(expected = "reentrant init")]
 fn reentrant_init() {
     let x: OnceCell<Box<i32>> = OnceCell::new();
@@ -219,7 +219,7 @@ fn reentrant_init() {
     eprintln!("use after free: {:?}", dangling_ref.get().unwrap());
 }
 
-
+#[test]
 fn eval_once_macro() {
     macro_rules! eval_once {
         (|| -> $ty:ty {
@@ -246,7 +246,7 @@ fn eval_once_macro() {
     assert_eq!(fib[5], 8)
 }
 
-
+#[test]
 fn once_cell_does_not_leak_partially_constructed_boxes() {
     let n_tries = if cfg!(miri) { 10 } else { 100 };
     let n_readers = 10;
@@ -272,7 +272,7 @@ fn once_cell_does_not_leak_partially_constructed_boxes() {
 }
 
 #[cfg(feature = "std")]
-
+#[test]
 fn get_does_not_block() {
     let cell = OnceCell::new();
     let barrier = Barrier::new(2);
@@ -291,7 +291,7 @@ fn get_does_not_block() {
     assert_eq!(cell.get(), Some(&"hello".to_string()));
 }
 
-
+#[test]
 // https://github.com/rust-lang/rust/issues/34761#issuecomment-256320669
 fn arrrrrrrrrrrrrrrrrrrrrr() {
     let cell = OnceCell::new();
@@ -301,7 +301,7 @@ fn arrrrrrrrrrrrrrrrrrrrrr() {
     }
 }
 
-
+#[test]
 fn once_cell_is_sync_send() {
     fn assert_traits<T: Send + Sync>() {}
     assert_traits::<OnceCell<String>>();

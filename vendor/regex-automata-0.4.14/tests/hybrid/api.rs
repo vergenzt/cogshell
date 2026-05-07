@@ -21,7 +21,7 @@ use regex_automata::{
 // utilization may change slightly and thus impact where a search gives up.
 // Precisely where a search gives up is not an API guarantee, so changing the
 // offsets here is OK.
-
+#[test]
 #[cfg(target_pointer_width = "64")]
 #[cfg(not(miri))]
 fn too_many_cache_resets_cause_quit() -> Result<(), Box<dyn Error>> {
@@ -102,7 +102,7 @@ fn too_many_cache_resets_cause_quit() -> Result<(), Box<dyn Error>> {
 }
 
 // Tests that quit bytes in the forward direction work correctly.
-
+#[test]
 fn quit_fwd() -> Result<(), Box<dyn Error>> {
     let dfa = DFA::builder()
         .configure(DFA::config().quit(b'x', true))
@@ -126,7 +126,7 @@ fn quit_fwd() -> Result<(), Box<dyn Error>> {
 }
 
 // Tests that quit bytes in the reverse direction work correctly.
-
+#[test]
 fn quit_rev() -> Result<(), Box<dyn Error>> {
     let dfa = DFA::builder()
         .configure(DFA::config().quit(b'x', true))
@@ -145,7 +145,7 @@ fn quit_rev() -> Result<(), Box<dyn Error>> {
 // Tests that if we heuristically enable Unicode word boundaries but then
 // instruct that a non-ASCII byte should NOT be a quit byte, then the builder
 // will panic.
-
+#[test]
 #[should_panic]
 fn quit_panics() {
     DFA::config().unicode_word_boundary(true).quit(b'\xFF', false);
@@ -154,7 +154,7 @@ fn quit_panics() {
 // This tests an intesting case where even if the Unicode word boundary option
 // is disabled, setting all non-ASCII bytes to be quit bytes will cause Unicode
 // word boundaries to be enabled.
-
+#[test]
 fn unicode_word_implicitly_works() -> Result<(), Box<dyn Error>> {
     let mut config = DFA::config();
     for b in 0x80..=0xFF {

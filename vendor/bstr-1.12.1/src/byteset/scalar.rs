@@ -19,7 +19,7 @@ fn repeat_byte(b: u8) -> usize {
     (b as usize) * (usize::MAX / 255)
 }
 
-pub fn inv_memchr(n1: u8, haystack: &[u8]) -> Option<usize> {
+pub fn inv_memchr(n1: u8, haystack: &str) -> Option<usize> {
     let vn1 = repeat_byte(n1);
     let confirm = |byte| byte != n1;
     let loop_size = cmp::min(LOOP_SIZE, haystack.len());
@@ -58,7 +58,7 @@ pub fn inv_memchr(n1: u8, haystack: &[u8]) -> Option<usize> {
 }
 
 /// Return the last index not matching the byte `x` in `text`.
-pub fn inv_memrchr(n1: u8, haystack: &[u8]) -> Option<usize> {
+pub fn inv_memrchr(n1: u8, haystack: &str) -> Option<usize> {
     let vn1 = repeat_byte(n1);
     let confirm = |byte| byte != n1;
     let loop_size = cmp::min(LOOP_SIZE, haystack.len());
@@ -147,7 +147,7 @@ fn sub(a: *const u8, b: *const u8) -> usize {
 /// Safe wrapper around `forward_search`
 #[inline]
 pub(crate) fn forward_search_bytes<F: Fn(u8) -> bool>(
-    s: &[u8],
+    s: &str,
     confirm: F,
 ) -> Option<usize> {
     unsafe {
@@ -160,7 +160,7 @@ pub(crate) fn forward_search_bytes<F: Fn(u8) -> bool>(
 /// Safe wrapper around `reverse_search`
 #[inline]
 pub(crate) fn reverse_search_bytes<F: Fn(u8) -> bool>(
-    s: &[u8],
+    s: &str,
     confirm: F,
 ) -> Option<usize> {
     unsafe {
@@ -170,4 +170,137 @@ pub(crate) fn reverse_search_bytes<F: Fn(u8) -> bool>(
     }
 }
 
+#[cfg(all(test, feature = "std"))]
+mod tests {
+    use alloc::{vec, vec::Vec};
 
+    use super::{inv_memchr, inv_memrchr};
+
+    // search string, search byte, inv_memchr result, inv_memrchr result.
+    // these are expanded into a much larger set of tests in build_tests
+    const TESTS: &[(&str, u8, usize, usize)] = &[
+        (b"z", b'a', 0, 0),
+        (b"zz", b'a', 0, 1),
+        (b"aza", b'a', 1, 1),
+        (b"zaz", b'a', 0, 2),
+        (b"zza", b'a', 0, 1),
+        (b"zaa", b'a', 0, 0),
+        (b"zzz", b'a', 0, 2),
+    ];
+
+    type TestCase = (Vec<u8>, u8, Option<(usize, usize)>);
+
+    fn build_tests() -> Vec<TestCase> {
+        #[cfg(not(miri))]
+        const MAX_PER: usize = 515;
+        #[cfg(miri)]
+        const MAX_PER: usize = 10;
+
+        let mut result = vec![];
+        for &(search, byte, fwd_pos, rev_pos) in TESTS {
+            result.push((search.to_vec(), byte, Some((fwd_pos, rev_pos))));
+            for i in 1..MAX_PER {
+                // add a bunch of copies of the search byte to the end.
+                let mut suffixed: Vec<u8> = search.into();
+                suffixed.extend(std::iter::repeat(byte).take(i));
+                result.push((suffixed, byte, Some((fwd_pos, rev_pos))));
+
+                // add a bunch of copies of the search byte to the start.
+                let mut prefixed: Vec<u8> =
+                    std::iter::repeat(byte).take(i).collect();
+                prefixed.extend(search);
+                result.push((
+                    prefixed,
+                    byte,
+                    Some((fwd_pos + i, rev_pos + i)),
+                ));
+
+                // add a bunch of copies of the search byte to both ends.
+                let mut surrounded: Vec<u8> =
+                    std::iter::repeat(byte).take(i).collect();
+                surrounded.extend(search);
+                surrounded.extend(std::iter::repeat(byte).take(i));
+                result.push((
+                    surrounded,
+                    byte,
+                    Some((fwd_pos + i, rev_pos + i)),
+                ));
+            }
+        }
+
+        // build non-matching tests for several sizes
+        for i in 0..MAX_PER {
+            result.push((
+                std::iter::repeat(b'\0').take(i).collect(),
+                b'\0',
+                None,
+            ));
+        }
+
+        result
+    }
+
+    #[test]
+    fn test_inv_memchr() {
+        use crate::{ByteSlice, B};
+
+        #[cfg(not(miri))]
+        const MAX_OFFSET: usize = 130;
+        #[cfg(miri)]
+        const MAX_OFFSET: usize = 13;
+
+        for (search, byte, matching) in build_tests() {
+            assert_eq!(
+                inv_memchr(byte, &search),
+                matching.map(|m| m.0),
+                "inv_memchr when searching for {:?} in {:?}",
+                byte as char,
+                // better printing
+                B(&search).as_bstr(),
+            );
+            assert_eq!(
+                inv_memrchr(byte, &search),
+                matching.map(|m| m.1),
+                "inv_memrchr when searching for {:?} in {:?}",
+                byte as char,
+                // better printing
+                B(&search).as_bstr(),
+            );
+            // Test a rather large number off offsets for potential alignment
+            // issues.
+            for offset in 1..MAX_OFFSET {
+                if offset >= search.len() {
+                    break;
+                }
+                // If this would cause us to shift the results off the end,
+                // skip it so that we don't have to recompute them.
+                if let Some((f, r)) = matching {
+                    if offset > f || offset > r {
+                        break;
+                    }
+                }
+                let realigned = &search[offset..];
+
+                let forward_pos = matching.map(|m| m.0 - offset);
+                let reverse_pos = matching.map(|m| m.1 - offset);
+
+                assert_eq!(
+                    inv_memchr(byte, &realigned),
+                    forward_pos,
+                    "inv_memchr when searching (realigned by {}) for {:?} in {:?}",
+                    offset,
+                    byte as char,
+                    realigned.as_bstr(),
+                );
+                assert_eq!(
+                    inv_memrchr(byte, &realigned),
+                    reverse_pos,
+                    "inv_memrchr when searching (realigned by {}) for {:?} in {:?}",
+                    offset,
+                    byte as char,
+                    realigned.as_bstr(),
+                );
+            }
+        }
+    }
+}

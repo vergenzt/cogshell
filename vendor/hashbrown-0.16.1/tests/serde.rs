@@ -9,14 +9,14 @@ use serde_test::{assert_tokens, Token};
 type FnvHashMap<K, V> = HashMap<K, V, BuildHasherDefault<FnvHasher>>;
 type FnvHashSet<T> = HashSet<T, BuildHasherDefault<FnvHasher>>;
 
-
+#[test]
 fn map_serde_tokens_empty() {
     let map = FnvHashMap::<char, u32>::default();
 
     assert_tokens(&map, &[Token::Map { len: Some(0) }, Token::MapEnd]);
 }
 
-
+#[test]
 fn map_serde_tokens() {
     let mut map = FnvHashMap::default();
     map.insert('b', 20);
@@ -38,14 +38,14 @@ fn map_serde_tokens() {
     );
 }
 
-
+#[test]
 fn set_serde_tokens_empty() {
     let set = FnvHashSet::<u32>::default();
 
     assert_tokens(&set, &[Token::Seq { len: Some(0) }, Token::SeqEnd]);
 }
 
-
+#[test]
 fn set_serde_tokens() {
     let mut set = FnvHashSet::default();
     set.insert(20);

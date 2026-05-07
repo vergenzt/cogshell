@@ -2,7 +2,7 @@ extern crate proc_macro;
 
 use crate::{
     parse::{Checksum, FileContext, MarkerInst, Span},
-    utils::{common_prefix_of_chars, leading_whitespace},
+    utils::common_prefixes::{common_prefix_of_chars, leading_whitespace},
 };
 
 pub struct BlockMarkers<'a> {
@@ -27,11 +27,11 @@ pub struct Block<'a> {
     /// The markers which delimit this block
     pub markers: BlockMarkers<'a>,
     /// The (pre-trimmed) lines of the program to run
-    pub prog_lines: Vec<&'a [u8]>,
+    pub prog_lines: Vec<&'a str>,
     /// The text to prepend to lines of output
-    pub prog_whitespace_pfx: &'a [u8],
+    pub prog_whitespace_pfx: &'a str,
     /// The unmodified previous output bytes found between the program end and output end markers
-    pub output_prev: &'a [u8],
+    pub output_prev: &'a str,
     /// The previous output checksum which followed this block's output end marker, if present
     pub output_prev_hash: Option<Checksum<'a>>,
     /// The full span of (the parsed version of) this block from start to end
@@ -50,13 +50,9 @@ impl<'a> Block<'a> {
 
         // find beginning of line containing start marker
         let prog_pfx = &content[..*prog_beg.span.start];
-        let prog_start_line_idx = prog_pfx
-            .iter()
-            .rposition(|c| *c == b'\n')
-            .map(|i| i + 1)
-            .unwrap_or(0);
+        let prog_start_line_idx = prog_pfx.rfind('\n').map(|i| i + 1).unwrap_or(0);
         let mut prog_lines: Vec<_> = content[prog_start_line_idx..*prog_end.span.start]
-            .split(|b| *b == b'\n')
+            .split('\n')
             .collect();
 
         // save whitespace prefix of the marker lines for prepending to output
@@ -65,7 +61,7 @@ impl<'a> Block<'a> {
             let start_ws = leading_whitespace(&content[prog_start_line_idx..*prog_beg.span.start]);
             if let Some(&prog_end_line_pfx) = prog_lines[1..].last() {
                 let end_ws = leading_whitespace(&prog_end_line_pfx);
-                common_prefix_of_chars(&vec![start_ws, end_ws]).unwrap()
+                common_prefix_of_chars(&vec![start_ws, end_ws]).unwrap_or("")
             } else {
                 start_ws
             }
@@ -76,25 +72,25 @@ impl<'a> Block<'a> {
         // https://github.com/nedbat/cog/blob/05842d65800458b1a18eba89770d8cb705cb503a/cogapp/cogapp.py#L46-L48
         if let Some(prog_pfx_to_strip) = common_prefix_of_chars(&prog_lines) {
             for line in prog_lines.iter_mut() {
-                *line = ByteStr::new(line.strip_prefix(prog_pfx_to_strip).unwrap());
+                *line = line.strip_prefix(prog_pfx_to_strip).unwrap();
             }
         }
 
         // remove start marker from first line
-        prog_lines[0] = ByteStr::new(prog_lines[0][prog_beg.span.len()..].trim_ascii_start());
+        prog_lines[0] = prog_lines[0][prog_beg.span.len()..].trim_ascii_start();
 
         // dedent program lines after the first
         let lines_to_dedent = prog_lines[1..].iter().filter(|l| !l.is_empty());
-        let line_indents = lines_to_dedent.map(|l| leading_whitespace(l));
-        if let Some(indent) = common_prefix_of_chars(line_indents) {
+        let line_indents: Vec<_> = lines_to_dedent.map(|l| leading_whitespace(l)).collect();
+        if let Some(indent) = common_prefix_of_chars(&line_indents) {
             for line in prog_lines[1..].iter_mut() {
-                *line = ByteStr::new(line.strip_prefix(indent).unwrap_or(line));
+                *line = line.strip_prefix(indent).unwrap_or(line);
             }
         }
 
         let output_prev = content[*prog_end.span.start..*outp_end.span.end]
-            .trim_prefix(b"\n")
-            .trim_suffix(b"\n");
+            .trim_prefix("\n")
+            .trim_suffix("\n");
         let block_sfx = &content[*outp_end.span.end..];
         let output_prev_hash = Checksum::from_block_suffix(block_sfx);
 

@@ -63,8 +63,8 @@ pub unsafe fn openpty(
     termp: *const termios,
     winp: *const crate::winsize,
 ) -> c_int {
-    const PTEM: &[u8] = b"ptem\0";
-    const LDTERM: &[u8] = b"ldterm\0";
+    const PTEM: &str = b"ptem\0";
+    const LDTERM: &str = b"ldterm\0";
 
     // Open the main pseudo-terminal device, making sure not to set it as the
     // controlling terminal for this process:

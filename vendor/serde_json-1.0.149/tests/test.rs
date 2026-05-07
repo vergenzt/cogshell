@@ -115,21 +115,21 @@ where
     }
 }
 
-
+#[test]
 fn test_write_null() {
     let tests = &[((), "null")];
     test_encode_ok(tests);
     test_pretty_encode_ok(tests);
 }
 
-
+#[test]
 fn test_write_u64() {
     let tests = &[(3u64, "3"), (u64::MAX, &u64::MAX.to_string())];
     test_encode_ok(tests);
     test_pretty_encode_ok(tests);
 }
 
-
+#[test]
 fn test_write_i64() {
     let tests = &[
         (3i64, "3"),
@@ -141,7 +141,7 @@ fn test_write_i64() {
     test_pretty_encode_ok(tests);
 }
 
-
+#[test]
 fn test_write_f64() {
     let tests = &[
         (3.0, "3.0"),
@@ -156,7 +156,7 @@ fn test_write_f64() {
     test_pretty_encode_ok(tests);
 }
 
-
+#[test]
 fn test_encode_nonfinite_float_yields_null() {
     let v = to_value(f64::NAN.copysign(1.0)).unwrap();
     assert!(v.is_null());
@@ -183,21 +183,21 @@ fn test_encode_nonfinite_float_yields_null() {
     assert!(v.is_null());
 }
 
-
+#[test]
 fn test_write_str() {
     let tests = &[("", "\"\""), ("foo", "\"foo\"")];
     test_encode_ok(tests);
     test_pretty_encode_ok(tests);
 }
 
-
+#[test]
 fn test_write_bool() {
     let tests = &[(true, "true"), (false, "false")];
     test_encode_ok(tests);
     test_pretty_encode_ok(tests);
 }
 
-
+#[test]
 fn test_write_char() {
     let tests = &[
         ('n', "\"n\""),
@@ -216,7 +216,7 @@ fn test_write_char() {
     test_pretty_encode_ok(tests);
 }
 
-
+#[test]
 fn test_write_list() {
     test_encode_ok(&[
         (vec![], "[]"),
@@ -266,7 +266,7 @@ fn test_write_list() {
     )]);
 }
 
-
+#[test]
 fn test_write_object() {
     test_encode_ok(&[
         (treemap!(), "{}"),
@@ -478,7 +478,7 @@ fn test_write_object() {
     )]);
 }
 
-
+#[test]
 fn test_write_tuple() {
     test_encode_ok(&[((5,), "[5]")]);
 
@@ -489,7 +489,7 @@ fn test_write_tuple() {
     test_pretty_encode_ok(&[((5, (6, "abc")), pretty_str!([5, [6, "abc"]]))]);
 }
 
-
+#[test]
 fn test_write_enum() {
     test_encode_ok(&[
         (Animal::Dog, "\"Dog\""),
@@ -555,7 +555,7 @@ fn test_write_enum() {
     ]);
 }
 
-
+#[test]
 fn test_write_option() {
     test_encode_ok(&[(None, "null"), (Some("jodhpurs"), "\"jodhpurs\"")]);
 
@@ -572,7 +572,7 @@ fn test_write_option() {
     ]);
 }
 
-
+#[test]
 fn test_write_newtype_struct() {
     #[derive(Serialize, PartialEq, Debug)]
     struct Newtype(BTreeMap<String, i32>);
@@ -585,7 +585,7 @@ fn test_write_newtype_struct() {
     test_encode_ok(&[(outer, r#"{"outer":{"inner":123}}"#)]);
 }
 
-
+#[test]
 fn test_deserialize_number_to_untagged_enum() {
     #[derive(Eq, PartialEq, Deserialize, Debug)]
     #[serde(untagged)]
@@ -672,7 +672,7 @@ where
     }
 }
 
-fn test_parse_slice_err<T>(errors: &[(&[u8], &'static str)])
+fn test_parse_slice_err<T>(errors: &[(&str, &'static str)])
 where
     T: Debug + PartialEq + de::DeserializeOwned,
 {
@@ -692,7 +692,7 @@ where
     }
 }
 
-
+#[test]
 fn test_parse_null() {
     test_parse_err::<()>(&[
         ("n", "EOF while parsing a value at line 1 column 1"),
@@ -703,7 +703,7 @@ fn test_parse_null() {
     test_parse_ok(vec![("null", ())]);
 }
 
-
+#[test]
 fn test_parse_bool() {
     test_parse_err::<bool>(&[
         ("t", "EOF while parsing a value at line 1 column 1"),
@@ -722,7 +722,7 @@ fn test_parse_bool() {
     ]);
 }
 
-
+#[test]
 fn test_parse_char() {
     test_parse_err::<char>(&[
         (
@@ -751,7 +751,7 @@ fn test_parse_char() {
     ]);
 }
 
-
+#[test]
 fn test_parse_number_errors() {
     test_parse_err::<f64>(&[
         ("+", "expected value at line 1 column 1"),
@@ -806,7 +806,7 @@ fn test_parse_number_errors() {
     ]);
 }
 
-
+#[test]
 fn test_parse_i64() {
     test_parse_ok(vec![
         ("-2", -2),
@@ -817,7 +817,7 @@ fn test_parse_i64() {
     ]);
 }
 
-
+#[test]
 fn test_parse_u64() {
     test_parse_ok(vec![
         ("0", 0u64),
@@ -827,7 +827,7 @@ fn test_parse_u64() {
     ]);
 }
 
-
+#[test]
 fn test_parse_negative_zero() {
     for negative_zero in &[
         "-0",
@@ -850,7 +850,7 @@ fn test_parse_negative_zero() {
     }
 }
 
-
+#[test]
 fn test_parse_f64() {
     test_parse_ok(vec![
         ("0.0", 0.0f64),
@@ -943,7 +943,7 @@ fn test_parse_f64() {
     ]);
 }
 
-
+#[test]
 fn test_value_as_f64() {
     let v = serde_json::from_str::<Value>("1e1000");
 
@@ -957,7 +957,7 @@ fn test_value_as_f64() {
 // Test roundtrip with some values that were not perfectly roundtripped by the
 // old f64 deserializer.
 #[cfg(feature = "float_roundtrip")]
-
+#[test]
 fn test_roundtrip_f64() {
     for &float in &[
         // Samples from quickcheck-ing roundtrip with `input: f64`. Comments
@@ -980,7 +980,7 @@ fn test_roundtrip_f64() {
     }
 }
 
-
+#[test]
 fn test_roundtrip_f32() {
     // This number has 1 ULP error if parsed via f64 and converted to f32.
     // https://github.com/serde-rs/json/pull/671#issuecomment-628534468
@@ -990,7 +990,7 @@ fn test_roundtrip_f32() {
     assert_eq!(float, output);
 }
 
-
+#[test]
 fn test_serialize_char() {
     let value = json!(
         ({
@@ -1003,7 +1003,7 @@ fn test_serialize_char() {
 }
 
 #[cfg(feature = "arbitrary_precision")]
-
+#[test]
 fn test_malicious_number() {
     #[derive(Serialize)]
     #[serde(rename = "$serde_json::private::Number")]
@@ -1018,7 +1018,7 @@ fn test_malicious_number() {
     assert_eq!(actual, "invalid number at line 1 column 1");
 }
 
-
+#[test]
 fn test_parse_number() {
     test_parse_ok(vec![
         ("0.0", Number::from_f64(0.0f64).unwrap()),
@@ -1063,7 +1063,7 @@ fn test_parse_number() {
     ]);
 }
 
-
+#[test]
 fn test_parse_string() {
     test_parse_err::<String>(&[
         ("\"", "EOF while parsing a string at line 1 column 1"),
@@ -1137,7 +1137,7 @@ fn test_parse_string() {
     ]);
 }
 
-
+#[test]
 fn test_parse_list() {
     test_parse_err::<Vec<f64>>(&[
         ("[", "EOF while parsing a list at line 1 column 1"),
@@ -1171,7 +1171,7 @@ fn test_parse_list() {
     test_parse_ok(vec![("[1, [2, 3]]", (1u64, (2u64, 3u64)))]);
 }
 
-
+#[test]
 fn test_parse_object() {
     test_parse_err::<BTreeMap<String, u32>>(&[
         ("{", "EOF while parsing an object at line 1 column 1"),
@@ -1216,7 +1216,7 @@ fn test_parse_object() {
     test_parse_ok(vec![("{\"c\":null}", treemap!('c' => ()))]);
 }
 
-
+#[test]
 fn test_parse_struct() {
     test_parse_err::<Outer>(&[
         (
@@ -1286,7 +1286,7 @@ fn test_parse_struct() {
     Inner::deserialize(j).unwrap();
 }
 
-
+#[test]
 fn test_parse_option() {
     test_parse_ok(vec![
         ("null", None::<String>),
@@ -1307,7 +1307,7 @@ fn test_parse_option() {
     ]);
 }
 
-
+#[test]
 fn test_parse_enum_errors() {
     test_parse_err::<Animal>(
         &[
@@ -1338,7 +1338,7 @@ fn test_parse_enum_errors() {
     );
 }
 
-
+#[test]
 fn test_parse_enum() {
     test_parse_ok(vec![
         ("\"Dog\"", Animal::Dog),
@@ -1390,7 +1390,7 @@ fn test_parse_enum() {
     )]);
 }
 
-
+#[test]
 fn test_parse_trailing_whitespace() {
     test_parse_ok(vec![
         ("[1, 2] ", vec![1u64, 2]),
@@ -1400,7 +1400,7 @@ fn test_parse_trailing_whitespace() {
     ]);
 }
 
-
+#[test]
 fn test_multiline_errors() {
     test_parse_err::<BTreeMap<String, String>>(&[(
         "{\n  \"foo\":\n \"bar\"",
@@ -1408,7 +1408,7 @@ fn test_multiline_errors() {
     )]);
 }
 
-
+#[test]
 fn test_missing_option_field() {
     #[derive(Debug, PartialEq, Deserialize)]
     struct Foo {
@@ -1428,7 +1428,7 @@ fn test_missing_option_field() {
     assert_eq!(value, Foo { x: Some(5) });
 }
 
-
+#[test]
 fn test_missing_nonoption_field() {
     #[derive(Debug, PartialEq, Deserialize)]
     struct Foo {
@@ -1438,7 +1438,7 @@ fn test_missing_nonoption_field() {
     test_parse_err::<Foo>(&[("{}", "missing field `x` at line 1 column 2")]);
 }
 
-
+#[test]
 fn test_missing_renamed_field() {
     #[derive(Debug, PartialEq, Deserialize)]
     struct Foo {
@@ -1459,7 +1459,7 @@ fn test_missing_renamed_field() {
     assert_eq!(value, Foo { x: Some(5) });
 }
 
-
+#[test]
 fn test_serialize_seq_with_no_len() {
     #[derive(Clone, Debug, PartialEq)]
     struct MyVec<T>(Vec<T>);
@@ -1541,7 +1541,7 @@ fn test_serialize_seq_with_no_len() {
     assert_eq!(s, expected);
 }
 
-
+#[test]
 fn test_serialize_map_with_no_len() {
     #[derive(Clone, Debug, PartialEq)]
     struct MyMap<K, V>(BTreeMap<K, V>);
@@ -1630,7 +1630,7 @@ fn test_serialize_map_with_no_len() {
 }
 
 #[cfg(not(miri))]
-
+#[test]
 fn test_deserialize_from_stream() {
     use serde_json::to_writer;
     use std::net::{TcpListener, TcpStream};
@@ -1670,7 +1670,7 @@ fn test_deserialize_from_stream() {
     assert_eq!(request, response);
 }
 
-
+#[test]
 fn test_serialize_rejects_adt_keys() {
     let map = treemap!(
         Some("a") => 2,
@@ -1682,7 +1682,7 @@ fn test_serialize_rejects_adt_keys() {
     assert_eq!(err.to_string(), "key must be a string");
 }
 
-
+#[test]
 fn test_bytes_ser() {
     let buf = vec![];
     let bytes = Bytes::new(&buf);
@@ -1693,7 +1693,7 @@ fn test_bytes_ser() {
     assert_eq!(to_string(&bytes).unwrap(), "[1,2,3]".to_owned());
 }
 
-
+#[test]
 fn test_byte_buf_ser() {
     let bytes = ByteBuf::new();
     assert_eq!(to_string(&bytes).unwrap(), "[]".to_owned());
@@ -1702,7 +1702,7 @@ fn test_byte_buf_ser() {
     assert_eq!(to_string(&bytes).unwrap(), "[1,2,3]".to_owned());
 }
 
-
+#[test]
 fn test_byte_buf_de() {
     let bytes = ByteBuf::new();
     let v: ByteBuf = from_str("[]").unwrap();
@@ -1713,7 +1713,7 @@ fn test_byte_buf_de() {
     assert_eq!(v, bytes);
 }
 
-
+#[test]
 fn test_byte_buf_de_invalid_surrogates() {
     let bytes = ByteBuf::from(vec![237, 160, 188]);
     let v: ByteBuf = from_str(r#""\ud83c""#).unwrap();
@@ -1759,7 +1759,7 @@ fn test_byte_buf_de_invalid_surrogates() {
     assert_eq!(v, bytes);
 }
 
-
+#[test]
 fn test_byte_buf_de_surrogate_pair() {
     // leading surrogate followed by trailing surrogate
     let bytes = ByteBuf::from(vec![240, 159, 128, 128]);
@@ -1773,7 +1773,7 @@ fn test_byte_buf_de_surrogate_pair() {
 }
 
 #[cfg(feature = "raw_value")]
-
+#[test]
 fn test_raw_de_invalid_surrogates() {
     use serde_json::value::RawValue;
 
@@ -1790,14 +1790,14 @@ fn test_raw_de_invalid_surrogates() {
 }
 
 #[cfg(feature = "raw_value")]
-
+#[test]
 fn test_raw_de_surrogate_pair() {
     use serde_json::value::RawValue;
 
     assert!(from_str::<Box<RawValue>>(r#""\ud83c\udc00""#).is_ok());
 }
 
-
+#[test]
 fn test_byte_buf_de_multiple() {
     let s: Vec<ByteBuf> = from_str(r#"["ab\nc", "cd\ne"]"#).unwrap();
     let a = ByteBuf::from(b"ab\nc".to_vec());
@@ -1805,7 +1805,7 @@ fn test_byte_buf_de_multiple() {
     assert_eq!(vec![a, b], s);
 }
 
-
+#[test]
 fn test_json_pointer() {
     // Test case taken from https://tools.ietf.org/html/rfc6901#page-5
     let data: Value = from_str(
@@ -1842,7 +1842,7 @@ fn test_json_pointer() {
     assert!(data.pointer("/foo/01").is_none());
 }
 
-
+#[test]
 fn test_json_pointer_mut() {
     // Test case taken from https://tools.ietf.org/html/rfc6901#page-5
     let mut data: Value = from_str(
@@ -1901,7 +1901,7 @@ fn test_json_pointer_mut() {
     assert_eq!(data.pointer_mut("").unwrap(), &mut d2);
 }
 
-
+#[test]
 fn test_stack_overflow() {
     let brackets: String = iter::repeat('[')
         .take(127)
@@ -1913,7 +1913,7 @@ fn test_stack_overflow() {
     test_parse_err::<Value>(&[(&brackets, "recursion limit exceeded at line 1 column 128")]);
 }
 
-
+#[test]
 #[cfg(feature = "unbounded_depth")]
 fn test_disable_recursion_limit() {
     let brackets: String = iter::repeat('[')
@@ -1926,7 +1926,7 @@ fn test_disable_recursion_limit() {
     Value::deserialize(&mut deserializer).unwrap();
 }
 
-
+#[test]
 fn test_integer_key() {
     // map with integer keys
     let map = treemap!(
@@ -1962,7 +1962,7 @@ fn test_integer_key() {
     );
 }
 
-
+#[test]
 fn test_integer128_key() {
     let map = treemap! {
         100000000000000000000000000000000000000u128 => (),
@@ -1972,7 +1972,7 @@ fn test_integer128_key() {
     assert_eq!(from_str::<BTreeMap<u128, ()>>(j).unwrap(), map);
 }
 
-
+#[test]
 fn test_float_key() {
     #[derive(Eq, PartialEq, Ord, PartialOrd, Debug, Clone)]
     struct Float;
@@ -2007,7 +2007,7 @@ fn test_float_key() {
     )]);
 }
 
-
+#[test]
 fn test_deny_non_finite_f32_key() {
     // We store float bits so that we can derive Ord, and other traits. In a
     // real context the code might involve a crate like ordered-float.
@@ -2036,7 +2036,7 @@ fn test_deny_non_finite_f32_key() {
     assert!(serde_json::to_value(map).is_err());
 }
 
-
+#[test]
 fn test_deny_non_finite_f64_key() {
     // We store float bits so that we can derive Ord, and other traits. In a
     // real context the code might involve a crate like ordered-float.
@@ -2065,7 +2065,7 @@ fn test_deny_non_finite_f64_key() {
     assert!(serde_json::to_value(map).is_err());
 }
 
-
+#[test]
 fn test_boolean_key() {
     let map = treemap!(false => 0, true => 1);
     let j = r#"{"false":0,"true":1}"#;
@@ -2073,7 +2073,7 @@ fn test_boolean_key() {
     test_parse_ok(vec![(j, map)]);
 }
 
-
+#[test]
 fn test_borrowed_key() {
     let map: BTreeMap<&str, ()> = from_str("{\"borrowed\":null}").unwrap();
     let expected = treemap! { "borrowed" => () };
@@ -2087,7 +2087,7 @@ fn test_borrowed_key() {
     assert_eq!(map, expected);
 }
 
-
+#[test]
 fn test_effectively_string_keys() {
     #[derive(Eq, PartialEq, Ord, PartialOrd, Debug, Clone, Serialize, Deserialize)]
     enum Enum {
@@ -2113,7 +2113,7 @@ fn test_effectively_string_keys() {
     test_parse_ok(vec![(expected, map)]);
 }
 
-
+#[test]
 fn test_json_macro() {
     // This is tricky because the <...> is not a single TT and the comma inside
     // looks like an array element separator.
@@ -2138,7 +2138,7 @@ fn test_json_macro() {
     let _ = json!({ "architecture": [true, null] });
 }
 
-
+#[test]
 fn issue_220() {
     #[derive(Debug, PartialEq, Eq, Deserialize)]
     enum E {
@@ -2150,7 +2150,7 @@ fn issue_220() {
     assert_eq!(from_str::<E>(r#"{"V": 0}"#).unwrap(), E::V(0));
 }
 
-
+#[test]
 fn test_partialeq_number() {
     macro_rules! number_partialeq_ok {
         ($($n:expr)*) => {
@@ -2174,7 +2174,7 @@ fn test_partialeq_number() {
     );
 }
 
-
+#[test]
 fn test_partialeq_string() {
     let v = to_value("42").unwrap();
     assert_eq!(v, "42");
@@ -2184,7 +2184,7 @@ fn test_partialeq_string() {
     assert_eq!(String::from("42"), v);
 }
 
-
+#[test]
 fn test_partialeq_bool() {
     let v = to_value(true).unwrap();
     assert_eq!(v, true);
@@ -2203,7 +2203,7 @@ impl io::Read for FailReader {
     }
 }
 
-
+#[test]
 fn test_category() {
     assert!(from_str::<String>("123").unwrap_err().is_data());
 
@@ -2241,7 +2241,7 @@ fn test_category() {
     assert!(from_reader::<_, String>(fail).unwrap_err().is_io());
 }
 
-
+#[test]
 // Clippy false positive: https://github.com/Manishearth/rust-clippy/issues/292
 #[allow(clippy::needless_lifetimes)]
 fn test_into_io_error() {
@@ -2261,7 +2261,7 @@ fn test_into_io_error() {
     assert_eq!(io_err.kind(), io::ErrorKind::NotConnected);
 }
 
-
+#[test]
 fn test_borrow() {
     let s: &str = from_str("\"borrowed\"").unwrap();
     assert_eq!("borrowed", s);
@@ -2270,7 +2270,7 @@ fn test_borrow() {
     assert_eq!("borrowed", s);
 }
 
-
+#[test]
 fn null_invalid_type() {
     let err = serde_json::from_str::<String>("null").unwrap_err();
     assert_eq!(
@@ -2279,7 +2279,7 @@ fn null_invalid_type() {
     );
 }
 
-
+#[test]
 fn test_integer128() {
     let signed = &[i128::MIN, -1, 0, 1, i128::MAX];
     let unsigned = &[0, 1, u128::MAX];
@@ -2316,7 +2316,7 @@ fn test_integer128() {
     ]);
 }
 
-
+#[test]
 fn test_integer128_to_value() {
     let signed = &[i128::from(i64::MIN), i128::from(u64::MAX)];
     let unsigned = &[0, u128::from(u64::MAX)];
@@ -2338,7 +2338,7 @@ fn test_integer128_to_value() {
 }
 
 #[cfg(feature = "raw_value")]
-
+#[test]
 fn test_borrowed_raw_value() {
     #[derive(Serialize, Deserialize)]
     struct Wrapper<'a> {
@@ -2370,7 +2370,7 @@ fn test_borrowed_raw_value() {
 }
 
 #[cfg(feature = "raw_value")]
-
+#[test]
 fn test_raw_value_in_map_key() {
     #[derive(RefCast)]
     #[repr(transparent)]
@@ -2410,7 +2410,7 @@ fn test_raw_value_in_map_key() {
 }
 
 #[cfg(feature = "raw_value")]
-
+#[test]
 fn test_boxed_raw_value() {
     #[derive(Serialize, Deserialize)]
     struct Wrapper {
@@ -2456,7 +2456,7 @@ fn test_boxed_raw_value() {
 }
 
 #[cfg(feature = "raw_value")]
-
+#[test]
 fn test_raw_invalid_utf8() {
     let j = &[b'"', b'\xCE', b'\xF8', b'"'];
     let value_err = serde_json::from_slice::<Value>(j).unwrap_err();
@@ -2473,7 +2473,7 @@ fn test_raw_invalid_utf8() {
 }
 
 #[cfg(feature = "raw_value")]
-
+#[test]
 fn test_serialize_unsized_value_to_raw_value() {
     assert_eq!(
         serde_json::value::to_raw_value("foobar").unwrap().get(),
@@ -2481,7 +2481,7 @@ fn test_serialize_unsized_value_to_raw_value() {
     );
 }
 
-
+#[test]
 fn test_borrow_in_map_key() {
     #[derive(Deserialize, Debug)]
     struct Outer {
@@ -2507,7 +2507,7 @@ fn test_borrow_in_map_key() {
     Outer::deserialize(&value).unwrap();
 }
 
-
+#[test]
 fn test_value_into_deserializer() {
     #[derive(Deserialize)]
     struct Outer {
@@ -2532,7 +2532,7 @@ fn test_value_into_deserializer() {
     assert_eq!(outer.inner.string, "Hello World");
 }
 
-
+#[test]
 fn hash_positive_and_negative_zero() {
     let rand = std::hash::RandomState::new();
 
@@ -2547,7 +2547,7 @@ fn hash_positive_and_negative_zero() {
     }
 }
 
-
+#[test]
 fn test_control_character_search() {
     // Different space circumstances
     for n in 0..16 {

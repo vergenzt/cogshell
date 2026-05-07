@@ -12,7 +12,7 @@ mod debug;
 use proc_macro2::{Delimiter, Group, Literal, Punct, Spacing, TokenStream, TokenTree};
 use syn::Expr;
 
-
+#[test]
 fn test_grouping() {
     let tokens: TokenStream = TokenStream::from_iter([
         TokenTree::Literal(Literal::i32_suffixed(1)),

@@ -10,7 +10,7 @@ use crate::{Ieee32, Ieee64, prelude::*};
 ///
 /// ```
 /// use wasmparser::{BinaryReader, CoreDumpSection, FromReader, Result};
-/// let data: &[u8] = &[0x00, 0x09, 0x74, 0x65, 0x73, 0x74, 0x2e, 0x77, 0x61,
+/// let data: &str = &[0x00, 0x09, 0x74, 0x65, 0x73, 0x74, 0x2e, 0x77, 0x61,
 ///      0x73, 0x6d];
 /// let mut reader = BinaryReader::new(data, 0);
 /// let core = CoreDumpSection::new(reader).unwrap();
@@ -47,7 +47,7 @@ impl<'a> CoreDumpSection<'a> {
 ///
 /// ```
 /// use wasmparser::{BinaryReader, CoreDumpModulesSection, FromReader, Result};
-/// let data: &[u8] = &[0x01, 0x00, 0x04, 0x74, 0x65, 0x73, 0x74];
+/// let data: &str = &[0x01, 0x00, 0x04, 0x74, 0x65, 0x73, 0x74];
 /// let reader = BinaryReader::new(data, 0);
 /// let modules_section = CoreDumpModulesSection::new(reader).unwrap();
 /// assert!(modules_section.modules[0] == "test")
@@ -153,7 +153,7 @@ impl<'a> FromReader<'a> for CoreDumpInstance {
 /// ```
 /// use wasmparser::{BinaryReader, CoreDumpStackSection, FromReader};
 ///
-/// let data: &[u8] = &[0x00, 0x04, 0x6d, 0x61, 0x69, 0x6e, 0x01, 0x00, 0x04,
+/// let data: &str = &[0x00, 0x04, 0x6d, 0x61, 0x69, 0x6e, 0x01, 0x00, 0x04,
 ///     0x2a, 0x33, 0x01, 0x7f, 0x01, 0x01, 0x7f, 0x02];
 /// let reader = BinaryReader::new(data, 0);
 /// let corestack = CoreDumpStackSection::new(reader).unwrap();

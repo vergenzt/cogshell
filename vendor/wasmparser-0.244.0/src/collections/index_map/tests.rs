@@ -35,7 +35,7 @@ fn assert_get(map: &mut TestMap, key: char, expected: impl Into<Option<(usize, i
     }
 }
 
-
+#[test]
 fn new_works() {
     let mut map = <IndexMap<char, i32>>::new();
     assert!(map.is_empty());
@@ -48,7 +48,7 @@ fn new_works() {
     assert!(map.into_iter().eq([]));
 }
 
-
+#[test]
 fn insert_works() {
     let mut map = <IndexMap<char, i32>>::new();
     let (k0, None) = map.insert_full('a', 10) else {
@@ -65,7 +65,7 @@ fn insert_works() {
     assert!(!map.is_empty());
 }
 
-
+#[test]
 fn extend_works() {
     let mut map = <IndexMap<char, i32>>::new();
     let mut values = [('a', 0), ('b', 1), ('c', 2), ('d', 3), ('e', 4), ('f', 5)];
@@ -83,7 +83,7 @@ fn extend_works() {
     assert!(map.into_iter().eq(values));
 }
 
-
+#[test]
 fn clear_works() {
     let mut map = <IndexMap<char, i32>>::new();
     map.extend([('a', 0), ('b', 1), ('c', 2), ('d', 3), ('e', 4), ('f', 5)]);
@@ -98,7 +98,7 @@ fn clear_works() {
     assert!(map.into_iter().eq([]));
 }
 
-
+#[test]
 fn swap_remove_works_ascending() {
     let mut map = <IndexMap<char, i32>>::new();
     let values = [('a', 0), ('b', 1), ('c', 2), ('d', 3), ('e', 4), ('f', 5)];
@@ -120,7 +120,7 @@ fn swap_remove_works_ascending() {
     }
 }
 
-
+#[test]
 fn swap_remove_works_descending() {
     let mut map = <IndexMap<char, i32>>::new();
     let values = [('a', 0), ('b', 1), ('c', 2), ('d', 3), ('e', 4), ('f', 5)];
@@ -142,7 +142,7 @@ fn swap_remove_works_descending() {
     }
 }
 
-
+#[test]
 fn entry_works_occupied() {
     let mut map = <IndexMap<char, i32>>::new();
     let values = [('a', 0), ('b', 1), ('c', 2), ('d', 3), ('e', 4), ('f', 5)];
@@ -162,7 +162,7 @@ fn entry_works_occupied() {
     }
 }
 
-
+#[test]
 fn entry_works_vacant() {
     let mut map = <IndexMap<char, i32>>::new();
     let values = [('a', 0), ('b', 1), ('c', 2), ('d', 3), ('e', 4), ('f', 5)];

@@ -8,10 +8,13 @@
 #![feature(slice_concat_trait)]
 #![feature(slice_concat_ext)]
 
+use std::sync::atomic::AtomicUsize;
+
 mod args;
-mod config;
 mod execute;
 mod parse;
 mod utils;
+
+static ERROR_COUNT: AtomicUsize = AtomicUsize::new(0);
 
 pub fn main() {}

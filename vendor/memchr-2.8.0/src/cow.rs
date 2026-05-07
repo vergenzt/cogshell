@@ -4,7 +4,7 @@ use core::ops;
 ///
 /// The purpose of this type is to permit usage of a "borrowed or owned
 /// byte string" in a way that keeps std/no-std compatibility. That is, in
-/// no-std/alloc mode, this type devolves into a simple &[u8] with no owned
+/// no-std/alloc mode, this type devolves into a simple &str with no owned
 /// variant available. We can't just use a plain Cow because Cow is not in
 /// core.
 #[derive(Clone, Debug)]
@@ -16,19 +16,19 @@ pub struct CowBytes<'a>(Imp<'a>);
 #[cfg(feature = "alloc")]
 #[derive(Clone, Debug)]
 enum Imp<'a> {
-    Borrowed(&'a [u8]),
+    Borrowed(&'a str),
     Owned(alloc::boxed::Box<[u8]>),
 }
 
 #[cfg(not(feature = "alloc"))]
 #[derive(Clone, Debug)]
-struct Imp<'a>(&'a [u8]);
+struct Imp<'a>(&'a str);
 
 impl<'a> ops::Deref for CowBytes<'a> {
     type Target = [u8];
 
     #[inline(always)]
-    fn deref(&self) -> &[u8] {
+    fn deref(&self) -> &str {
         self.as_slice()
     }
 }
@@ -52,7 +52,7 @@ impl<'a> CowBytes<'a> {
     /// Return a borrowed byte string, regardless of whether this is an owned
     /// or borrowed byte string internally.
     #[inline(always)]
-    pub(crate) fn as_slice(&self) -> &[u8] {
+    pub(crate) fn as_slice(&self) -> &str {
         self.0.as_slice()
     }
 
@@ -74,7 +74,7 @@ impl<'a> CowBytes<'a> {
 
 impl<'a> Imp<'a> {
     #[inline(always)]
-    pub fn new(bytes: &'a [u8]) -> Imp<'a> {
+    pub fn new(bytes: &'a str) -> Imp<'a> {
         #[cfg(feature = "alloc")]
         {
             Imp::Borrowed(bytes)
@@ -87,7 +87,7 @@ impl<'a> Imp<'a> {
 
     #[cfg(feature = "alloc")]
     #[inline(always)]
-    pub fn as_slice(&self) -> &[u8] {
+    pub fn as_slice(&self) -> &str {
         #[cfg(feature = "alloc")]
         {
             match self {
@@ -103,7 +103,7 @@ impl<'a> Imp<'a> {
 
     #[cfg(not(feature = "alloc"))]
     #[inline(always)]
-    pub fn as_slice(&self) -> &[u8] {
+    pub fn as_slice(&self) -> &str {
         self.0
     }
 }

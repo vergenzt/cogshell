@@ -78,4 +78,36 @@ impl Encode for Revision {
     }
 }
 
+#[cfg(test)]
+mod test {
+    use super::*;
+    use wasm_encoder::Component;
+    use wasmparser::Payload;
 
+    #[test]
+    fn roundtrip() {
+        let mut component = Component::new();
+        component.section(&Revision::new("de978e17a80c1118f606fce919ba9b7d5a04a5ad"));
+        let component = component.finish();
+
+        let mut parsed = false;
+        for section in wasmparser::Parser::new(0).parse_all(&component) {
+            if let Payload::CustomSection(reader) = section.unwrap() {
+                let revision = Revision::parse_custom_section(&reader).unwrap();
+                assert_eq!(
+                    revision.to_string(),
+                    "de978e17a80c1118f606fce919ba9b7d5a04a5ad"
+                );
+                parsed = true;
+            }
+        }
+        assert!(parsed);
+    }
+
+    #[test]
+    fn serialize() {
+        let revision = Revision::new("de978e17a80c1118f606fce919ba9b7d5a04a5ad");
+        let json = serde_json::to_string(&revision).unwrap();
+        assert_eq!(r#""de978e17a80c1118f606fce919ba9b7d5a04a5ad""#, json);
+    }
+}

@@ -20,7 +20,7 @@ use crate::{create_input, suite, untestify_kind};
 const EXPANSIONS: &[&str] = &["is_match", "find", "which"];
 
 /// Runs the test suite with the default configuration.
-
+#[test]
 fn unminimized_default() -> Result<()> {
     let builder = Regex::builder();
     TestRunner::new()?
@@ -33,7 +33,7 @@ fn unminimized_default() -> Result<()> {
 
 /// Runs the test suite with the default configuration and a prefilter enabled,
 /// if one can be built.
-
+#[test]
 fn unminimized_prefilter() -> Result<()> {
     let my_compiler = |test: &RegexTest, regexes: &[String]| {
         // Parse regexes as HIRs so we can get literals to build a prefilter.
@@ -63,7 +63,7 @@ fn unminimized_prefilter() -> Result<()> {
 }
 
 /// Runs the test suite with start states specialized.
-
+#[test]
 fn unminimized_specialized_start_states() -> Result<()> {
     let mut builder = Regex::builder();
     builder.dense(dense::Config::new().specialize_start_states(true));
@@ -77,7 +77,7 @@ fn unminimized_specialized_start_states() -> Result<()> {
 }
 
 /// Runs the test suite with byte classes disabled.
-
+#[test]
 fn unminimized_no_byte_class() -> Result<()> {
     let mut builder = Regex::builder();
     builder.dense(dense::Config::new().byte_classes(false));
@@ -91,7 +91,7 @@ fn unminimized_no_byte_class() -> Result<()> {
 }
 
 /// Runs the test suite with NFA shrinking enabled.
-
+#[test]
 fn unminimized_nfa_shrink() -> Result<()> {
     let mut builder = Regex::builder();
     builder.thompson(thompson::Config::new().shrink(true));
@@ -106,7 +106,7 @@ fn unminimized_nfa_shrink() -> Result<()> {
 
 /// Runs the test suite on a minimized DFA with an otherwise default
 /// configuration.
-
+#[test]
 fn minimized_default() -> Result<()> {
     let mut builder = Regex::builder();
     builder.dense(dense::Config::new().minimize(true));
@@ -119,7 +119,7 @@ fn minimized_default() -> Result<()> {
 }
 
 /// Runs the test suite on a minimized DFA with byte classes disabled.
-
+#[test]
 fn minimized_no_byte_class() -> Result<()> {
     let mut builder = Regex::builder();
     builder.dense(dense::Config::new().minimize(true).byte_classes(false));
@@ -133,7 +133,7 @@ fn minimized_no_byte_class() -> Result<()> {
 }
 
 /// Runs the test suite on a sparse unminimized DFA.
-
+#[test]
 fn sparse_unminimized_default() -> Result<()> {
     let builder = Regex::builder();
     TestRunner::new()?
@@ -145,7 +145,7 @@ fn sparse_unminimized_default() -> Result<()> {
 }
 
 /// Runs the test suite on a sparse unminimized DFA with prefilters enabled.
-
+#[test]
 fn sparse_unminimized_prefilter() -> Result<()> {
     let my_compiler = |test: &RegexTest, regexes: &[String]| {
         // Parse regexes as HIRs so we can get literals to build a prefilter.
@@ -179,7 +179,7 @@ fn sparse_unminimized_prefilter() -> Result<()> {
 
 /// Another basic sanity test that checks we can serialize and then deserialize
 /// a regex, and that the resulting regex can be used for searching correctly.
-
+#[test]
 fn serialization_unminimized_default() -> Result<()> {
     let builder = Regex::builder();
     let my_compiler = |builder| {
@@ -209,7 +209,7 @@ fn serialization_unminimized_default() -> Result<()> {
 /// A basic sanity test that checks we can serialize and then deserialize a
 /// regex using sparse DFAs, and that the resulting regex can be used for
 /// searching correctly.
-
+#[test]
 fn sparse_serialization_unminimized_default() -> Result<()> {
     let builder = Regex::builder();
     let my_compiler = |builder| {
@@ -218,9 +218,9 @@ fn sparse_serialization_unminimized_default() -> Result<()> {
             let fwd_bytes = re.forward().to_sparse()?.to_bytes_native_endian();
             let rev_bytes = re.reverse().to_sparse()?.to_bytes_native_endian();
             Ok(CompiledRegex::compiled(move |test| -> TestResult {
-                let fwd: sparse::DFA<&[u8]> =
+                let fwd: sparse::DFA<&str> =
                     sparse::DFA::from_bytes(&fwd_bytes).unwrap().0;
-                let rev: sparse::DFA<&[u8]> =
+                let rev: sparse::DFA<&str> =
                     sparse::DFA::from_bytes(&rev_bytes).unwrap().0;
                 let re = builder.build_from_dfas(fwd, rev);
                 run_test(&re, test)

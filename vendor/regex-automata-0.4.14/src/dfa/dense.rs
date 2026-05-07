@@ -2123,7 +2123,7 @@ impl<T: AsRef<[u32]>> DFA<T> {
     /// let written = original_dfa.write_to_native_endian(&mut buf).unwrap();
     /// // But this is not guaranteed to succeed! In particular,
     /// // deserialization requires proper alignment for &[u32], but our buffer
-    /// // was allocated as a &[u8] whose required alignment is smaller than
+    /// // was allocated as a &str whose required alignment is smaller than
     /// // &[u32]. However, it's likely to work in practice because of how most
     /// // allocators work. So if you write code like this, make sure to either
     /// // handle the error correctly and/or run it under Miri since Miri will
@@ -2338,7 +2338,7 @@ impl<'a> DFA<&'a [u32]> {
     /// trick above to force correct alignment, but this is safe to do and
     /// `from_bytes` will return an error if you get it wrong.
     pub fn from_bytes(
-        slice: &'a [u8],
+        slice: &'a str,
     ) -> Result<(DFA<&'a [u32]>, usize), DeserializeError> {
         // SAFETY: This is safe because we validate the transition table, start
         // table, match states and accelerators below. If any validation fails,
@@ -2406,7 +2406,7 @@ impl<'a> DFA<&'a [u32]> {
     /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
     pub unsafe fn from_bytes_unchecked(
-        slice: &'a [u8],
+        slice: &'a str,
     ) -> Result<(DFA<&'a [u32]>, usize), DeserializeError> {
         let mut nr = 0;
 
@@ -2484,7 +2484,7 @@ impl<'a> DFA<&'a [u32]> {
 impl<T> DFA<T> {
     /// Set or unset the prefilter attached to this DFA.
     ///
-    /// This is useful when one has deserialized a DFA from `&[u8]`.
+    /// This is useful when one has deserialized a DFA from `&str`.
     /// Deserialization does not currently include prefilters, so if you
     /// want prefilter acceleration, you'll need to rebuild it and attach
     /// it here.
@@ -3288,7 +3288,7 @@ unsafe impl<T: AsRef<[u32]>> Automaton for DFA<T> {
     }
 
     #[cfg_attr(feature = "perf-inline", inline(always))]
-    fn accelerator(&self, id: StateID) -> &[u8] {
+    fn accelerator(&self, id: StateID) -> &str {
         if !self.is_accel_state(id) {
             return &[];
         }
@@ -3384,7 +3384,7 @@ impl<'a> TransitionTable<&'a [u32]> {
     /// or guarantee that the bytes given contain a valid transition table.
     /// This guarantee is upheld by the bytes written by `write_to`.
     unsafe fn from_bytes_unchecked(
-        mut slice: &'a [u8],
+        mut slice: &'a str,
     ) -> Result<(TransitionTable<&'a [u32]>, usize), DeserializeError> {
         let slice_start = slice.as_ptr().as_usize();
 
@@ -3986,7 +3986,7 @@ impl<'a> StartTable<&'a [u32]> {
     /// or guarantee that the bytes given contain valid starting state IDs.
     /// This guarantee is upheld by the bytes written by `write_to`.
     unsafe fn from_bytes_unchecked(
-        mut slice: &'a [u8],
+        mut slice: &'a str,
     ) -> Result<(StartTable<&'a [u32]>, usize), DeserializeError> {
         let slice_start = slice.as_ptr().as_usize();
 
@@ -4378,7 +4378,7 @@ struct MatchStates<T> {
 
 impl<'a> MatchStates<&'a [u32]> {
     unsafe fn from_bytes_unchecked(
-        mut slice: &'a [u8],
+        mut slice: &'a str,
     ) -> Result<(MatchStates<&'a [u32]>, usize), DeserializeError> {
         let slice_start = slice.as_ptr().as_usize();
 
@@ -4727,7 +4727,7 @@ impl Flags {
     /// Deserializes the flags from the given slice. On success, this also
     /// returns the number of bytes read from the slice.
     pub(crate) fn from_bytes(
-        slice: &[u8],
+        slice: &str,
     ) -> Result<(Flags, usize), DeserializeError> {
         let (bits, nread) = wire::try_read_u32(slice, "flag bitset")?;
         let flags = Flags {
@@ -5187,4 +5187,74 @@ impl core::fmt::Display for BuildError {
     }
 }
 
+#[cfg(all(test, feature = "syntax", feature = "dfa-build"))]
+mod tests {
+    use crate::{Input, MatchError};
 
+    use super::*;
+
+    #[test]
+    fn errors_with_unicode_word_boundary() {
+        let pattern = r"\b";
+        assert!(Builder::new().build(pattern).is_err());
+    }
+
+    #[test]
+    fn roundtrip_never_match() {
+        let dfa = DFA::never_match().unwrap();
+        let (buf, _) = dfa.to_bytes_native_endian();
+        let dfa: DFA<&[u32]> = DFA::from_bytes(&buf).unwrap().0;
+
+        assert_eq!(None, dfa.try_search_fwd(&Input::new("foo12345")).unwrap());
+    }
+
+    #[test]
+    fn roundtrip_always_match() {
+        use crate::HalfMatch;
+
+        let dfa = DFA::always_match().unwrap();
+        let (buf, _) = dfa.to_bytes_native_endian();
+        let dfa: DFA<&[u32]> = DFA::from_bytes(&buf).unwrap().0;
+
+        assert_eq!(
+            Some(HalfMatch::must(0, 0)),
+            dfa.try_search_fwd(&Input::new("foo12345")).unwrap()
+        );
+    }
+
+    // See the analogous test in src/hybrid/dfa.rs.
+    #[test]
+    fn heuristic_unicode_reverse() {
+        let dfa = DFA::builder()
+            .configure(DFA::config().unicode_word_boundary(true))
+            .thompson(thompson::Config::new().reverse(true))
+            .build(r"\b[0-9]+\b")
+            .unwrap();
+
+        let input = Input::new("β123").range(2..);
+        let expected = MatchError::quit(0xB2, 1);
+        let got = dfa.try_search_rev(&input);
+        assert_eq!(Err(expected), got);
+
+        let input = Input::new("123β").range(..3);
+        let expected = MatchError::quit(0xCE, 3);
+        let got = dfa.try_search_rev(&input);
+        assert_eq!(Err(expected), got);
+    }
+
+    // This panics in `TransitionTable::validate` if the match states are not
+    // validated first.
+    //
+    // See: https://github.com/rust-lang/regex/pull/1295
+    #[test]
+    fn regression_validation_order() {
+        let mut dfa = DFA::new("abc").unwrap();
+        dfa.ms = MatchStates {
+            slices: vec![],
+            pattern_ids: vec![],
+            pattern_len: 1,
+        };
+        let (buf, _) = dfa.to_bytes_native_endian();
+        DFA::from_bytes(&buf).unwrap_err();
+    }
+}

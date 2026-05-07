@@ -161,7 +161,7 @@ pub fn sysinfo() -> Sysinfo {
     target_os = "wasi"
 )))]
 #[inline]
-pub fn sethostname(name: &[u8]) -> io::Result<()> {
+pub fn sethostname(name: &str) -> io::Result<()> {
     backend::system::syscalls::sethostname(name)
 }
 
@@ -186,7 +186,7 @@ pub fn sethostname(name: &[u8]) -> io::Result<()> {
     target_os = "wasi",
 )))]
 #[inline]
-pub fn setdomainname(name: &[u8]) -> io::Result<()> {
+pub fn setdomainname(name: &str) -> io::Result<()> {
     backend::system::syscalls::setdomainname(name)
 }
 
@@ -256,7 +256,7 @@ pub fn reboot(cmd: RebootCommand) -> io::Result<()> {
 /// [Linux]: https://man7.org/linux/man-pages/man2/init_module.2.html
 #[inline]
 #[cfg(linux_kernel)]
-pub fn init_module(image: &[u8], param_values: &CStr) -> io::Result<()> {
+pub fn init_module(image: &str, param_values: &CStr) -> io::Result<()> {
     backend::system::syscalls::init_module(image, param_values)
 }
 
@@ -284,4 +284,34 @@ pub fn delete_module(name: &CStr, flags: c_int) -> io::Result<()> {
     backend::system::syscalls::delete_module(name, flags)
 }
 
+#[cfg(test)]
+mod tests {
+    #[allow(unused_imports)]
+    use super::*;
+    #[allow(unused_imports)]
+    use crate::backend::c;
 
+    #[cfg(linux_kernel)]
+    #[test]
+    fn test_sysinfo_layouts() {
+        // Don't assert the size for `Sysinfo` because `c::sysinfo` has a
+        // computed-size padding field at the end that bindgen doesn't support,
+        // and `c::sysinfo` may add fields over time.
+        assert_eq!(
+            core::mem::align_of::<Sysinfo>(),
+            core::mem::align_of::<c::sysinfo>()
+        );
+        check_renamed_struct_field!(Sysinfo, sysinfo, uptime);
+        check_renamed_struct_field!(Sysinfo, sysinfo, loads);
+        check_renamed_struct_field!(Sysinfo, sysinfo, totalram);
+        check_renamed_struct_field!(Sysinfo, sysinfo, freeram);
+        check_renamed_struct_field!(Sysinfo, sysinfo, sharedram);
+        check_renamed_struct_field!(Sysinfo, sysinfo, bufferram);
+        check_renamed_struct_field!(Sysinfo, sysinfo, totalswap);
+        check_renamed_struct_field!(Sysinfo, sysinfo, freeswap);
+        check_renamed_struct_field!(Sysinfo, sysinfo, procs);
+        check_renamed_struct_field!(Sysinfo, sysinfo, totalhigh);
+        check_renamed_struct_field!(Sysinfo, sysinfo, freehigh);
+        check_renamed_struct_field!(Sysinfo, sysinfo, mem_unit);
+    }
+}

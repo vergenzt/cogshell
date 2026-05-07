@@ -32,11 +32,11 @@ use crate::{
 /// [UAX #29](https://www.unicode.org/reports/tr29/tr29-33.html#Grapheme_Cluster_Boundaries).
 #[derive(Clone, Debug)]
 pub struct Graphemes<'a> {
-    bs: &'a [u8],
+    bs: &'a str,
 }
 
 impl<'a> Graphemes<'a> {
-    pub(crate) fn new(bs: &'a [u8]) -> Graphemes<'a> {
+    pub(crate) fn new(bs: &'a str) -> Graphemes<'a> {
         Graphemes { bs }
     }
 
@@ -60,7 +60,7 @@ impl<'a> Graphemes<'a> {
     /// assert_eq!(b"", it.as_bytes());
     /// ```
     #[inline]
-    pub fn as_bytes(&self) -> &'a [u8] {
+    pub fn as_bytes(&self) -> &'a str {
         self.bs
     }
 }
@@ -122,13 +122,13 @@ impl<'a> DoubleEndedIterator for Graphemes<'a> {
 /// [UAX #29](https://www.unicode.org/reports/tr29/tr29-33.html#Grapheme_Cluster_Boundaries).
 #[derive(Clone, Debug)]
 pub struct GraphemeIndices<'a> {
-    bs: &'a [u8],
+    bs: &'a str,
     forward_index: usize,
     reverse_index: usize,
 }
 
 impl<'a> GraphemeIndices<'a> {
-    pub(crate) fn new(bs: &'a [u8]) -> GraphemeIndices<'a> {
+    pub(crate) fn new(bs: &'a str) -> GraphemeIndices<'a> {
         GraphemeIndices { bs, forward_index: 0, reverse_index: bs.len() }
     }
 
@@ -152,7 +152,7 @@ impl<'a> GraphemeIndices<'a> {
     /// assert_eq!(b"", it.as_bytes());
     /// ```
     #[inline]
-    pub fn as_bytes(&self) -> &'a [u8] {
+    pub fn as_bytes(&self) -> &'a str {
         self.bs
     }
 }
@@ -192,7 +192,7 @@ impl<'a> DoubleEndedIterator for GraphemeIndices<'a> {
 /// codepoint if invalid UTF-8 was found), along with the number of bytes
 /// decoded in the byte string. The number of bytes decoded may not be the
 /// same as the length of grapheme in the case where invalid UTF-8 is found.
-pub fn decode_grapheme(bs: &[u8]) -> (&str, usize) {
+pub fn decode_grapheme(bs: &str) -> (&str, usize) {
     if bs.is_empty() {
         ("", 0)
     } else if bs.len() >= 2
@@ -226,7 +226,7 @@ pub fn decode_grapheme(bs: &[u8]) -> (&str, usize) {
     }
 }
 
-fn decode_last_grapheme(bs: &[u8]) -> (&str, usize) {
+fn decode_last_grapheme(bs: &str) -> (&str, usize) {
     if bs.is_empty() {
         ("", 0)
     } else if let Some(hm) = {
@@ -258,7 +258,7 @@ fn decode_last_grapheme(bs: &[u8]) -> (&str, usize) {
 /// occur between regional indicators where it would cause an odd number of
 /// regional indicators to exist before the break from the *start* of the
 /// string. A reverse regex cannot detect this case easily without look-around.
-fn adjust_rev_for_regional_indicator(mut bs: &[u8], i: usize) -> usize {
+fn adjust_rev_for_regional_indicator(mut bs: &str, i: usize) -> usize {
     // All regional indicators use a 4 byte encoding, and we only care about
     // the case where we found a pair of regional indicators.
     if bs.len() - i != 8 {
@@ -286,4 +286,110 @@ fn adjust_rev_for_regional_indicator(mut bs: &[u8], i: usize) -> usize {
     }
 }
 
+#[cfg(all(test, feature = "std"))]
+mod tests {
+    use alloc::{
+        string::{String, ToString},
+        vec,
+        vec::Vec,
+    };
 
+    #[cfg(not(miri))]
+    use ucd_parse::GraphemeClusterBreakTest;
+
+    use crate::tests::LOSSY_TESTS;
+
+    use super::*;
+
+    #[test]
+    #[cfg(not(miri))]
+    fn forward_ucd() {
+        for (i, test) in ucdtests().into_iter().enumerate() {
+            let given = test.grapheme_clusters.concat();
+            let got: Vec<String> = Graphemes::new(given.as_bytes())
+                .map(|cluster| cluster.to_string())
+                .collect();
+            assert_eq!(
+                test.grapheme_clusters,
+                got,
+                "\ngrapheme forward break test {} failed:\n\
+                 given:    {:?}\n\
+                 expected: {:?}\n\
+                 got:      {:?}\n",
+                i,
+                uniescape(&given),
+                uniescape_vec(&test.grapheme_clusters),
+                uniescape_vec(&got),
+            );
+        }
+    }
+
+    #[test]
+    #[cfg(not(miri))]
+    fn reverse_ucd() {
+        for (i, test) in ucdtests().into_iter().enumerate() {
+            let given = test.grapheme_clusters.concat();
+            let mut got: Vec<String> = Graphemes::new(given.as_bytes())
+                .rev()
+                .map(|cluster| cluster.to_string())
+                .collect();
+            got.reverse();
+            assert_eq!(
+                test.grapheme_clusters,
+                got,
+                "\n\ngrapheme reverse break test {} failed:\n\
+                 given:    {:?}\n\
+                 expected: {:?}\n\
+                 got:      {:?}\n",
+                i,
+                uniescape(&given),
+                uniescape_vec(&test.grapheme_clusters),
+                uniescape_vec(&got),
+            );
+        }
+    }
+
+    #[test]
+    fn forward_lossy() {
+        for &(expected, input) in LOSSY_TESTS {
+            let got = Graphemes::new(input.as_bytes()).collect::<String>();
+            assert_eq!(expected, got);
+        }
+    }
+
+    #[test]
+    fn reverse_lossy() {
+        for &(expected, input) in LOSSY_TESTS {
+            let expected: String = expected.chars().rev().collect();
+            let got =
+                Graphemes::new(input.as_bytes()).rev().collect::<String>();
+            assert_eq!(expected, got);
+        }
+    }
+
+    #[cfg(not(miri))]
+    fn uniescape(s: &str) -> String {
+        s.chars().flat_map(|c| c.escape_unicode()).collect::<String>()
+    }
+
+    #[cfg(not(miri))]
+    fn uniescape_vec(strs: &[String]) -> Vec<String> {
+        strs.iter().map(|s| uniescape(s)).collect()
+    }
+
+    /// Return all of the UCD for grapheme breaks.
+    #[cfg(not(miri))]
+    fn ucdtests() -> Vec<GraphemeClusterBreakTest> {
+        const TESTDATA: &str = include_str!("data/GraphemeBreakTest.txt");
+
+        let mut tests = vec![];
+        for mut line in TESTDATA.lines() {
+            line = line.trim();
+            if line.starts_with("#") || line.contains("surrogate") {
+                continue;
+            }
+            tests.push(line.parse().unwrap());
+        }
+        tests
+    }
+}

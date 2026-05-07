@@ -8,8 +8,10 @@ mod named_field;
 mod top;
 mod utils;
 
-
-
+#[cfg(test)]
+mod field_tests;
+#[cfg(test)]
+mod top_tests;
 
 mod help;
 

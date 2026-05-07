@@ -1340,7 +1340,7 @@ pub mod wasi {
                 pub fn append(
                     &self,
                     name: &str,
-                    value: &[u8],
+                    value: &str,
                 ) -> Result<(), HeaderError> {
                     unsafe {
                         #[repr(align(1))]

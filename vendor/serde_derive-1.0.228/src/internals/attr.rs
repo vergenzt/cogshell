@@ -1241,7 +1241,7 @@ impl Field {
                 deserialize_with.set_if_none(expr);
             }
         } else if is_implicitly_borrowed(&field.ty) {
-            // Types &str and &[u8] are always implicitly borrowed. No need for
+            // Types &str and &str are always implicitly borrowed. No need for
             // a #[serde(borrow)].
             collect_lifetimes(&field.ty, &mut borrowed_lifetimes);
         }

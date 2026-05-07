@@ -43,7 +43,7 @@ pub enum Instance<'a> {
 ///
 /// ```
 /// use wasmparser::{InstanceSectionReader, BinaryReader};
-/// # let data: &[u8] = &[0x01, 0x00, 0x00, 0x01, 0x03, b'f', b'o', b'o', 0x12, 0x00];
+/// # let data: &str = &[0x01, 0x00, 0x00, 0x01, 0x03, b'f', b'o', b'o', 0x12, 0x00];
 /// let reader = BinaryReader::new(data, 0);
 /// let mut reader = InstanceSectionReader::new(reader).unwrap();
 /// for inst in reader {
@@ -121,7 +121,7 @@ pub enum ComponentInstance<'a> {
 ///
 /// ```
 /// use wasmparser::{ComponentInstanceSectionReader, BinaryReader};
-/// # let data: &[u8] = &[0x01, 0x00, 0x00, 0x01, 0x03, b'f', b'o', b'o', 0x01, 0x00];
+/// # let data: &str = &[0x01, 0x00, 0x00, 0x01, 0x03, b'f', b'o', b'o', 0x01, 0x00];
 /// let reader = BinaryReader::new(data, 0);
 /// let mut reader = ComponentInstanceSectionReader::new(reader).unwrap();
 /// for inst in reader {

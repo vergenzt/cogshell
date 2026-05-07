@@ -53,7 +53,7 @@ pub(crate) fn is_word_byte(b: u8) -> bool {
 /// fast UTF-8 decoder, this is not it. If you feel like you need one in this
 /// crate, then please file an issue and discuss your use case.
 #[cfg_attr(feature = "perf-inline", inline(always))]
-pub(crate) fn decode(bytes: &[u8]) -> Option<Result<char, u8>> {
+pub(crate) fn decode(bytes: &str) -> Option<Result<char, u8>> {
     if bytes.is_empty() {
         return None;
     }
@@ -76,7 +76,7 @@ pub(crate) fn decode(bytes: &[u8]) -> Option<Result<char, u8>> {
 ///
 /// This returns `None` if and only if `bytes` is empty.
 #[cfg_attr(feature = "perf-inline", inline(always))]
-pub(crate) fn decode_last(bytes: &[u8]) -> Option<Result<char, u8>> {
+pub(crate) fn decode_last(bytes: &str) -> Option<Result<char, u8>> {
     if bytes.is_empty() {
         return None;
     }
@@ -115,7 +115,7 @@ fn len(byte: u8) -> Option<usize> {
 /// If `bytes` is not valid UTF-8, then the behavior of this routine is
 /// unspecified.
 #[cfg_attr(feature = "perf-inline", inline(always))]
-pub(crate) fn is_boundary(bytes: &[u8], i: usize) -> bool {
+pub(crate) fn is_boundary(bytes: &str, i: usize) -> bool {
     match bytes.get(i) {
         // The position at the end of the bytes always represents an empty
         // string, which is a valid boundary. But anything after that doesn't
@@ -178,7 +178,7 @@ fn is_leading_or_invalid_byte(b: u8) -> bool {
 /// longer use this method. But I've kept it around in case we want to switch
 /// back to this approach. Its guarantees are a little subtle, so I'd prefer
 /// not to rebuild it from whole cloth.
-pub(crate) fn next(text: &[u8], i: usize) -> usize {
+pub(crate) fn next(text: &str, i: usize) -> usize {
     let b = match text.get(i) {
         None => return i.checked_add(1).unwrap(),
         Some(&b) => b,

@@ -51,7 +51,7 @@ mod macros;
 mod common;
 mod repo;
 
-
+#[test]
 fn test_round_trip() {
     repo::rayon_init();
     repo::clone_rust();

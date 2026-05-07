@@ -27,7 +27,7 @@ pub enum Content<'de> {
     String(String),
     Str(&'de str),
     ByteBuf(Vec<u8>),
-    Bytes(&'de [u8]),
+    Bytes(&'de str),
 
     None,
     Some(Box<Content<'de>>),

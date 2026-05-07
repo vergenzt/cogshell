@@ -2,7 +2,7 @@
 
 fn assert_send_sync<T: Send + Sync>() {}
 
-
+#[test]
 fn test() {
     assert_send_sync::<semver::BuildMetadata>();
     assert_send_sync::<semver::Comparator>();

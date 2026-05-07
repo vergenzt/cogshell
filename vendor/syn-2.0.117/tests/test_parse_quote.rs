@@ -12,7 +12,7 @@ mod debug;
 use syn::punctuated::Punctuated;
 use syn::{parse_quote, Attribute, Field, Lit, Pat, Stmt, Token};
 
-
+#[test]
 fn test_attribute() {
     let attr: Attribute = parse_quote!(#[test]);
     snapshot!(attr, @r#"
@@ -43,7 +43,7 @@ fn test_attribute() {
     "#);
 }
 
-
+#[test]
 fn test_field() {
     let field: Field = parse_quote!(pub enabled: bool);
     snapshot!(field, @r#"
@@ -84,7 +84,7 @@ fn test_field() {
     "#);
 }
 
-
+#[test]
 fn test_pat() {
     let pat: Pat = parse_quote!(Some(false) | None);
     snapshot!(&pat, @r#"
@@ -118,7 +118,7 @@ fn test_pat() {
     assert_eq!(*boxed_pat, pat);
 }
 
-
+#[test]
 fn test_punctuated() {
     let punctuated: Punctuated<Lit, Token![|]> = parse_quote!(true | true);
     snapshot!(punctuated, @r#"
@@ -148,7 +148,7 @@ fn test_punctuated() {
     "#);
 }
 
-
+#[test]
 fn test_vec_stmt() {
     let stmts: Vec<Stmt> = parse_quote! {
         let _;

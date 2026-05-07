@@ -41,7 +41,7 @@ const ASCII_MASK: usize = ASCII_MASK_U64 as usize;
 ///
 /// If slice only contains ASCII bytes, then the length of the slice is
 /// returned.
-pub fn first_non_ascii_byte(slice: &[u8]) -> usize {
+pub fn first_non_ascii_byte(slice: &str) -> usize {
     #[cfg(any(miri, not(target_arch = "x86_64")))]
     {
         first_non_ascii_byte_fallback(slice)
@@ -54,7 +54,7 @@ pub fn first_non_ascii_byte(slice: &[u8]) -> usize {
 }
 
 #[cfg(any(test, miri, not(target_arch = "x86_64")))]
-fn first_non_ascii_byte_fallback(slice: &[u8]) -> usize {
+fn first_non_ascii_byte_fallback(slice: &str) -> usize {
     let start_ptr = slice.as_ptr();
     let end_ptr = slice[slice.len()..].as_ptr();
     let mut ptr = start_ptr;
@@ -115,7 +115,7 @@ fn first_non_ascii_byte_fallback(slice: &[u8]) -> usize {
 }
 
 #[cfg(all(not(miri), target_arch = "x86_64"))]
-fn first_non_ascii_byte_sse2(slice: &[u8]) -> usize {
+fn first_non_ascii_byte_sse2(slice: &str) -> usize {
     use core::arch::x86_64::*;
 
     const VECTOR_SIZE: usize = core::mem::size_of::<__m128i>();
@@ -258,4 +258,79 @@ fn sub(a: *const u8, b: *const u8) -> usize {
     (a as usize) - (b as usize)
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
 
+    // Our testing approach here is to try and exhaustively test every case.
+    // This includes the position at which a non-ASCII byte occurs in addition
+    // to the alignment of the slice that we're searching.
+
+    #[test]
+    fn positive_fallback_forward() {
+        for i in 0..517 {
+            let s = "a".repeat(i);
+            assert_eq!(
+                i,
+                first_non_ascii_byte_fallback(s.as_bytes()),
+                "i: {:?}, len: {:?}, s: {:?}",
+                i,
+                s.len(),
+                s
+            );
+        }
+    }
+
+    #[test]
+    #[cfg(target_arch = "x86_64")]
+    #[cfg(not(miri))]
+    fn positive_sse2_forward() {
+        for i in 0..517 {
+            let b = "a".repeat(i).into_bytes();
+            assert_eq!(b.len(), first_non_ascii_byte_sse2(&b));
+        }
+    }
+
+    #[test]
+    #[cfg(not(miri))]
+    fn negative_fallback_forward() {
+        for i in 0..517 {
+            for align in 0..65 {
+                let mut s = "a".repeat(i);
+                s.push_str("☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃");
+                let s = s.get(align..).unwrap_or("");
+                assert_eq!(
+                    i.saturating_sub(align),
+                    first_non_ascii_byte_fallback(s.as_bytes()),
+                    "i: {:?}, align: {:?}, len: {:?}, s: {:?}",
+                    i,
+                    align,
+                    s.len(),
+                    s
+                );
+            }
+        }
+    }
+
+    #[test]
+    #[cfg(target_arch = "x86_64")]
+    #[cfg(not(miri))]
+    fn negative_sse2_forward() {
+        for i in 0..517 {
+            for align in 0..65 {
+                let mut s = "a".repeat(i);
+                s.push_str("☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃☃");
+                let s = s.get(align..).unwrap_or("");
+                assert_eq!(
+                    i.saturating_sub(align),
+                    first_non_ascii_byte_sse2(s.as_bytes()),
+                    "i: {:?}, align: {:?}, len: {:?}, s: {:?}",
+                    i,
+                    align,
+                    s.len(),
+                    s
+                );
+            }
+        }
+    }
+}

@@ -80,7 +80,7 @@ impl VisitMut for AsIfPrinted {
     }
 }
 
-
+#[test]
 fn test_permutations() -> ExitCode {
     fn iter(depth: usize, f: &mut dyn FnMut(Expr)) {
         let span = Span::call_site();

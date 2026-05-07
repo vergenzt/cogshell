@@ -78,4 +78,33 @@ impl Encode for Description {
     }
 }
 
+#[cfg(test)]
+mod test {
+    use super::*;
+    use wasm_encoder::Component;
+    use wasmparser::Payload;
 
+    #[test]
+    fn roundtrip() {
+        let mut component = Component::new();
+        component.section(&Description::new("Nori likes chicken"));
+        let component = component.finish();
+
+        let mut parsed = false;
+        for section in wasmparser::Parser::new(0).parse_all(&component) {
+            if let Payload::CustomSection(reader) = section.unwrap() {
+                let description = Description::parse_custom_section(&reader).unwrap();
+                assert_eq!(description.to_string(), "Nori likes chicken");
+                parsed = true;
+            }
+        }
+        assert!(parsed);
+    }
+
+    #[test]
+    fn serialize() {
+        let description = Description::new("Chashu likes tuna");
+        let json = serde_json::to_string(&description).unwrap();
+        assert_eq!(r#""Chashu likes tuna""#, json);
+    }
+}

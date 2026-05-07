@@ -60,7 +60,7 @@ pub enum Dylink0Subsection<'a> {
     RuntimePath(Vec<&'a str>),
     Unknown {
         ty: u8,
-        data: &'a [u8],
+        data: &'a str,
         range: Range<usize>,
     },
 }

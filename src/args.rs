@@ -1,32 +1,61 @@
-use core::error::Source;
-use std::{ffi::OsString, ops::Index, path::PathBuf};
+use std::{
+    fs::File,
+    io::{self, BufReader, stdin, stdout},
+    marker::PhantomData,
+    ops::Deref,
+    path::PathBuf,
+};
 
-use bpaf::{Bpaf as BpafArgParser, Parser, construct, long, positional};
+use bpaf::{Parser, construct, long, positional};
 
-use crate::config::MarkerConfig;
+use crate::utils::atomic_writer::AtomicFileWriter;
 
-/// Strategy describing *how* to write to an output destination
-pub enum DestWriteStrategy {
-    /// Buffer output to a temporary file, then only upon successful completion either
-    /// rename it (for file destinations) or stream it all (for stdout).
-    Atomic,
-    /// Write directly to the file or stream as output comes available. May produce partial
-    /// output if an error occurs. Truncates file destinations on start.
-    Immediate,
-}
+trait BufReadPlusWrite {}
+impl<T: io::BufRead + io::Write> BufReadPlusWrite for Box<T> {}
+
+pub trait ReadOrWrite {}
+pub type Read = Box<dyn io::BufRead>;
+pub type Write = Box<dyn io::Write>;
+pub type ReadAndWrite = Box<dyn BufReadPlusWrite>;
+
+impl ReadOrWrite for Read {}
+impl ReadOrWrite for Write {}
+impl ReadOrWrite for ReadAndWrite {}
 
 /// A "path" to read or write from (where `-` means stdin or stdout)
-pub enum PathArg {
-    StdStream,
-    File(PathBuf),
+pub enum FileOrStream<RW: ReadOrWrite> {
+    File(PathBuf, PhantomData<RW>),
+    Stream(PhantomData<RW>),
 }
 
-impl PathArg {
+impl FileOrStream<_> {
+  pub fn to_string()
+}
+
+impl<RW: ReadOrWrite> FileOrStream<RW> {
     /// Interpret exactly `-` as std{in/out}, anything else as itself.
     pub fn parse(path: PathBuf) -> Self {
         match path {
-            [b'-'] => Self::StdStream,
-            _ => Self::File(path),
+            [b'-'] => Self::Stream(PhantomData),
+            _ => Self::File(path, PhantomData),
+        }
+    }
+}
+
+impl FileOrStream<Read> {
+    pub fn open(&self) -> Read {
+        match self {
+            Self::Stream(_) => Box::new(BufReader::new(stdin())),
+            Self::File(path, _) => Box::new(File::open_buffered(path)?),
+        }
+    }
+}
+
+impl FileOrStream<Write> {
+    pub fn open(self) -> Write {
+        match self {
+            Self::Stream(_) => Box::new(stdout()),
+            Self::File(path, _) => Box::new(AtomicFileWriter::new(path)),
         }
     }
 }
@@ -35,48 +64,46 @@ impl PathArg {
 /// specified if there is exactly one source arg.)
 pub enum SourceAndDestArgs {
     /// Process any number of files in-place
-    SourcesInPlace(Vec<PathArg>),
+    SourcesInPlace(Vec<FileOrStream<ReadAndWrite>>),
     /// Process exactly one input (stdin or file) to one output (stdout or file)
-    SourceAndDest(PathArg, PathArg),
+    SourceAndDest(FileOrStream<Read>, FileOrStream<Write>),
 }
 
-impl SourceAndDestArgs {
-    fn source() -> impl Parser<PathArg> {
-        positional::<PathBuf>("SOURCE").map(PathArg::parse)
-    }
-
-    fn dest() -> impl Parser<PathArg> {
-        long("output")
-            .short('o')
-            .argument::<PathBuf>("DEST")
-            .map(PathArg::parse)
-    }
-
-    fn source_and_dest() -> impl Parser<SourceAndDestArgs> {
-        construct!(SourceAndDestArgs::SourceAndDest(source(), dest()))
-    }
-
-    fn sources() -> impl Parser<Vec<PathArg>> {
-        source().some("Must specify at least one SOURCE!")
-    }
-
-    fn sources_in_place() -> impl Parser<SourceAndDestArgs> {
-        construct!(SourceAndDestArgs::SourcesInPlace(sources()))
-    }
-
-    fn parser() -> impl Parser<Self> {
-        construct!([source_and_dest(), sources_in_place()])
-    }
+fn source() -> impl Parser<FileOrStream<Read>> {
+    positional::<PathBuf>("SOURCE").map(FileOrStream::parse)
 }
 
-pub struct MarkerConfig([OsString; 3]);
+fn dest() -> impl Parser<FileOrStream<Write>> {
+    long("output")
+        .short('o')
+        .argument::<PathBuf>("DEST")
+        .map(FileOrStream::parse)
+}
+
+fn source_and_dest() -> impl Parser<SourceAndDestArgs> {
+    construct!(SourceAndDestArgs::SourceAndDest(source(), dest()))
+}
+
+fn sources() -> impl Parser<Vec<FileOrStream<ReadAndWrite>>> {
+    source().some("Must specify at least one SOURCE!")
+}
+
+fn sources_in_place() -> impl Parser<SourceAndDestArgs> {
+    construct!(SourceAndDestArgs::SourcesInPlace(sources()))
+}
+
+fn source_and_dest_args() -> impl Parser<SourceAndDestArgs> {
+    construct!([source_and_dest(), sources_in_place()])
+}
+
+pub struct MarkerConfig([String; 3]);
 
 impl MarkerConfig {
-    fn parse(arg: OsString) -> Result<Self, String> {
-        let parts: Vec<_> = arg.into_vec().split(|c| c.is_ascii_whitespace()).collect();
-        match parts[..] {
-            [a, b, c] => Ok(Self([a, b, c].map(OsString::from))),
-            _ => {
+    fn parse(arg: String) -> Result<Self, String> {
+        let parts: Vec<_> = arg.split_ascii_whitespace().collect();
+        match parts.as_array::<3>() {
+            Some(arr) => Ok(Self(arr.map(String::from))),
+            None => {
                 let disp = arg.display();
                 Err(format!(
                     "Marker config `{disp}` does not consist of three whitespace-separated words!"
@@ -84,42 +111,44 @@ impl MarkerConfig {
             }
         }
     }
+}
 
-    /// The patterns surrounding cog inline instructions. Should include three
-    /// values separated by spaces, the start, end, and end-output markers.
-    fn parser() -> impl Parser<Self> {
-        long("markers")
-            .argument::<OsString>("START END END-OUTPUT")
-            .fallback(OsString::from("[[[cogsh ]]] [[[end]]]"))
-            .parse(parse)
-            .display_fallback()
-    }
+/// The patterns surrounding cog inline instructions. Should include three
+/// values separated by spaces, the start, end, and end-output markers.
+fn marker() -> impl Parser<MarkerConfig> {
+    long("markers")
+        .argument::<&str>("START END END-OUTPUT")
+        .fallback("[[[cogsh ]]] [[[end]]]")
+        .parse(MarkerConfig::parse)
+        .display_fallback()
 }
 
 impl Deref for MarkerConfig {
-    type Target = [OsString; 3];
+    type Target = [String; 3];
     fn deref(self: &MarkerConfig) -> &Self::Target {
         &self.0
     }
 }
 
 pub struct Args {
-    source_and_dest: SourceAndDestArgs,
-    prologue: Vec<OsString>,
-    output_line_suffix: Option<OsString>,
-    markers: MarkerConfig,
+    pub source_and_dest: SourceAndDestArgs,
+    pub prologue: Vec<String>,
+    pub output_line_suffix: Option<String>,
+    pub markers: MarkerConfig,
+}
+
+/// Statements to execute before running CogShell scripts. Executed once per file before
+/// the first block.
+fn prologue() -> impl Parser<Vec<String>> {
+    long("prologue").argument("LINE").many()
+}
+
+/// Suffix to append to each output line
+fn output_line_suffix() -> impl Parser<Option<String>> {
+    long("suffix").short('s').argument("SUFFIX")
 }
 
 impl Args {
-    /// Statements to execute before running CogShell scripts. Executed once per file before the first block.
-    fn prologue() -> impl Parser<Vec<OsString>> {
-        long("prologue").argument("LINE").many()
-    }
-
-    fn output_line_suffix() -> impl Parser<OsString> {
-        long("suffix").short('s').argument("SUFFIX")
-    }
-
     pub fn parser() -> impl Parser<Self> {
         let source_and_dest = SourceAndDestArgs::parser();
         let markers = MarkerConfig::parser();

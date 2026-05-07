@@ -108,4 +108,71 @@ pub fn embed_component_metadata(
     Ok(())
 }
 
+#[cfg(test)]
+mod tests {
+    use anyhow::Result;
+    use wasmparser::Payload;
+    use wit_parser::Resolve;
 
+    use super::{StringEncoding, embed_component_metadata};
+
+    const MODULE_WAT: &str = r#"
+(module
+  (type (;0;) (func))
+  (func (;0;) (type 0)
+    nop
+  )
+)
+"#;
+
+    const COMPONENT_WIT: &str = r#"
+package test:foo;
+world test-world {}
+"#;
+
+    #[test]
+    fn component_metadata_embedding_works() -> Result<()> {
+        let mut bytes = wat::parse_str(MODULE_WAT)?;
+
+        // Get original len & custom section count
+        let original_len = bytes.len();
+        let payloads = wasmparser::Parser::new(0).parse_all(&bytes);
+        let original_custom_section_count = payloads.fold(0, |acc, payload| {
+            if let Ok(Payload::CustomSection { .. }) = payload {
+                acc + 1
+            } else {
+                acc
+            }
+        });
+
+        // Parse pre-canned WIT to build resolver
+        let mut resolver = Resolve::default();
+        let pkg = resolver.push_str("in-code.wit", COMPONENT_WIT)?;
+        let world = resolver.select_world(&[pkg], Some("test-world"))?;
+
+        // Embed component metadata
+        embed_component_metadata(&mut bytes, &resolver, world, StringEncoding::UTF8)?;
+
+        // Re-retrieve custom section count, and search for the component-type custom section along the way
+        let mut found_component_section = false;
+        let new_custom_section_count =
+            wasmparser::Parser::new(0)
+                .parse_all(&bytes)
+                .fold(0, |acc, payload| {
+                    if let Ok(Payload::CustomSection(reader)) = payload {
+                        if reader.name() == "component-type" {
+                            found_component_section = true;
+                        }
+                        acc + 1
+                    } else {
+                        acc
+                    }
+                });
+
+        assert!(original_len < bytes.len());
+        assert_eq!(original_custom_section_count + 1, new_custom_section_count);
+        assert!(found_component_section);
+
+        Ok(())
+    }
+}

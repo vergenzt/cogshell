@@ -36,7 +36,7 @@ use syn::{
     ReturnType, Stmt, Token, Type, TypePath, UnOp,
 };
 
-
+#[test]
 fn test_expr_parse() {
     let tokens = quote!(..100u32);
     snapshot!(tokens as Expr, @r#"
@@ -59,7 +59,7 @@ fn test_expr_parse() {
     "#);
 }
 
-
+#[test]
 fn test_await() {
     // Must not parse as Expr::Field.
     let tokens = quote!(fut.await);
@@ -80,7 +80,7 @@ fn test_await() {
 }
 
 #[rustfmt::skip]
-
+#[test]
 fn test_tuple_multi_index() {
     let expected = snapshot!("tuple.0.0" as Expr, @r#"
     Expr::Field {
@@ -126,7 +126,7 @@ fn test_tuple_multi_index() {
     }
 }
 
-
+#[test]
 fn test_macro_variable_func() {
     // mimics the token stream corresponding to `$fn()`
     let path = Group::new(Delimiter::None, quote!(f));
@@ -192,7 +192,7 @@ fn test_macro_variable_func() {
     "#);
 }
 
-
+#[test]
 fn test_macro_variable_macro() {
     // mimics the token stream corresponding to `$macro!()`
     let mac = Group::new(Delimiter::None, quote!(m));
@@ -215,7 +215,7 @@ fn test_macro_variable_macro() {
     "#);
 }
 
-
+#[test]
 fn test_macro_variable_struct() {
     // mimics the token stream corresponding to `$struct {}`
     let s = Group::new(Delimiter::None, quote! { S });
@@ -234,7 +234,7 @@ fn test_macro_variable_struct() {
     "#);
 }
 
-
+#[test]
 fn test_macro_variable_unary() {
     // mimics the token stream corresponding to `$expr.method()` where expr is `&self`
     let inner = Group::new(Delimiter::None, quote!(&self));
@@ -259,7 +259,7 @@ fn test_macro_variable_unary() {
     "#);
 }
 
-
+#[test]
 fn test_macro_variable_match_arm() {
     // mimics the token stream corresponding to `match v { _ => $expr }`
     let expr = Group::new(Delimiter::None, quote! { #[a] () });
@@ -335,7 +335,7 @@ fn test_macro_variable_match_arm() {
 }
 
 // https://github.com/dtolnay/syn/issues/1019
-
+#[test]
 fn test_closure_vs_rangefull() {
     #[rustfmt::skip] // rustfmt bug: https://github.com/rust-lang/rustfmt/issues/4808
     let tokens = quote!(|| .. .method());
@@ -352,13 +352,13 @@ fn test_closure_vs_rangefull() {
     "#);
 }
 
-
+#[test]
 fn test_postfix_operator_after_cast() {
     syn::parse_str::<Expr>("|| &x as T[0]").unwrap_err();
     syn::parse_str::<Expr>("|| () as ()()").unwrap_err();
 }
 
-
+#[test]
 fn test_range_kinds() {
     syn::parse_str::<Expr>("..").unwrap();
     syn::parse_str::<Expr>("..hi").unwrap();
@@ -376,7 +376,7 @@ fn test_range_kinds() {
     syn::parse_str::<Expr>("lo...hi").unwrap_err();
 }
 
-
+#[test]
 fn test_range_precedence() {
     snapshot!(".. .." as Expr, @r#"
     Expr::Range {
@@ -427,7 +427,7 @@ fn test_range_precedence() {
     syn::parse_str::<Expr>("x .. x ..").unwrap_err();
 }
 
-
+#[test]
 fn test_range_attrs() {
     // Attributes are not allowed on range expressions starting with `..`
     syn::parse_str::<Expr>("#[allow()] ..").unwrap_err();
@@ -474,7 +474,7 @@ fn test_range_attrs() {
     "#);
 }
 
-
+#[test]
 fn test_ranges_bailout() {
     syn::parse_str::<Expr>(".. ?").unwrap_err();
     syn::parse_str::<Expr>(".. .field").unwrap_err();
@@ -568,7 +568,7 @@ fn test_ranges_bailout() {
     ");
 }
 
-
+#[test]
 fn test_ambiguous_label() {
     for stmt in [
         quote! {
@@ -597,7 +597,7 @@ fn test_ambiguous_label() {
     }
 }
 
-
+#[test]
 fn test_extended_interpolated_path() {
     let path = Group::new(Delimiter::None, quote!(a::b));
 
@@ -705,7 +705,7 @@ fn test_extended_interpolated_path() {
     "#);
 }
 
-
+#[test]
 fn test_tuple_comma() {
     let mut expr = ExprTuple {
         attrs: Vec::new(),
@@ -759,7 +759,7 @@ fn test_tuple_comma() {
     "#);
 }
 
-
+#[test]
 fn test_binop_associativity() {
     // Left to right.
     snapshot!("() + () + ()" as Expr, @r#"
@@ -791,7 +791,7 @@ fn test_binop_associativity() {
     syn::parse_str::<Expr>("() == () == ()").unwrap_err();
 }
 
-
+#[test]
 fn test_assign_range_precedence() {
     // Range has higher precedence as the right-hand of an assignment, but
     // ambiguous precedence as the left-hand of an assignment.
@@ -822,7 +822,7 @@ fn test_assign_range_precedence() {
     syn::parse_str::<Expr>("() .. () += ()").unwrap_err();
 }
 
-
+#[test]
 fn test_chained_comparison() {
     // https://github.com/dtolnay/syn/issues/1738
     let _ = syn::parse_str::<Expr>("a = a < a <");
@@ -839,7 +839,7 @@ fn test_chained_comparison() {
     assert_eq!("unexpected token", err.to_string());
 }
 
-
+#[test]
 fn test_fixup() {
     for tokens in [
         quote! { 2 * (1 + 1) },
@@ -910,7 +910,7 @@ fn test_fixup() {
     }
 }
 
-
+#[test]
 fn test_permutations() -> ExitCode {
     fn iter(depth: usize, f: &mut dyn FnMut(Expr)) {
         let span = Span::call_site();

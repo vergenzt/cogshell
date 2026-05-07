@@ -20,7 +20,7 @@ use crate::{create_input, suite, untestify_kind};
 const EXPANSIONS: &[&str] = &["is_match", "find", "which"];
 
 /// Tests the default configuration of the hybrid NFA/DFA.
-
+#[test]
 fn default() -> Result<()> {
     let builder = Regex::builder();
     TestRunner::new()?
@@ -33,7 +33,7 @@ fn default() -> Result<()> {
 }
 
 /// Tests the hybrid NFA/DFA with prefilters enabled.
-
+#[test]
 fn prefilter() -> Result<()> {
     let my_compiler = |test: &RegexTest, regexes: &[String]| {
         // Parse regexes as HIRs so we can get literals to build a prefilter.
@@ -71,7 +71,7 @@ fn prefilter() -> Result<()> {
 /// Nevertheless, we test to make sure everything is OK with NFA shrinking. As
 /// a bonus, there are some tests we don't need to skip because they now fit in
 /// the default cache capacity.
-
+#[test]
 fn nfa_shrink() -> Result<()> {
     let mut builder = Regex::builder();
     builder.thompson(thompson::Config::new().shrink(true));
@@ -84,7 +84,7 @@ fn nfa_shrink() -> Result<()> {
 
 /// Tests the hybrid NFA/DFA when 'starts_for_each_pattern' is enabled for all
 /// tests.
-
+#[test]
 fn starts_for_each_pattern() -> Result<()> {
     let mut builder = Regex::builder();
     builder.dfa(DFA::config().starts_for_each_pattern(true));
@@ -98,7 +98,7 @@ fn starts_for_each_pattern() -> Result<()> {
 }
 
 /// Tests the hybrid NFA/DFA when 'specialize_start_states' is enabled.
-
+#[test]
 fn specialize_start_states() -> Result<()> {
     let mut builder = Regex::builder();
     builder.dfa(DFA::config().specialize_start_states(true));
@@ -116,7 +116,7 @@ fn specialize_start_states() -> Result<()> {
 /// N.B. Disabling byte classes doesn't avoid any indirection at search time.
 /// All it does is cause every byte value to be its own distinct equivalence
 /// class.
-
+#[test]
 fn no_byte_classes() -> Result<()> {
     let mut builder = Regex::builder();
     builder.dfa(DFA::config().byte_classes(false));
@@ -135,7 +135,7 @@ fn no_byte_classes() -> Result<()> {
 /// N.B. If a regex suite test is added that causes the cache to be cleared,
 /// then this should just skip that test. (Which can be done by calling the
 /// 'blacklist' method on 'TestRunner'.)
-
+#[test]
 fn no_cache_clearing() -> Result<()> {
     let mut builder = Regex::builder();
     builder.dfa(DFA::config().minimum_cache_clear_count(Some(0)));
@@ -149,7 +149,7 @@ fn no_cache_clearing() -> Result<()> {
 }
 
 /// Tests the hybrid NFA/DFA when the minimum cache capacity is set.
-
+#[test]
 fn min_cache_capacity() -> Result<()> {
     let mut builder = Regex::builder();
     builder

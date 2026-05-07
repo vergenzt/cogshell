@@ -2,28 +2,27 @@ use std::ops::Deref;
 
 use std::{fs, io};
 
-use regex::bytes::Regex;
+use regex::Regex;
 
 use super::block::Block;
 use super::errors::{ParseError, ParseErrorKind};
 use super::marker::MarkerKind;
-use crate::args::io::{FileOrStream, In};
-use crate::config::Config;
+use crate::args::{Args, FileOrStream, Read};
 use crate::parse::{BlockMarkers, Loc, MarkerInst, Span};
 
 pub struct FileContext<'a> {
     /// The filename or input stream containing CogShell block(s)
-    pub source: FileOrStream<In>,
+    pub source: FileOrStream<Read>,
     /// The original content of the source
-    pub content: Vec<u8>,
+    pub content: String,
     /// Config used to parse the source
-    pub config: &'a Config,
+    pub config: &'a Args,
 }
 
 impl<'a> FileContext<'a> {
-    pub fn new(source: FileOrStream<In>, config: &'a Config) -> io::Result<Self> {
-        let mut content = vec![];
-        source.open()?.read_to_end(&mut content)?;
+    pub fn new(source: FileOrStream<Read>, config: &'a Args) -> io::Result<Self> {
+        let mut content = String::new();
+        source.open().read_to_string(&mut content)?;
         Ok(Self {
             source,
             content,
@@ -52,18 +51,8 @@ impl<'a> File<'a> {
         let content = &ctx.content;
 
         let markers_re = {
-            let mut re_buf = String::from("(?-u)");
-            for (i, marker) in ctx.config.markers.iter().enumerate() {
-                if i > 0 {
-                    re_buf.push('|');
-                }
-                re_buf.push('(');
-                for byte in marker.iter() {
-                    re_buf.push_str(&format!(r"\x{:02x}", byte));
-                }
-                re_buf.push(')');
-            }
-            Regex::new(&re_buf).unwrap()
+            let parts = ctx.config.markers.map(|m| regex::escape(&m));
+            Regex::new(&parts.join("|")).unwrap()
         };
 
         let mut line: usize = 0;

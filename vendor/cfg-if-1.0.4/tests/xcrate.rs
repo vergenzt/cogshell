@@ -10,7 +10,7 @@ cfg_if::cfg_if! {
     }
 }
 
-
+#[test]
 fn smoke() {
     assert!(works());
 }

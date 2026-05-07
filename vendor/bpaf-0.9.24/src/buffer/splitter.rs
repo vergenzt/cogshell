@@ -133,7 +133,7 @@ impl<'a> Iterator for Splitter<'a> {
     }
 }
 
-
+#[test]
 fn space_code_block() {
     use Chunk::*;
     let xs = split("a\n\n    a\n    b\n\ndf\n\n    c\n    d\n").collect::<Vec<_>>();
@@ -154,7 +154,7 @@ fn space_code_block() {
     );
 }
 
-
+#[test]
 fn ticks_code_block() {
     use Chunk::*;
     let a = "a\n\n```text\na\nb\n```\n\ndf\n\n```\nc\nd\n```\n";

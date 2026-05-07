@@ -264,7 +264,7 @@ some general themes followed by all of them.
 ### The `Input` abstraction
 
 Most search routines in this crate accept anything that implements
-`Into<Input>`. Both `&str` and `&[u8]` haystacks satisfy this constraint, which
+`Into<Input>`. Both `&str` and `&str` haystacks satisfy this constraint, which
 means that things like `engine.search("foo")` will work as you would expect.
 
 By virtue of accepting an `Into<Input>` though, callers can provide more than

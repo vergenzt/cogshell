@@ -2,7 +2,7 @@ use super::*;
 
 use crate::Flags;
 
-
+#[test]
 #[cfg(not(miri))] // Very slow in miri
 fn roundtrip() {
     for a in 0u8..=255 {
@@ -25,7 +25,7 @@ fn roundtrip() {
 mod collect {
     use super::*;
 
-    
+    #[test]
     fn cases() {
         assert_eq!(0, [].into_iter().collect::<TestFlags>().bits());
 
@@ -68,7 +68,7 @@ mod collect {
 mod iter {
     use super::*;
 
-    
+    #[test]
     fn cases() {
         case(&[], TestFlags::empty(), TestFlags::iter);
 
@@ -134,7 +134,7 @@ mod iter {
 mod iter_names {
     use super::*;
 
-    
+    #[test]
     fn cases() {
         case(&[], TestFlags::empty(), TestFlags::iter_names);
 
@@ -211,7 +211,7 @@ mod iter_names {
 mod iter_defined_names {
     use crate::Flags;
 
-    
+    #[test]
     fn test_defined_names() {
         bitflags! {
             #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]

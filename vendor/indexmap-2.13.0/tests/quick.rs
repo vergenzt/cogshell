@@ -849,7 +849,7 @@ impl Deref for Alpha {
     }
 }
 
-const ALPHABET: &[u8] = b"abcdefghijklmnopqrstuvwxyz";
+const ALPHABET: &str = b"abcdefghijklmnopqrstuvwxyz";
 
 impl Arbitrary for Alpha {
     fn arbitrary(g: &mut Gen) -> Self {

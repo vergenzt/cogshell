@@ -353,7 +353,7 @@ impl TryFrom<usize> for SmallIndex {
     }
 }
 
-
+#[cfg(test)]
 impl quickcheck::Arbitrary for SmallIndex {
     fn arbitrary(gen: &mut quickcheck::Gen) -> SmallIndex {
         use core::cmp::max;

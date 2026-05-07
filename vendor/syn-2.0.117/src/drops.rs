@@ -37,7 +37,7 @@ impl<T> TrivialDrop for slice::IterMut<'_, T> {}
 impl<T> TrivialDrop for option::IntoIter<&T> {}
 impl<T> TrivialDrop for option::IntoIter<&mut T> {}
 
-
+#[test]
 fn test_needs_drop() {
     use core::mem::needs_drop;
 

@@ -24,13 +24,13 @@ impl StdError for TestError {
     }
 }
 
-
+#[test]
 fn test_literal_source() {
     let error = anyhow!("oh no!");
     assert!(error.source().is_none());
 }
 
-
+#[test]
 fn test_variable_source() {
     let msg = "oh no!";
     let error = anyhow!(msg);
@@ -41,20 +41,20 @@ fn test_variable_source() {
     assert!(error.source().is_none());
 }
 
-
+#[test]
 fn test_fmt_source() {
     let error = anyhow!("{} {}!", "oh", "no");
     assert!(error.source().is_none());
 }
 
-
+#[test]
 fn test_io_source() {
     let io = io::Error::new(io::ErrorKind::Other, "oh no!");
     let error = anyhow!(TestError::Io(io));
     assert_eq!("oh no!", error.source().unwrap().to_string());
 }
 
-
+#[test]
 fn test_anyhow_from_anyhow() {
     let error = anyhow!("oh no!").context("context");
     let error = anyhow!(error);

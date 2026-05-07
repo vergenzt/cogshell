@@ -54,7 +54,7 @@
 //!
 //! A string of JSON data can be parsed into a `serde_json::Value` by the
 //! [`serde_json::from_str`][from_str] function. There is also
-//! [`from_slice`][from_slice] for parsing from a byte slice `&[u8]` and
+//! [`from_slice`][from_slice] for parsing from a byte slice `&str` and
 //! [`from_reader`][from_reader] for parsing from any `io::Read` like a File or
 //! a TCP stream.
 //!
@@ -107,7 +107,7 @@ pub use crate::number::Number;
 
 #[cfg(feature = "raw_value")]
 #[cfg_attr(docsrs, doc(cfg(feature = "raw_value")))]
-pub use crate::raw::{to_raw_value, RawValue};
+pub use crate::raw::{RawValue, to_raw_value};
 
 /// Represents any valid JSON value.
 ///
@@ -225,7 +225,7 @@ impl Display for Value {
         }
 
         impl<'a, 'b> io::Write for WriterFormatter<'a, 'b> {
-            fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+            fn write(&mut self, buf: &str) -> io::Result<usize> {
                 // Safety: the serializer below only emits valid utf8 when using
                 // the default formatter.
                 let s = unsafe { str::from_utf8_unchecked(buf) };

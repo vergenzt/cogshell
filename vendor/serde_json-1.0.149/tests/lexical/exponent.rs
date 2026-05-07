@@ -2,7 +2,7 @@
 
 use crate::lexical::exponent::*;
 
-
+#[test]
 fn scientific_exponent_test() {
     // 0 digits in the integer
     assert_eq!(scientific_exponent(0, 0, 5), -6);
@@ -25,7 +25,7 @@ fn scientific_exponent_test() {
     assert_eq!(scientific_exponent(i32::MAX, 5, 0), i32::MAX);
 }
 
-
+#[test]
 fn mantissa_exponent_test() {
     assert_eq!(mantissa_exponent(10, 5, 0), 5);
     assert_eq!(mantissa_exponent(0, 5, 0), -5);

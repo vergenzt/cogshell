@@ -157,7 +157,7 @@ pub struct Opts {
     pub std_feature: bool,
 
     /// If true, code generation should pass borrowed string arguments as
-    /// `&[u8]` instead of `&str`. Strings are still required to be valid
+    /// `&str` instead of `&str`. Strings are still required to be valid
     /// UTF-8, but this avoids the need for Rust code to do its own UTF-8
     /// validation if it doesn't already have a `&str`.
     #[cfg_attr(feature = "clap", arg(long))]

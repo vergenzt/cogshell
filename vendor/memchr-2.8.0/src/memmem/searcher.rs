@@ -44,7 +44,7 @@ impl Searcher {
     pub(crate) fn new<R: HeuristicFrequencyRank>(
         prefilter: PrefilterConfig,
         ranker: R,
-        needle: &[u8],
+        needle: &str,
     ) -> Searcher {
         let rabinkarp = rabinkarp::Finder::new(needle);
         if needle.len() <= 1 {
@@ -172,7 +172,7 @@ impl Searcher {
     /// by the prefilter.
     #[inline]
     fn twoway(
-        needle: &[u8],
+        needle: &str,
         rabinkarp: rabinkarp::Finder,
         prestrat: Option<Prefilter>,
     ) -> Searcher {
@@ -210,8 +210,8 @@ impl Searcher {
     pub(crate) fn find(
         &self,
         prestate: &mut PrefilterState,
-        haystack: &[u8],
-        needle: &[u8],
+        haystack: &str,
+        needle: &str,
     ) -> Option<usize> {
         if haystack.len() < needle.len() {
             None
@@ -273,8 +273,8 @@ struct TwoWayWithPrefilter {
 type SearcherKindFn = unsafe fn(
     searcher: &Searcher,
     prestate: &mut PrefilterState,
-    haystack: &[u8],
-    needle: &[u8],
+    haystack: &str,
+    needle: &str,
 ) -> Option<usize>;
 
 /// Reads from the `empty` field of `SearcherKind` to handle the case of
@@ -286,8 +286,8 @@ type SearcherKindFn = unsafe fn(
 unsafe fn searcher_kind_empty(
     _searcher: &Searcher,
     _prestate: &mut PrefilterState,
-    _haystack: &[u8],
-    _needle: &[u8],
+    _haystack: &str,
+    _needle: &str,
 ) -> Option<usize> {
     Some(0)
 }
@@ -301,8 +301,8 @@ unsafe fn searcher_kind_empty(
 unsafe fn searcher_kind_one_byte(
     searcher: &Searcher,
     _prestate: &mut PrefilterState,
-    haystack: &[u8],
-    _needle: &[u8],
+    haystack: &str,
+    _needle: &str,
 ) -> Option<usize> {
     let needle = searcher.kind.one_byte;
     crate::memchr(needle, haystack)
@@ -318,8 +318,8 @@ unsafe fn searcher_kind_one_byte(
 unsafe fn searcher_kind_two_way(
     searcher: &Searcher,
     _prestate: &mut PrefilterState,
-    haystack: &[u8],
-    needle: &[u8],
+    haystack: &str,
+    needle: &str,
 ) -> Option<usize> {
     if rabinkarp::is_fast(haystack, needle) {
         searcher.rabinkarp.find(haystack, needle)
@@ -339,8 +339,8 @@ unsafe fn searcher_kind_two_way(
 unsafe fn searcher_kind_two_way_with_prefilter(
     searcher: &Searcher,
     prestate: &mut PrefilterState,
-    haystack: &[u8],
-    needle: &[u8],
+    haystack: &str,
+    needle: &str,
 ) -> Option<usize> {
     if rabinkarp::is_fast(haystack, needle) {
         searcher.rabinkarp.find(haystack, needle)
@@ -362,8 +362,8 @@ unsafe fn searcher_kind_two_way_with_prefilter(
 unsafe fn searcher_kind_sse2(
     searcher: &Searcher,
     _prestate: &mut PrefilterState,
-    haystack: &[u8],
-    needle: &[u8],
+    haystack: &str,
+    needle: &str,
 ) -> Option<usize> {
     let finder = &searcher.kind.sse2;
     if haystack.len() < finder.min_haystack_len() {
@@ -383,8 +383,8 @@ unsafe fn searcher_kind_sse2(
 unsafe fn searcher_kind_avx2(
     searcher: &Searcher,
     _prestate: &mut PrefilterState,
-    haystack: &[u8],
-    needle: &[u8],
+    haystack: &str,
+    needle: &str,
 ) -> Option<usize> {
     let finder = &searcher.kind.avx2;
     if haystack.len() < finder.min_haystack_len() {
@@ -404,8 +404,8 @@ unsafe fn searcher_kind_avx2(
 unsafe fn searcher_kind_simd128(
     searcher: &Searcher,
     _prestate: &mut PrefilterState,
-    haystack: &[u8],
-    needle: &[u8],
+    haystack: &str,
+    needle: &str,
 ) -> Option<usize> {
     let finder = &searcher.kind.simd128;
     if haystack.len() < finder.min_haystack_len() {
@@ -425,8 +425,8 @@ unsafe fn searcher_kind_simd128(
 unsafe fn searcher_kind_neon(
     searcher: &Searcher,
     _prestate: &mut PrefilterState,
-    haystack: &[u8],
-    needle: &[u8],
+    haystack: &str,
+    needle: &str,
 ) -> Option<usize> {
     let finder = &searcher.kind.neon;
     if haystack.len() < finder.min_haystack_len() {
@@ -467,7 +467,7 @@ impl SearcherRev {
     /// reverse. That is, it reports the last (instead of the first) occurrence
     /// of a needle in a haystack.
     #[inline]
-    pub(crate) fn new(needle: &[u8]) -> SearcherRev {
+    pub(crate) fn new(needle: &str) -> SearcherRev {
         let kind = if needle.len() <= 1 {
             if needle.is_empty() {
                 trace!("building empty reverse substring searcher");
@@ -492,8 +492,8 @@ impl SearcherRev {
     #[inline]
     pub(crate) fn rfind(
         &self,
-        haystack: &[u8],
-        needle: &[u8],
+        haystack: &str,
+        needle: &str,
     ) -> Option<usize> {
         if haystack.len() < needle.len() {
             return None;
@@ -615,7 +615,7 @@ impl Prefilter {
     fn fallback<R: HeuristicFrequencyRank>(
         ranker: R,
         pair: Pair,
-        needle: &[u8],
+        needle: &str,
     ) -> Option<Prefilter> {
         /// The maximum frequency rank permitted for the fallback prefilter.
         /// If the rarest byte in the needle has a frequency rank above this
@@ -643,7 +643,7 @@ impl Prefilter {
     /// Return a prefilter using a x86_64 SSE2 vector algorithm.
     #[cfg(all(target_arch = "x86_64", target_feature = "sse2"))]
     #[inline]
-    fn sse2(finder: sse2::Finder, needle: &[u8]) -> Prefilter {
+    fn sse2(finder: sse2::Finder, needle: &str) -> Prefilter {
         trace!("building x86_64 SSE2 prefilter");
         let rarest_offset = finder.pair().index1();
         let rarest_byte = needle[usize::from(rarest_offset)];
@@ -658,7 +658,7 @@ impl Prefilter {
     /// Return a prefilter using a x86_64 AVX2 vector algorithm.
     #[cfg(all(target_arch = "x86_64", target_feature = "sse2"))]
     #[inline]
-    fn avx2(finder: avx2::Finder, needle: &[u8]) -> Prefilter {
+    fn avx2(finder: avx2::Finder, needle: &str) -> Prefilter {
         trace!("building x86_64 AVX2 prefilter");
         let rarest_offset = finder.pair().index1();
         let rarest_byte = needle[usize::from(rarest_offset)];
@@ -673,7 +673,7 @@ impl Prefilter {
     /// Return a prefilter using a wasm32 simd128 vector algorithm.
     #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
     #[inline]
-    fn simd128(finder: simd128::Finder, needle: &[u8]) -> Prefilter {
+    fn simd128(finder: simd128::Finder, needle: &str) -> Prefilter {
         trace!("building wasm32 simd128 prefilter");
         let rarest_offset = finder.pair().index1();
         let rarest_byte = needle[usize::from(rarest_offset)];
@@ -688,7 +688,7 @@ impl Prefilter {
     /// Return a prefilter using a aarch64 neon vector algorithm.
     #[cfg(target_arch = "aarch64")]
     #[inline]
-    fn neon(finder: neon::Finder, needle: &[u8]) -> Prefilter {
+    fn neon(finder: neon::Finder, needle: &str) -> Prefilter {
         trace!("building aarch64 neon prefilter");
         let rarest_offset = finder.pair().index1();
         let rarest_byte = needle[usize::from(rarest_offset)];
@@ -714,7 +714,7 @@ impl Prefilter {
     /// as quickly as possible before running a (likely) slower confirmation
     /// step.
     #[inline]
-    fn find(&self, haystack: &[u8]) -> Option<usize> {
+    fn find(&self, haystack: &str) -> Option<usize> {
         // SAFETY: By construction, we've ensured that the function in
         // `self.call` is properly paired with the union used in `self.kind`.
         unsafe { (self.call)(self, haystack) }
@@ -724,7 +724,7 @@ impl Prefilter {
     /// byte from the needle. This is generally only used for very small
     /// haystacks.
     #[inline]
-    fn find_simple(&self, haystack: &[u8]) -> Option<usize> {
+    fn find_simple(&self, haystack: &str) -> Option<usize> {
         // We don't use crate::memchr here because the haystack should be small
         // enough that memchr won't be able to use vector routines anyway. So
         // we just skip straight to the fallback implementation which is likely
@@ -774,7 +774,7 @@ union PrefilterKind {
 /// When using a function of this type, callers must ensure that the correct
 /// function is paired with the value populated in `PrefilterKind` union.
 type PrefilterKindFn =
-    unsafe fn(strat: &Prefilter, haystack: &[u8]) -> Option<usize>;
+    unsafe fn(strat: &Prefilter, haystack: &str) -> Option<usize>;
 
 /// Reads from the `fallback` field of `PrefilterKind` to execute the fallback
 /// prefilter. Works on all platforms.
@@ -784,7 +784,7 @@ type PrefilterKindFn =
 /// Callers must ensure that the `strat.kind.fallback` union field is set.
 unsafe fn prefilter_kind_fallback(
     strat: &Prefilter,
-    haystack: &[u8],
+    haystack: &str,
 ) -> Option<usize> {
     strat.kind.fallback.find_prefilter(haystack)
 }
@@ -798,7 +798,7 @@ unsafe fn prefilter_kind_fallback(
 #[cfg(all(target_arch = "x86_64", target_feature = "sse2"))]
 unsafe fn prefilter_kind_sse2(
     strat: &Prefilter,
-    haystack: &[u8],
+    haystack: &str,
 ) -> Option<usize> {
     let finder = &strat.kind.sse2;
     if haystack.len() < finder.min_haystack_len() {
@@ -817,7 +817,7 @@ unsafe fn prefilter_kind_sse2(
 #[cfg(all(target_arch = "x86_64", target_feature = "sse2"))]
 unsafe fn prefilter_kind_avx2(
     strat: &Prefilter,
-    haystack: &[u8],
+    haystack: &str,
 ) -> Option<usize> {
     let finder = &strat.kind.avx2;
     if haystack.len() < finder.min_haystack_len() {
@@ -836,7 +836,7 @@ unsafe fn prefilter_kind_avx2(
 #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
 unsafe fn prefilter_kind_simd128(
     strat: &Prefilter,
-    haystack: &[u8],
+    haystack: &str,
 ) -> Option<usize> {
     let finder = &strat.kind.simd128;
     if haystack.len() < finder.min_haystack_len() {
@@ -855,7 +855,7 @@ unsafe fn prefilter_kind_simd128(
 #[cfg(target_arch = "aarch64")]
 unsafe fn prefilter_kind_neon(
     strat: &Prefilter,
-    haystack: &[u8],
+    haystack: &str,
 ) -> Option<usize> {
     let finder = &strat.kind.neon;
     if haystack.len() < finder.min_haystack_len() {
@@ -967,7 +967,7 @@ pub(crate) struct Pre<'a> {
 impl<'a> Pre<'a> {
     /// Call this prefilter on the given haystack with the given needle.
     #[inline]
-    pub(crate) fn find(&mut self, haystack: &[u8]) -> Option<usize> {
+    pub(crate) fn find(&mut self, haystack: &str) -> Option<usize> {
         let result = self.prestrat.find(haystack);
         self.prestate.update(result.unwrap_or(haystack.len()));
         result
@@ -993,7 +993,7 @@ impl<'a> Pre<'a> {
 /// positions are generated for large needles. Thus, we only permit vector
 /// algorithms to own substring search when the needle is of a certain length.
 #[inline]
-fn do_packed_search(needle: &[u8]) -> bool {
+fn do_packed_search(needle: &str) -> bool {
     /// The minimum length of a needle required for this algorithm. The minimum
     /// is 2 since a length of 1 should just use memchr and a length of 0 isn't
     /// a case handled by this searcher.

@@ -9,7 +9,7 @@ use crate::{
 /// Returns the decode metadata representing the total number of bytes decoded, including the ones
 /// indicated as already written by `output_index`.
 pub(crate) fn decode_suffix(
-    input: &[u8],
+    input: &str,
     input_index: usize,
     output: &mut [u8],
     mut output_index: usize,

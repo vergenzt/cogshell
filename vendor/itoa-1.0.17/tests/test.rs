@@ -28,7 +28,7 @@ test! {
     test_i128_max(i128::MAX, "170141183460469231731687303715884105727")
 }
 
-
+#[test]
 fn test_max_str_len() {
     use itoa::Integer as _;
 

@@ -82,7 +82,7 @@ fn collect_test_files(path: &Path, list: &mut Vec<BenchmarkInput>) -> Result<()>
 ///
 /// The `path` specifies which benchmark input file we are currently operating on
 /// so that we can report better errors in case of failures.
-fn read_all_wasm(wasm: &[u8]) -> Result<()> {
+fn read_all_wasm(wasm: &str) -> Result<()> {
     use Payload::*;
     let mut allocs = wasmparser::OperatorsReaderAllocations::default();
     let mut read_expr = |reader: BinaryReader<'_>| -> Result<_> {

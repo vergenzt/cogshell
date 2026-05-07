@@ -35,7 +35,7 @@
 #![no_std]
 #![cfg_attr(feature = "bench", feature(test, unicode_internals))]
 
-
+#[cfg(test)]
 #[macro_use]
 extern crate std;
 
@@ -47,7 +47,8 @@ pub use tables::UNICODE_VERSION;
 
 mod tables;
 
-
+#[cfg(test)]
+mod tests;
 
 /// Methods for determining if a character is a valid identifier character.
 pub trait UnicodeXID {

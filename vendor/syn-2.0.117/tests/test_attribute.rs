@@ -12,7 +12,7 @@ mod debug;
 use syn::parse::Parser;
 use syn::{Attribute, Meta};
 
-
+#[test]
 fn test_meta_item_word() {
     let meta = test("#[foo]");
 
@@ -27,7 +27,7 @@ fn test_meta_item_word() {
     "#);
 }
 
-
+#[test]
 fn test_meta_item_name_value() {
     let meta = test("#[foo = 5]");
 
@@ -47,7 +47,7 @@ fn test_meta_item_name_value() {
     "#);
 }
 
-
+#[test]
 fn test_meta_item_bool_value() {
     let meta = test("#[foo = true]");
 
@@ -88,7 +88,7 @@ fn test_meta_item_bool_value() {
     "#);
 }
 
-
+#[test]
 fn test_meta_item_list_lit() {
     let meta = test("#[foo(5)]");
 
@@ -107,7 +107,7 @@ fn test_meta_item_list_lit() {
     "#);
 }
 
-
+#[test]
 fn test_meta_item_list_word() {
     let meta = test("#[foo(bar)]");
 
@@ -126,7 +126,7 @@ fn test_meta_item_list_word() {
     "#);
 }
 
-
+#[test]
 fn test_meta_item_list_name_value() {
     let meta = test("#[foo(bar = 5)]");
 
@@ -145,7 +145,7 @@ fn test_meta_item_list_name_value() {
     "#);
 }
 
-
+#[test]
 fn test_meta_item_list_bool_value() {
     let meta = test("#[foo(bar = true)]");
 
@@ -164,7 +164,7 @@ fn test_meta_item_list_bool_value() {
     "#);
 }
 
-
+#[test]
 fn test_meta_item_multiple() {
     let meta = test("#[foo(word, name = 5, list(name2 = 6), word2)]");
 
@@ -183,7 +183,7 @@ fn test_meta_item_multiple() {
     "#);
 }
 
-
+#[test]
 fn test_bool_lit() {
     let meta = test("#[foo(true)]");
 
@@ -202,7 +202,7 @@ fn test_bool_lit() {
     "#);
 }
 
-
+#[test]
 fn test_negative_lit() {
     let meta = test("#[form(min = -1, max = 200)]");
 

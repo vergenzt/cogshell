@@ -49,7 +49,7 @@ fn calculate_number_of_rounds(byte_len: usize, approx_values_per_byte: u8, max: 
     prod
 }
 
-
+#[test]
 fn roundtrip_random_short_standard() {
     let mut byte_buf: Vec<u8> = Vec::new();
     let mut str_buf = String::new();
@@ -59,7 +59,7 @@ fn roundtrip_random_short_standard() {
     }
 }
 
-
+#[test]
 fn roundtrip_random_with_fast_loop_standard() {
     let mut byte_buf: Vec<u8> = Vec::new();
     let mut str_buf = String::new();
@@ -69,7 +69,7 @@ fn roundtrip_random_with_fast_loop_standard() {
     }
 }
 
-
+#[test]
 fn roundtrip_random_short_no_padding() {
     let mut byte_buf: Vec<u8> = Vec::new();
     let mut str_buf = String::new();
@@ -80,7 +80,7 @@ fn roundtrip_random_short_no_padding() {
     }
 }
 
-
+#[test]
 fn roundtrip_random_no_padding() {
     let mut byte_buf: Vec<u8> = Vec::new();
     let mut str_buf = String::new();
@@ -92,7 +92,7 @@ fn roundtrip_random_no_padding() {
     }
 }
 
-
+#[test]
 fn roundtrip_decode_trailing_10_bytes() {
     // This is a special case because we decode 8 byte blocks of input at a time as much as we can,
     // ideally unrolled to 32 bytes at a time, in stages 1 and 2. Since we also write a u64's worth
@@ -113,7 +113,7 @@ fn roundtrip_decode_trailing_10_bytes() {
     }
 }
 
-
+#[test]
 fn display_wrapper_matches_normal_encode() {
     let mut bytes = Vec::<u8>::with_capacity(256);
 
@@ -128,7 +128,7 @@ fn display_wrapper_matches_normal_encode() {
     );
 }
 
-
+#[test]
 fn encode_engine_slice_error_when_buffer_too_small() {
     for num_triples in 1..100 {
         let input = "AAA".repeat(num_triples);

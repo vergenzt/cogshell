@@ -305,7 +305,7 @@ impl<'a, K, V> From<OccupiedEntry<'a, K, V>> for IndexedEntry<'a, K, V> {
     }
 }
 
-
+#[test]
 fn assert_send_sync() {
     fn assert_send_sync<T: Send + Sync>() {}
     assert_send_sync::<Entry<'_, i32, i32>>();

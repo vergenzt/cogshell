@@ -54,7 +54,7 @@ fn stdlib_xid_continue(b: &mut Bencher) {
     b.iter(|| string.chars().all(char::is_xid_continue));
 }
 
-
+#[test]
 fn test_is_xid_start() {
     let chars = ['A', 'Z', 'a', 'z', '\u{1000d}', '\u{10026}'];
 
@@ -63,7 +63,7 @@ fn test_is_xid_start() {
     }
 }
 
-
+#[test]
 fn test_is_not_xid_start() {
     let chars = [
         '\x00', '\x01', '0', '9', ' ', '[', '<', '{', '(', '\u{02c2}', '\u{ffff}',
@@ -74,7 +74,7 @@ fn test_is_not_xid_start() {
     }
 }
 
-
+#[test]
 fn test_is_xid_continue() {
     let chars = ['0', '9', 'A', 'Z', 'a', 'z', '_', '\u{1000d}', '\u{10026}'];
 
@@ -83,7 +83,7 @@ fn test_is_xid_continue() {
     }
 }
 
-
+#[test]
 fn test_is_not_xid_continue() {
     let chars = [
         '\x00', '\x01', ' ', '[', '<', '{', '(', '\u{02c2}', '\u{ffff}',

@@ -868,15 +868,15 @@ impl<'a, E> Debug for CowStrDeserializer<'a, E> {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/// A deserializer holding a `&[u8]`. Always calls [`Visitor::visit_bytes`].
+/// A deserializer holding a `&str`. Always calls [`Visitor::visit_bytes`].
 pub struct BytesDeserializer<'a, E> {
-    value: &'a [u8],
+    value: &'a str,
     marker: PhantomData<E>,
 }
 
 impl<'a, E> BytesDeserializer<'a, E> {
     /// Create a new deserializer from the given bytes.
-    pub fn new(value: &'a [u8]) -> Self {
+    pub fn new(value: &'a str) -> Self {
         BytesDeserializer {
             value,
             marker: PhantomData,
@@ -886,7 +886,7 @@ impl<'a, E> BytesDeserializer<'a, E> {
 
 impl_copy_clone!(BytesDeserializer<'a>);
 
-impl<'de, 'a, E> IntoDeserializer<'de, E> for &'a [u8]
+impl<'de, 'a, E> IntoDeserializer<'de, E> for &'a str
 where
     E: de::Error,
 {
@@ -937,16 +937,16 @@ impl<'a, E> Debug for BytesDeserializer<'a, E> {
     }
 }
 
-/// A deserializer holding a `&[u8]` with a lifetime tied to another
+/// A deserializer holding a `&str` with a lifetime tied to another
 /// deserializer. Always calls [`Visitor::visit_borrowed_bytes`].
 pub struct BorrowedBytesDeserializer<'de, E> {
-    value: &'de [u8],
+    value: &'de str,
     marker: PhantomData<E>,
 }
 
 impl<'de, E> BorrowedBytesDeserializer<'de, E> {
     /// Create a new borrowed deserializer from the given borrowed bytes.
-    pub fn new(value: &'de [u8]) -> Self {
+    pub fn new(value: &'de str) -> Self {
         BorrowedBytesDeserializer {
             value,
             marker: PhantomData,

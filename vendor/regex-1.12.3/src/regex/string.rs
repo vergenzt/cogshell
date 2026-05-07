@@ -17,7 +17,7 @@ use crate::{error::Error, RegexBuilder};
 /// offsets**. Every byte offset is guaranteed to be at a Unicode code point
 /// boundary. That is, all offsets returned by the `Regex` API are guaranteed
 /// to be ranges that can slice a `&str` without panicking. If you want to
-/// relax this requirement, then you must search `&[u8]` haystacks with a
+/// relax this requirement, then you must search `&str` haystacks with a
 /// [`bytes::Regex`](crate::bytes::Regex).
 ///
 /// The only methods that allocate new strings are the string replacement

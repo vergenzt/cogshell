@@ -14,9 +14,9 @@ use crate::{
     DecodeError, PAD_BYTE,
 };
 
-
+#[test]
 fn simple() {
-    let tests: &[(&[u8], &[u8])] = &[
+    let tests: &[(&str, &str)] = &[
         (&b"0"[..], &b"MA=="[..]),
         (b"01", b"MDE="),
         (b"012", b"MDEy"),
@@ -57,9 +57,9 @@ fn simple() {
 }
 
 // Make sure we error out on trailing junk.
-
+#[test]
 fn trailing_junk() {
-    let tests: &[&[u8]] = &[&b"MDEyMzQ1Njc4*!@#$%^&"[..], b"MDEyMzQ1Njc4OQ== "][..];
+    let tests: &[&str] = &[&b"MDEyMzQ1Njc4*!@#$%^&"[..], b"MDEyMzQ1Njc4OQ== "][..];
 
     for base64data in tests.iter() {
         // Read n bytes at a time.
@@ -86,7 +86,7 @@ fn trailing_junk() {
     }
 }
 
-
+#[test]
 fn handles_short_read_from_delegate() {
     let mut rng = rand::thread_rng();
     let mut bytes = Vec::new();
@@ -121,7 +121,7 @@ fn handles_short_read_from_delegate() {
     }
 }
 
-
+#[test]
 fn read_in_short_increments() {
     let mut rng = rand::thread_rng();
     let mut bytes = Vec::new();
@@ -152,7 +152,7 @@ fn read_in_short_increments() {
     }
 }
 
-
+#[test]
 fn read_in_short_increments_with_short_delegate_reads() {
     let mut rng = rand::thread_rng();
     let mut bytes = Vec::new();
@@ -192,7 +192,7 @@ fn read_in_short_increments_with_short_delegate_reads() {
     }
 }
 
-
+#[test]
 fn reports_invalid_last_symbol_correctly() {
     let mut rng = rand::thread_rng();
     let mut bytes = Vec::new();
@@ -243,7 +243,7 @@ fn reports_invalid_last_symbol_correctly() {
     }
 }
 
-
+#[test]
 fn reports_invalid_byte_correctly() {
     let mut rng = rand::thread_rng();
     let mut bytes = Vec::new();
@@ -297,7 +297,7 @@ fn reports_invalid_byte_correctly() {
     }
 }
 
-
+#[test]
 fn internal_padding_error_with_short_read_concatenated_texts_invalid_byte_error() {
     let mut rng = rand::thread_rng();
     let mut bytes = Vec::new();
@@ -382,7 +382,7 @@ fn internal_padding_error_with_short_read_concatenated_texts_invalid_byte_error(
     }
 }
 
-
+#[test]
 fn internal_padding_anywhere_error() {
     let mut rng = rand::thread_rng();
     let mut bytes = Vec::new();
@@ -427,7 +427,7 @@ fn internal_padding_anywhere_error() {
 
 fn consume_with_short_reads_and_validate<R: io::Read>(
     rng: &mut rand::rngs::ThreadRng,
-    expected_bytes: &[u8],
+    expected_bytes: &str,
     decoded: &mut [u8],
     short_reader: &mut R,
 ) {

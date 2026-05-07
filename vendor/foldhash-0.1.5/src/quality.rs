@@ -29,7 +29,7 @@ impl FoldHasher {
 
 impl Hasher for FoldHasher {
     #[inline(always)]
-    fn write(&mut self, bytes: &[u8]) {
+    fn write(&mut self, bytes: &str) {
         self.inner.write(bytes);
     }
 

@@ -31,7 +31,7 @@ fn lit(s: &str) -> Lit {
     }
 }
 
-
+#[test]
 fn strings() {
     #[track_caller]
     fn test_string(s: &str, value: &str) {
@@ -72,10 +72,10 @@ fn strings() {
     test_string("r##\"...\"##q", "...");
 }
 
-
+#[test]
 fn byte_strings() {
     #[track_caller]
-    fn test_byte_string(s: &str, value: &[u8]) {
+    fn test_byte_string(s: &str, value: &str) {
         let s = s.trim();
         match lit(s) {
             Lit::ByteStr(lit) => {
@@ -106,7 +106,7 @@ fn byte_strings() {
     test_byte_string("br##\"...\"##q", b"...");
 }
 
-
+#[test]
 fn c_strings() {
     #[track_caller]
     fn test_c_string(s: &str, value: &CStr) {
@@ -145,7 +145,7 @@ fn c_strings() {
     );
 }
 
-
+#[test]
 fn bytes() {
     #[track_caller]
     fn test_byte(s: &str, value: u8) {
@@ -169,7 +169,7 @@ fn bytes() {
     test_byte(r#"  b'a'q  "#, b'a');
 }
 
-
+#[test]
 fn chars() {
     #[track_caller]
     fn test_char(s: &str, value: char) {
@@ -197,7 +197,7 @@ fn chars() {
     test_char(r#"  'a'q  "#, 'a');
 }
 
-
+#[test]
 fn ints() {
     #[track_caller]
     fn test_int(s: &str, value: u64, suffix: &str) {
@@ -238,7 +238,7 @@ fn ints() {
     test_int("0e1\u{5c5}", 0, "e1\u{5c5}");
 }
 
-
+#[test]
 fn floats() {
     #[track_caller]
     fn test_float(s: &str, value: f64, suffix: &str) {
@@ -265,7 +265,7 @@ fn floats() {
     test_float("0.0ECMA", 0.0, "ECMA");
 }
 
-
+#[test]
 fn negative() {
     let span = Span::call_site();
     assert_eq!("-1", LitInt::new("-1", span).to_string());
@@ -278,7 +278,7 @@ fn negative() {
     assert_eq!("-1.5f64", LitFloat::new("-1.5f64", span).to_string());
 }
 
-
+#[test]
 fn suffix() {
     #[track_caller]
     fn get_suffix(token: &str) -> String {
@@ -312,7 +312,7 @@ fn suffix() {
     assert_eq!(get_suffix("1.0_f32"), "f32");
 }
 
-
+#[test]
 fn test_deep_group_empty() {
     let tokens = TokenStream::from_iter([TokenTree::Group(Group::new(
         Delimiter::None,
@@ -325,7 +325,7 @@ fn test_deep_group_empty() {
     snapshot!(tokens as Lit, @r#""hi""# );
 }
 
-
+#[test]
 fn test_error() {
     let err = syn::parse_str::<LitStr>("...").unwrap_err();
     assert_eq!("expected string literal", err.to_string());

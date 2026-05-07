@@ -5,7 +5,7 @@ use getrandom::{fill, fill_uninit};
 #[cfg(all(feature = "wasm_js", target_arch = "wasm32", target_os = "unknown"))]
 use wasm_bindgen_test::wasm_bindgen_test as test;
 
-
+#[test]
 fn test_zero() {
     // Test that APIs are happy with zero-length requests
     fill(&mut [0u8; 0]).unwrap();
@@ -42,7 +42,7 @@ fn num_diff_bits<T: DiffBits>(s1: &[T], s2: &[T]) -> usize {
 }
 
 // Tests the quality of calling getrandom on two large buffers
-
+#[test]
 fn test_diff() {
     const N: usize = 1000;
     let mut v1 = [0u8; N];
@@ -67,7 +67,7 @@ fn test_diff() {
     assert!(d2 < 4500);
 }
 
-
+#[test]
 fn test_diff_u32() {
     const N: usize = 1000 / 4;
     let mut v1 = [0u32; N];
@@ -86,7 +86,7 @@ fn test_diff_u32() {
     assert!(d1 < 4500);
 }
 
-
+#[test]
 fn test_diff_u64() {
     const N: usize = 1000 / 8;
     let mut v1 = [0u64; N];
@@ -105,7 +105,7 @@ fn test_diff_u64() {
     assert!(d1 < 4500);
 }
 
-
+#[test]
 fn test_small() {
     const N: usize = 64;
     // For each buffer size, get at least 256 bytes and check that between
@@ -133,7 +133,7 @@ fn test_small() {
 }
 
 // Tests the quality of calling getrandom repeatedly on small buffers
-
+#[test]
 fn test_small_uninit() {
     const N: usize = 64;
     // For each buffer size, get at least 256 bytes and check that between
@@ -162,13 +162,13 @@ fn test_small_uninit() {
     }
 }
 
-
+#[test]
 fn test_huge() {
     let mut huge = [0u8; 100_000];
     fill(&mut huge).unwrap();
 }
 
-
+#[test]
 fn test_huge_uninit() {
     const N: usize = 100_000;
     let mut huge = [MaybeUninit::uninit(); N];
@@ -176,7 +176,7 @@ fn test_huge_uninit() {
     assert_eq!(res.len(), N);
 }
 
-
+#[test]
 #[cfg_attr(
     target_arch = "wasm32",
     ignore = "The thread API always fails/panics on WASM"

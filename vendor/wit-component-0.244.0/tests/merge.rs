@@ -13,7 +13,7 @@ use wit_parser::Resolve;
 /// is valid along the way. On successful merge the resulting documents
 /// are printed and asserted against expectations. Failures assert the
 /// correct error message.
-
+#[test]
 fn merging() -> Result<()> {
     drop(env_logger::try_init());
 

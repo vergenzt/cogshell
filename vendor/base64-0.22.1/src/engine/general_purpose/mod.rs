@@ -45,7 +45,7 @@ impl super::Engine for GeneralPurpose {
     type Config = GeneralPurposeConfig;
     type DecodeEstimate = GeneralPurposeEstimate;
 
-    fn internal_encode(&self, input: &[u8], output: &mut [u8]) -> usize {
+    fn internal_encode(&self, input: &str, output: &mut [u8]) -> usize {
         let mut input_index: usize = 0;
 
         const BLOCKS_PER_FAST_LOOP: usize = 4;
@@ -170,7 +170,7 @@ impl super::Engine for GeneralPurpose {
 
     fn internal_decode(
         &self,
-        input: &[u8],
+        input: &str,
         output: &mut [u8],
         estimate: Self::DecodeEstimate,
     ) -> Result<DecodeMetadata, DecodeSliceError> {
@@ -225,7 +225,7 @@ pub(crate) const fn decode_table(alphabet: &Alphabet) -> [u8; 256] {
 }
 
 #[inline]
-fn read_u64(s: &[u8]) -> u64 {
+fn read_u64(s: &str) -> u64 {
     u64::from_be_bytes(s[..8].try_into().unwrap())
 }
 

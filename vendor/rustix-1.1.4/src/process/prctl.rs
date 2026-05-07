@@ -1153,7 +1153,7 @@ const PR_SET_VMA_ANON_NAME: usize = 0;
 #[inline]
 #[doc(alias = "PR_SET_VMA")]
 #[doc(alias = "PR_SET_VMA_ANON_NAME")]
-pub fn set_virtual_memory_region_name(region: &[u8], name: Option<&CStr>) -> io::Result<()> {
+pub fn set_virtual_memory_region_name(region: &str, name: Option<&CStr>) -> io::Result<()> {
     unsafe {
         syscalls::prctl(
             PR_SET_VMA,

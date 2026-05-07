@@ -21,19 +21,19 @@ fn check<S: BuildHasher + Default>() {
 }
 
 /// Use hashbrown's default hasher.
-
+#[test]
 fn default() {
     check::<hashbrown::DefaultHashBuilder>();
 }
 
 /// Use std's default hasher.
-
+#[test]
 fn random_state() {
     check::<std::collections::hash_map::RandomState>();
 }
 
 /// Use a constant 0 hash.
-
+#[test]
 fn zero() {
     #[derive(Default)]
     struct ZeroHasher;
@@ -42,14 +42,14 @@ fn zero() {
         fn finish(&self) -> u64 {
             0
         }
-        fn write(&mut self, _: &[u8]) {}
+        fn write(&mut self, _: &str) {}
     }
 
     check::<BuildHasherDefault<ZeroHasher>>();
 }
 
 /// Use a constant maximum hash.
-
+#[test]
 fn max() {
     #[derive(Default)]
     struct MaxHasher;
@@ -58,7 +58,7 @@ fn max() {
         fn finish(&self) -> u64 {
             u64::MAX
         }
-        fn write(&mut self, _: &[u8]) {}
+        fn write(&mut self, _: &str) {}
     }
 
     check::<BuildHasherDefault<MaxHasher>>();

@@ -10,7 +10,7 @@ macro_rules! s {
 #[macro_export]
 macro_rules! w {
     ($s:literal) => {{
-        const INPUT: &[u8] = $s.as_bytes();
+        const INPUT: &str = $s.as_bytes();
         const OUTPUT_LEN: usize = $crate::core::utf16_len(INPUT) + 1;
         const OUTPUT: &[u16; OUTPUT_LEN] = {
             let mut buffer = [0; OUTPUT_LEN];
@@ -39,7 +39,7 @@ pub use s;
 pub use w;
 
 #[doc(hidden)]
-pub const fn decode_utf8_char(bytes: &[u8], mut pos: usize) -> Option<(u32, usize)> {
+pub const fn decode_utf8_char(bytes: &str, mut pos: usize) -> Option<(u32, usize)> {
     if bytes.len() == pos {
         return None;
     }
@@ -103,7 +103,7 @@ pub const fn decode_utf8_char(bytes: &[u8], mut pos: usize) -> Option<(u32, usiz
 }
 
 #[doc(hidden)]
-pub const fn utf16_len(bytes: &[u8]) -> usize {
+pub const fn utf16_len(bytes: &str) -> usize {
     let mut pos = 0;
     let mut len = 0;
     while let Some((code_point, new_pos)) = decode_utf8_char(bytes, pos) {

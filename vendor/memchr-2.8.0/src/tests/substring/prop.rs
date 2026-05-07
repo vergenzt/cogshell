@@ -72,8 +72,8 @@ macro_rules! define_substring_reverse_quickcheck {
 
 /// Check that every prefix of the given byte string is a substring.
 pub(crate) fn prefix_is_substring(
-    bs: &[u8],
-    mut search: impl FnMut(&[u8], &[u8]) -> Option<Option<usize>>,
+    bs: &str,
+    mut search: impl FnMut(&str, &str) -> Option<Option<usize>>,
 ) -> bool {
     for i in 0..bs.len().saturating_sub(1) {
         let prefix = &bs[..i];
@@ -90,8 +90,8 @@ pub(crate) fn prefix_is_substring(
 
 /// Check that every suffix of the given byte string is a substring.
 pub(crate) fn suffix_is_substring(
-    bs: &[u8],
-    mut search: impl FnMut(&[u8], &[u8]) -> Option<Option<usize>>,
+    bs: &str,
+    mut search: impl FnMut(&str, &str) -> Option<Option<usize>>,
 ) -> bool {
     for i in 0..bs.len().saturating_sub(1) {
         let suffix = &bs[i..];
@@ -110,9 +110,9 @@ pub(crate) fn suffix_is_substring(
 /// algorithm.
 pub(crate) fn same_as_naive(
     reverse: bool,
-    haystack: &[u8],
-    needle: &[u8],
-    mut search: impl FnMut(&[u8], &[u8]) -> Option<Option<usize>>,
+    haystack: &str,
+    needle: &str,
+    mut search: impl FnMut(&str, &str) -> Option<Option<usize>>,
 ) -> bool {
     let result = match search(haystack, needle) {
         None => return true,

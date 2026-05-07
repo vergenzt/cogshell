@@ -28,7 +28,7 @@ impl<'a> CustomSectionReader<'a> {
     }
 
     /// The actual contents of the custom section.
-    pub fn data(&self) -> &'a [u8] {
+    pub fn data(&self) -> &'a str {
         self.reader.remaining_buffer()
     }
 

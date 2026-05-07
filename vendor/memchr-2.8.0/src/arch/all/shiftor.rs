@@ -29,7 +29,7 @@ impl Finder {
     ///
     /// The needle may be empty. The empty needle matches at every byte offset.
     #[inline]
-    pub fn new(needle: &[u8]) -> Option<Finder> {
+    pub fn new(needle: &str) -> Option<Finder> {
         let needle_len = needle.len();
         if needle_len > Finder::MAX_NEEDLE_LEN {
             // A match is found when bit 7 is set in 'result' in the search
@@ -58,7 +58,7 @@ impl Finder {
     /// occur when the needle and haystack both have length zero. Otherwise,
     /// for non-empty haystacks, the maximum value is `haystack.len() - 1`.
     #[inline]
-    pub fn find(&self, haystack: &[u8]) -> Option<usize> {
+    pub fn find(&self, haystack: &str) -> Option<usize> {
         if self.needle_len == 0 {
             return Some(0);
         }
@@ -74,4 +74,16 @@ impl Finder {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
 
+    define_substring_forward_quickcheck!(|h, n| Some(Finder::new(n)?.find(h)));
+
+    #[test]
+    fn forward() {
+        crate::tests::substring::Runner::new()
+            .fwd(|h, n| Some(Finder::new(n)?.find(h)))
+            .run();
+    }
+}

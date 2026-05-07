@@ -65,10 +65,10 @@ const SEEDS: &'static [Seed] = &[
 /// of the pair of bytes selected and the size of the vector used.
 pub(crate) struct Runner {
     fwd: Option<
-        Box<dyn FnMut(&[u8], &[u8]) -> Option<Option<usize>> + 'static>,
+        Box<dyn FnMut(&str, &str) -> Option<Option<usize>> + 'static>,
     >,
     rev: Option<
-        Box<dyn FnMut(&[u8], &[u8]) -> Option<Option<usize>> + 'static>,
+        Box<dyn FnMut(&str, &str) -> Option<Option<usize>> + 'static>,
     >,
 }
 
@@ -132,7 +132,7 @@ impl Runner {
     /// If this is not set, then forward substring search is not tested.
     pub(crate) fn fwd(
         mut self,
-        search: impl FnMut(&[u8], &[u8]) -> Option<Option<usize>> + 'static,
+        search: impl FnMut(&str, &str) -> Option<Option<usize>> + 'static,
     ) -> Runner {
         self.fwd = Some(Box::new(search));
         self
@@ -148,7 +148,7 @@ impl Runner {
     /// If this is not set, then reverse substring search is not tested.
     pub(crate) fn rev(
         mut self,
-        search: impl FnMut(&[u8], &[u8]) -> Option<Option<usize>> + 'static,
+        search: impl FnMut(&str, &str) -> Option<Option<usize>> + 'static,
     ) -> Runner {
         self.rev = Some(Box::new(search));
         self

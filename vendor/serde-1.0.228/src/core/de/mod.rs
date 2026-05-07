@@ -357,8 +357,8 @@ pub enum Unexpected<'a> {
     /// The input contained a `&str` or `String` that was not expected.
     Str(&'a str),
 
-    /// The input contained a `&[u8]` or `Vec<u8>` that was not expected.
-    Bytes(&'a [u8]),
+    /// The input contained a `&str` or `Vec<u8>` that was not expected.
+    Bytes(&'a str),
 
     /// The input contained a unit `()` that was not expected.
     Unit,
@@ -1583,7 +1583,7 @@ pub trait Visitor<'de>: Sized {
     ///
     /// It is never correct to implement `visit_byte_buf` without implementing
     /// `visit_bytes`. Implement neither, both, or just `visit_bytes`.
-    fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
+    fn visit_bytes<E>(self, v: &str) -> Result<Self::Value, E>
     where
         E: Error,
     {
@@ -1595,11 +1595,11 @@ pub trait Visitor<'de>: Sized {
     ///
     /// This enables zero-copy deserialization of bytes in some formats. For
     /// example Postcard data containing bytes can be deserialized with zero
-    /// copying into a `&'a [u8]` as long as the input data outlives `'a`.
+    /// copying into a `&'a str` as long as the input data outlives `'a`.
     ///
     /// The default implementation forwards to `visit_bytes`.
     #[inline]
-    fn visit_borrowed_bytes<E>(self, v: &'de [u8]) -> Result<Self::Value, E>
+    fn visit_borrowed_bytes<E>(self, v: &'de str) -> Result<Self::Value, E>
     where
         E: Error,
     {

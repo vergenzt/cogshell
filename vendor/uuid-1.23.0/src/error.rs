@@ -47,7 +47,7 @@ pub(crate) enum ErrorKind {
 ///
 /// [`Uuid`]: ../struct.Uuid.html
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub struct InvalidUuid<'a>(pub(crate) &'a [u8]);
+pub struct InvalidUuid<'a>(pub(crate) &'a str);
 
 impl<'a> InvalidUuid<'a> {
     /// Converts the lightweight error type into detailed diagnostics.

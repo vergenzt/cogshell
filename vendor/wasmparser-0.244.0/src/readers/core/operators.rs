@@ -603,7 +603,7 @@ impl<'a> IntoIterator for OperatorsReader<'a> {
     /// # Examples
     /// ```
     /// # use wasmparser::{Operator, CodeSectionReader, Result, BinaryReader};
-    /// # let data: &[u8] = &[
+    /// # let data: &str = &[
     /// #     0x01, 0x03, 0x00, 0x01, 0x0b];
     /// let reader = BinaryReader::new(data, 0);
     /// let code_reader = CodeSectionReader::new(reader).unwrap();
@@ -675,7 +675,7 @@ impl<'a> Iterator for OperatorsIteratorWithOffsets<'a> {
     /// # Examples
     /// ```
     /// use wasmparser::{Operator, CodeSectionReader, Result, BinaryReader};
-    /// # let data: &[u8] = &[
+    /// # let data: &str = &[
     /// #     0x01, 0x03, 0x00, /* offset = 23 */ 0x01, 0x0b];
     /// let reader = BinaryReader::new(data, 20);
     /// let code_reader = CodeSectionReader::new(reader).unwrap();

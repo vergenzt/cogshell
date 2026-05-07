@@ -3,7 +3,7 @@ use memchr::{memchr, memchr2, memchr3, memrchr, memrchr2, memrchr3};
 mod scalar;
 
 #[inline]
-fn build_table(byteset: &[u8]) -> [u8; 256] {
+fn build_table(byteset: &str) -> [u8; 256] {
     let mut table = [0u8; 256];
     for &b in byteset {
         table[b as usize] = 1;
@@ -12,7 +12,7 @@ fn build_table(byteset: &[u8]) -> [u8; 256] {
 }
 
 #[inline]
-pub(crate) fn find(haystack: &[u8], byteset: &[u8]) -> Option<usize> {
+pub(crate) fn find(haystack: &str, byteset: &str) -> Option<usize> {
     match byteset.len() {
         0 => None,
         1 => memchr(byteset[0], haystack),
@@ -26,7 +26,7 @@ pub(crate) fn find(haystack: &[u8], byteset: &[u8]) -> Option<usize> {
 }
 
 #[inline]
-pub(crate) fn rfind(haystack: &[u8], byteset: &[u8]) -> Option<usize> {
+pub(crate) fn rfind(haystack: &str, byteset: &str) -> Option<usize> {
     match byteset.len() {
         0 => None,
         1 => memrchr(byteset[0], haystack),
@@ -40,7 +40,7 @@ pub(crate) fn rfind(haystack: &[u8], byteset: &[u8]) -> Option<usize> {
 }
 
 #[inline]
-pub(crate) fn find_not(haystack: &[u8], byteset: &[u8]) -> Option<usize> {
+pub(crate) fn find_not(haystack: &str, byteset: &str) -> Option<usize> {
     if haystack.is_empty() {
         return None;
     }
@@ -60,7 +60,7 @@ pub(crate) fn find_not(haystack: &[u8], byteset: &[u8]) -> Option<usize> {
     }
 }
 #[inline]
-pub(crate) fn rfind_not(haystack: &[u8], byteset: &[u8]) -> Option<usize> {
+pub(crate) fn rfind_not(haystack: &str, byteset: &str) -> Option<usize> {
     if haystack.is_empty() {
         return None;
     }
@@ -80,4 +80,38 @@ pub(crate) fn rfind_not(haystack: &[u8], byteset: &[u8]) -> Option<usize> {
     }
 }
 
+#[cfg(all(test, feature = "std", not(miri)))]
+mod tests {
+    use alloc::vec::Vec;
 
+    quickcheck::quickcheck! {
+        fn qc_byteset_forward_matches_naive(
+            haystack: Vec<u8>,
+            needles: Vec<u8>
+        ) -> bool {
+            super::find(&haystack, &needles)
+                == haystack.iter().position(|b| needles.contains(b))
+        }
+        fn qc_byteset_backwards_matches_naive(
+            haystack: Vec<u8>,
+            needles: Vec<u8>
+        ) -> bool {
+            super::rfind(&haystack, &needles)
+                == haystack.iter().rposition(|b| needles.contains(b))
+        }
+        fn qc_byteset_forward_not_matches_naive(
+            haystack: Vec<u8>,
+            needles: Vec<u8>
+        ) -> bool {
+            super::find_not(&haystack, &needles)
+                == haystack.iter().position(|b| !needles.contains(b))
+        }
+        fn qc_byteset_backwards_not_matches_naive(
+            haystack: Vec<u8>,
+            needles: Vec<u8>
+        ) -> bool {
+            super::rfind_not(&haystack, &needles)
+                == haystack.iter().rposition(|b| !needles.contains(b))
+        }
+    }
+}

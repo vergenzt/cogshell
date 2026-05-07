@@ -18,7 +18,7 @@ use {
 use crate::{create_input, suite, testify_captures};
 
 /// Tests the default configuration of the bounded backtracker.
-
+#[test]
 fn default() -> Result<()> {
     let builder = BoundedBacktracker::builder();
     let mut runner = TestRunner::new()?;
@@ -37,7 +37,7 @@ fn default() -> Result<()> {
 }
 
 /// Tests the backtracker with prefilters enabled.
-
+#[test]
 fn prefilter() -> Result<()> {
     let my_compiler = |test: &RegexTest, regexes: &[String]| {
         // Parse regexes as HIRs so we can get literals to build a prefilter.
@@ -64,7 +64,7 @@ fn prefilter() -> Result<()> {
 
 /// Tests the bounded backtracker when its visited capacity is set to its
 /// minimum amount.
-
+#[test]
 fn min_visited_capacity() -> Result<()> {
     let mut runner = TestRunner::new()?;
     runner.expand(&["is_match", "find", "captures"], |test| test.compiles());

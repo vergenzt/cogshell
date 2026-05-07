@@ -89,7 +89,7 @@ fn assert_err<T: Debug>(result: impl FnOnce() -> Result<T>, expected: &'static s
     }
 }
 
-
+#[test]
 fn test_recursion() {
     // Must not blow the default #[recursion_limit], which is 128.
     #[rustfmt::skip]
@@ -106,7 +106,7 @@ fn test_recursion() {
     test().unwrap_err();
 }
 
-
+#[test]
 fn test_low_precedence_control_flow() {
     #[allow(unreachable_code)]
     let test = || {
@@ -123,7 +123,7 @@ fn test_low_precedence_control_flow() {
     assert!(test().unwrap());
 }
 
-
+#[test]
 fn test_low_precedence_binary_operator() {
     // Must not partition as `false == (true && false)`.
     let test = || Ok(ensure!(false == true && false));
@@ -142,7 +142,7 @@ fn test_low_precedence_binary_operator() {
     assert_err(test, "Condition failed: `a <= b || a - b <= 10`");
 }
 
-
+#[test]
 fn test_high_precedence_binary_operator() {
     let a = 15;
     let b = 3;
@@ -150,7 +150,7 @@ fn test_high_precedence_binary_operator() {
     assert_err(test, "Condition failed: `a - b <= 10` (12 vs 10)");
 }
 
-
+#[test]
 fn test_closure() {
     // Must not partition as `(S + move) || (1 == 1)` by treating move as an
     // identifier, nor as `(S + move || 1) == (1)` by misinterpreting the
@@ -170,7 +170,7 @@ fn test_closure() {
     assert_err(test, "Condition failed: `S + |()| 1 == 1`");
 }
 
-
+#[test]
 fn test_unary() {
     let mut x = &1;
     let test = || Ok(ensure!(*x == 2));
@@ -190,7 +190,7 @@ fn test_unary() {
 }
 
 #[rustversion::since(1.82)]
-
+#[test]
 fn test_raw_addr() {
     let mut x = 1;
     let test = || Ok(ensure!(S + &raw const x != S + &raw mut x));
@@ -200,7 +200,7 @@ fn test_raw_addr() {
     );
 }
 
-
+#[test]
 fn test_if() {
     #[rustfmt::skip]
     let test = || Ok(ensure!(if false {}.t(1) == 2));
@@ -242,7 +242,7 @@ fn test_if() {
     );
 }
 
-
+#[test]
 fn test_loop() {
     #[rustfmt::skip]
     let test = || Ok(ensure!(1 + loop { break 1 } == 1));
@@ -294,7 +294,7 @@ fn test_loop() {
     );
 }
 
-
+#[test]
 fn test_match() {
     #[rustfmt::skip]
     let test = || Ok(ensure!(match 1 == 1 { true => 1, false => 0 } == 2));
@@ -304,7 +304,7 @@ fn test_match() {
     );
 }
 
-
+#[test]
 fn test_atom() {
     let test = || Ok(ensure!([false, false].len() > 3));
     assert_err(
@@ -336,7 +336,7 @@ fn test_atom() {
     );
 }
 
-
+#[test]
 fn test_path() {
     let test = || Ok(ensure!(crate::S.t(1) == 2));
     assert_err(test, "Condition failed: `crate::S.t(1) == 2` (1 vs 2)");
@@ -434,7 +434,7 @@ fn test_path() {
     );
 }
 
-
+#[test]
 fn test_macro() {
     let test = || Ok(ensure!(anyhow!("...").to_string().len() <= 1));
     assert_err(
@@ -452,7 +452,7 @@ fn test_macro() {
     );
 }
 
-
+#[test]
 fn test_trailer() {
     let test = || Ok(ensure!((|| 1)() == 2));
     assert_err(test, "Condition failed: `(|| 1)() == 2` (1 vs 2)");
@@ -491,7 +491,7 @@ fn test_trailer() {
     );
 }
 
-
+#[test]
 fn test_whitespace() {
     #[derive(Debug)]
     pub struct Point {
@@ -509,7 +509,7 @@ fn test_whitespace() {
     );
 }
 
-
+#[test]
 fn test_too_long() {
     let test = || Ok(ensure!("" == "x".repeat(10)));
     assert_err(
@@ -521,7 +521,7 @@ fn test_too_long() {
     assert_err(test, "Condition failed: `\"\" == \"x\".repeat(80)`");
 }
 
-
+#[test]
 fn test_as() {
     let test = || Ok(ensure!('\0' as u8 > 1));
     assert_err(test, "Condition failed: `'\\0' as u8 > 1` (0 vs 1)");
@@ -673,7 +673,7 @@ fn test_as() {
     assert_err(test, "Condition failed: `0 as int! {...} != 0` (0 vs 0)");
 }
 
-
+#[test]
 fn test_pat() {
     let test = || Ok(ensure!(if let ref mut _x @ 0 = 0 { 0 } else { 1 } == 1));
     assert_err(

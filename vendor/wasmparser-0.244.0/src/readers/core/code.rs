@@ -79,7 +79,7 @@ impl<'a> FunctionBody<'a> {
     /// Returns the body of this function as a list of bytes.
     ///
     /// Note that the returned bytes start with the function locals declaration.
-    pub fn as_bytes(&self) -> &'a [u8] {
+    pub fn as_bytes(&self) -> &'a str {
         self.reader.remaining_buffer()
     }
 }

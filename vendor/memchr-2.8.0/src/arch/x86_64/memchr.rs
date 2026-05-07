@@ -31,7 +31,7 @@ the CPU supports.
 /// `needle3`, respectively. The `start` and `end` parameters correspond to the
 /// start and end of the haystack, respectively.
 ///
-/// We use raw pointers here instead of the more obvious `haystack: &[u8]` so
+/// We use raw pointers here instead of the more obvious `haystack: &str` so
 /// that the function is compatible with our lower level iterator logic that
 /// operates on raw pointers. We use this macro to implement "raw" memchr
 /// routines with the signature above, and then define memchr routines using

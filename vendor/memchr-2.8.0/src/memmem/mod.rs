@@ -114,7 +114,7 @@ mod searcher;
 /// ```
 #[inline]
 pub fn find_iter<'h, 'n, N: 'n + ?Sized + AsRef<[u8]>>(
-    haystack: &'h [u8],
+    haystack: &'h str,
     needle: &'n N,
 ) -> FindIter<'h, 'n> {
     FindIter::new(haystack, Finder::new(needle))
@@ -148,7 +148,7 @@ pub fn find_iter<'h, 'n, N: 'n + ?Sized + AsRef<[u8]>>(
 /// ```
 #[inline]
 pub fn rfind_iter<'h, 'n, N: 'n + ?Sized + AsRef<[u8]>>(
-    haystack: &'h [u8],
+    haystack: &'h str,
     needle: &'n N,
 ) -> FindRevIter<'h, 'n> {
     FindRevIter::new(haystack, FinderRev::new(needle))
@@ -182,7 +182,7 @@ pub fn rfind_iter<'h, 'n, N: 'n + ?Sized + AsRef<[u8]>>(
 /// assert_eq!(None, memmem::find(haystack, b"quux"));
 /// ```
 #[inline]
-pub fn find(haystack: &[u8], needle: &[u8]) -> Option<usize> {
+pub fn find(haystack: &str, needle: &str) -> Option<usize> {
     if haystack.len() < 64 {
         rabinkarp::Finder::new(needle).find(haystack, needle)
     } else {
@@ -219,7 +219,7 @@ pub fn find(haystack: &[u8], needle: &[u8]) -> Option<usize> {
 /// assert_eq!(None, memmem::rfind(haystack, b"quux"));
 /// ```
 #[inline]
-pub fn rfind(haystack: &[u8], needle: &[u8]) -> Option<usize> {
+pub fn rfind(haystack: &str, needle: &str) -> Option<usize> {
     if haystack.len() < 64 {
         rabinkarp::FinderRev::new(needle).rfind(haystack, needle)
     } else {
@@ -235,7 +235,7 @@ pub fn rfind(haystack: &[u8], needle: &[u8]) -> Option<usize> {
 /// needle.
 #[derive(Debug, Clone)]
 pub struct FindIter<'h, 'n> {
-    haystack: &'h [u8],
+    haystack: &'h str,
     prestate: PrefilterState,
     finder: Finder<'n>,
     pos: usize,
@@ -244,7 +244,7 @@ pub struct FindIter<'h, 'n> {
 impl<'h, 'n> FindIter<'h, 'n> {
     #[inline(always)]
     pub(crate) fn new(
-        haystack: &'h [u8],
+        haystack: &'h str,
         finder: Finder<'n>,
     ) -> FindIter<'h, 'n> {
         let prestate = PrefilterState::new();
@@ -312,7 +312,7 @@ impl<'h, 'n> Iterator for FindIter<'h, 'n> {
 /// needle.
 #[derive(Clone, Debug)]
 pub struct FindRevIter<'h, 'n> {
-    haystack: &'h [u8],
+    haystack: &'h str,
     finder: FinderRev<'n>,
     /// When searching with an empty needle, this gets set to `None` after
     /// we've yielded the last element at `0`.
@@ -322,7 +322,7 @@ pub struct FindRevIter<'h, 'n> {
 impl<'h, 'n> FindRevIter<'h, 'n> {
     #[inline(always)]
     pub(crate) fn new(
-        haystack: &'h [u8],
+        haystack: &'h str,
         finder: FinderRev<'n>,
     ) -> FindRevIter<'h, 'n> {
         let pos = Some(haystack.len());
@@ -421,7 +421,7 @@ impl<'n> Finder<'n> {
     /// assert_eq!(None, Finder::new("quux").find(haystack));
     /// ```
     #[inline]
-    pub fn find(&self, haystack: &[u8]) -> Option<usize> {
+    pub fn find(&self, haystack: &str) -> Option<usize> {
         let mut prestate = PrefilterState::new();
         let needle = self.needle.as_slice();
         self.searcher.find(&mut prestate, haystack, needle)
@@ -456,7 +456,7 @@ impl<'n> Finder<'n> {
     #[inline]
     pub fn find_iter<'a, 'h>(
         &'a self,
-        haystack: &'h [u8],
+        haystack: &'h str,
     ) -> FindIter<'h, 'a> {
         FindIter::new(haystack, self.as_ref())
     }
@@ -502,7 +502,7 @@ impl<'n> Finder<'n> {
     /// finder's needle can be either borrowed or owned, so the lifetime of the
     /// needle returned must necessarily be the shorter of the two.
     #[inline]
-    pub fn needle(&self) -> &[u8] {
+    pub fn needle(&self) -> &str {
         self.needle.as_slice()
     }
 }
@@ -537,7 +537,7 @@ impl<'n> FinderRev<'n> {
     /// haystack.
     ///
     /// The haystack may be any type that can be cheaply converted into a
-    /// `&[u8]`. This includes, but is not limited to, `&str` and `&[u8]`.
+    /// `&str`. This includes, but is not limited to, `&str` and `&str`.
     ///
     /// # Complexity
     ///
@@ -594,7 +594,7 @@ impl<'n> FinderRev<'n> {
     #[inline]
     pub fn rfind_iter<'a, 'h>(
         &'a self,
-        haystack: &'h [u8],
+        haystack: &'h str,
     ) -> FindRevIter<'h, 'a> {
         FindRevIter::new(haystack, self.as_ref())
     }
@@ -640,7 +640,7 @@ impl<'n> FinderRev<'n> {
     /// finder's needle can be either borrowed or owned, so the lifetime of the
     /// needle returned must necessarily be the shorter of the two.
     #[inline]
-    pub fn needle(&self) -> &[u8] {
+    pub fn needle(&self) -> &str {
         self.needle.as_slice()
     }
 }
@@ -751,4 +751,26 @@ impl FinderBuilder {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
 
+    define_substring_forward_quickcheck!(|h, n| Some(Finder::new(n).find(h)));
+    define_substring_reverse_quickcheck!(|h, n| Some(
+        FinderRev::new(n).rfind(h)
+    ));
+
+    #[test]
+    fn forward() {
+        crate::tests::substring::Runner::new()
+            .fwd(|h, n| Some(Finder::new(n).find(h)))
+            .run();
+    }
+
+    #[test]
+    fn reverse() {
+        crate::tests::substring::Runner::new()
+            .rev(|h, n| Some(FinderRev::new(n).rfind(h)))
+            .run();
+    }
+}
