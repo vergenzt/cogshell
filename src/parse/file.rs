@@ -7,12 +7,12 @@ use regex::Regex;
 use super::block::Block;
 use super::errors::{ParseError, ParseErrorKind};
 use super::marker::MarkerKind;
-use crate::args::{Args, FileOrStream, Read};
+use crate::args::{Args, Pipe, Read};
 use crate::parse::{BlockMarkers, Loc, MarkerInst, Span};
 
 pub struct FileContext<'a> {
     /// The filename or input stream containing CogShell block(s)
-    pub source: FileOrStream<Read>,
+    pub source: Pipe<Read>,
     /// The original content of the source
     pub content: String,
     /// Config used to parse the source
@@ -20,7 +20,7 @@ pub struct FileContext<'a> {
 }
 
 impl<'a> FileContext<'a> {
-    pub fn new(source: FileOrStream<Read>, config: &'a Args) -> io::Result<Self> {
+    pub fn new(source: Pipe<Read>, config: &'a Args) -> io::Result<Self> {
         let mut content = String::new();
         source.open().read_to_string(&mut content)?;
         Ok(Self {
@@ -51,7 +51,7 @@ impl<'a> File<'a> {
         let content = &ctx.content;
 
         let markers_re = {
-            let parts = ctx.config.markers.map(|m| regex::escape(&m));
+            let parts = ctx.config.markers.clone().map(|m| regex::escape(&m));
             Regex::new(&parts.join("|")).unwrap()
         };
 
@@ -64,7 +64,7 @@ impl<'a> File<'a> {
             let mat = caps.get_match();
 
             // just a newline -> increment our line count and skip
-            if mat.as_bytes() == &[b'\n'] {
+            if mat.as_str() == "\n" {
                 line += 1;
                 line_start = mat.end();
                 continue;
@@ -80,7 +80,7 @@ impl<'a> File<'a> {
                 line,
                 col: mat.range().start - line_start,
             };
-            let end = start + mat.as_bytes();
+            let end = start + mat.as_str();
             let span = Span { start, end };
             let marker = MarkerInst::new(content, span);
 

@@ -32,6 +32,7 @@ impl Add<&str> for Loc {
 
     fn add(self, rhs: &str) -> Self::Output {
         let (lines, last_line_len) = match rhs
+            .as_bytes()
             .iter()
             .enumerate()
             .filter(|(_, c)| **c == b'\n')

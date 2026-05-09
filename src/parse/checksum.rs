@@ -1,7 +1,8 @@
 use std::sync::LazyLock;
 
-use base64::{Engine as _, prelude::BASE64_STANDARD};
 use regex::Regex;
+
+use crate::utils::base64::base64_encode;
 
 #[derive(Copy, Clone, Debug)]
 pub enum ChecksumKind {
@@ -61,11 +62,9 @@ impl<'a> Checksum<'a> {
         let hash_comp_str = match self.kind {
             ChecksumKind::Md5Hex => format!("{:x}", hash_computed),
             ChecksumKind::Md5Base64Prefix10Chars => {
-                let mut hash_comp_b64 = BASE64_STANDARD.encode(&hash_computed.0);
-                hash_comp_b64.truncate(10);
-                hash_comp_b64
+                base64_encode(&hash_computed.0)[..10].to_string()
             }
         };
-        self.hash == hash_comp_str.as_bytes()
+        self.hash == &hash_comp_str
     }
 }

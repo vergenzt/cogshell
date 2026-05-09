@@ -74,5 +74,5 @@ use yare::parameterized;
 
 )]
 fn test_common_prefix_general(inputs: Vec<&str>, expected: Option<&str>) {
-    assert_eq!(common_prefix_of_chars(inputs), expected);
+    assert_eq!(common_prefix_of_chars(&inputs), expected);
 }

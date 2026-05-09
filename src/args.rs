@@ -1,61 +1,69 @@
 use std::{
+    any::TypeId,
+    fmt::Display,
     fs::File,
-    io::{self, BufReader, stdin, stdout},
+    io::{self, BufRead, BufReader, Read, Write, stdin, stdout},
     marker::PhantomData,
     ops::Deref,
     path::PathBuf,
+    str::FromStr,
 };
 
 use bpaf::{Parser, construct, long, positional};
 
 use crate::utils::atomic_writer::AtomicFileWriter;
 
-trait BufReadPlusWrite {}
-impl<T: io::BufRead + io::Write> BufReadPlusWrite for Box<T> {}
-
-pub trait ReadOrWrite {}
-pub type Read = Box<dyn io::BufRead>;
-pub type Write = Box<dyn io::Write>;
-pub type ReadAndWrite = Box<dyn BufReadPlusWrite>;
-
-impl ReadOrWrite for Read {}
-impl ReadOrWrite for Write {}
-impl ReadOrWrite for ReadAndWrite {}
-
 /// A "path" to read or write from (where `-` means stdin or stdout)
-pub enum FileOrStream<RW: ReadOrWrite> {
-    File(PathBuf, PhantomData<RW>),
-    Stream(PhantomData<RW>),
+pub enum Pipe {
+    File(PathBuf),
+    Stream,
 }
 
-impl FileOrStream<_> {
-  pub fn to_string()
+pub enum PipeDir {
+    Read,
+    Write,
 }
 
-impl<RW: ReadOrWrite> FileOrStream<RW> {
-    /// Interpret exactly `-` as std{in/out}, anything else as itself.
-    pub fn parse(path: PathBuf) -> Self {
-        match path {
-            [b'-'] => Self::Stream(PhantomData),
-            _ => Self::File(path, PhantomData),
+pub struct PipeWithDir(Pipe, PipeDir);
+
+impl Display for PipeWithDir {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self(Pipe::File(path), _) => {
+                let pfx = match path.as_os_str().as_encoded_bytes() {
+                    b"<stdin>" | b"<stdout>" => "./",
+                    _ => "",
+                };
+                write!(f, "{}{}", pfx, path.display())
+            }
+            Self(Pipe::Stream, PipeDir::Read) => write!(f, "<stdin>"),
+            Self(Pipe::Stream, PipeDir::Write) => write!(f, "<stdout>"),
         }
     }
 }
 
-impl FileOrStream<Read> {
-    pub fn open(&self) -> Read {
-        match self {
-            Self::Stream(_) => Box::new(BufReader::new(stdin())),
-            Self::File(path, _) => Box::new(File::open_buffered(path)?),
+impl FromStr for Pipe {
+    type Err = !;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s == "-" {
+            Ok(Self::Stream)
+        } else {
+            Ok(Self::File(PathBuf::from(s)))
         }
     }
 }
 
-impl FileOrStream<Write> {
-    pub fn open(self) -> Write {
+impl Pipe {
+    pub fn open_for_read(&self) -> io::Result<Box<dyn BufRead>> {
         match self {
-            Self::Stream(_) => Box::new(stdout()),
-            Self::File(path, _) => Box::new(AtomicFileWriter::new(path)),
+            Self::Stream => Ok(Box::new(BufReader::new(stdin()))),
+            Self::File(path) => Ok(Box::new(File::open_buffered(path)?)),
+        }
+    }
+    pub fn open_for_write(self) -> io::Result<Box<dyn Write>> {
+        match self {
+            Self::Stream => Ok(Box::new(stdout())),
+            Self::File(path) => Ok(Box::new(AtomicFileWriter::new(path))),
         }
     }
 }
@@ -64,27 +72,24 @@ impl FileOrStream<Write> {
 /// specified if there is exactly one source arg.)
 pub enum SourceAndDestArgs {
     /// Process any number of files in-place
-    SourcesInPlace(Vec<FileOrStream<ReadAndWrite>>),
+    SourcesInPlace(Vec<Pipe>),
     /// Process exactly one input (stdin or file) to one output (stdout or file)
-    SourceAndDest(FileOrStream<Read>, FileOrStream<Write>),
+    SourceAndDest(Pipe, Pipe),
 }
 
-fn source() -> impl Parser<FileOrStream<Read>> {
-    positional::<PathBuf>("SOURCE").map(FileOrStream::parse)
+fn source() -> impl Parser<Pipe> {
+    positional::<Pipe>("SOURCE")
 }
 
-fn dest() -> impl Parser<FileOrStream<Write>> {
-    long("output")
-        .short('o')
-        .argument::<PathBuf>("DEST")
-        .map(FileOrStream::parse)
+fn dest() -> impl Parser<Pipe> {
+    long("output").short('o').argument::<Pipe>("DEST")
 }
 
 fn source_and_dest() -> impl Parser<SourceAndDestArgs> {
     construct!(SourceAndDestArgs::SourceAndDest(source(), dest()))
 }
 
-fn sources() -> impl Parser<Vec<FileOrStream<ReadAndWrite>>> {
+fn sources() -> impl Parser<Vec<Pipe>> {
     source().some("Must specify at least one SOURCE!")
 }
 
@@ -96,32 +101,8 @@ fn source_and_dest_args() -> impl Parser<SourceAndDestArgs> {
     construct!([source_and_dest(), sources_in_place()])
 }
 
+#[derive(Clone)]
 pub struct MarkerConfig([String; 3]);
-
-impl MarkerConfig {
-    fn parse(arg: String) -> Result<Self, String> {
-        let parts: Vec<_> = arg.split_ascii_whitespace().collect();
-        match parts.as_array::<3>() {
-            Some(arr) => Ok(Self(arr.map(String::from))),
-            None => {
-                let disp = arg.display();
-                Err(format!(
-                    "Marker config `{disp}` does not consist of three whitespace-separated words!"
-                ))
-            }
-        }
-    }
-}
-
-/// The patterns surrounding cog inline instructions. Should include three
-/// values separated by spaces, the start, end, and end-output markers.
-fn marker() -> impl Parser<MarkerConfig> {
-    long("markers")
-        .argument::<&str>("START END END-OUTPUT")
-        .fallback("[[[cogsh ]]] [[[end]]]")
-        .parse(MarkerConfig::parse)
-        .display_fallback()
-}
 
 impl Deref for MarkerConfig {
     type Target = [String; 3];
@@ -130,10 +111,39 @@ impl Deref for MarkerConfig {
     }
 }
 
+impl FromStr for MarkerConfig {
+    type Err = String;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let parts: Vec<_> = s.split_ascii_whitespace().collect();
+        match parts.as_array::<3>() {
+            Some(arr) => Ok(Self(arr.map(String::from))),
+            None => Err(format!(
+                "Marker config `{s}` does not consist of three whitespace-separated words!"
+            )),
+        }
+    }
+}
+
+impl Display for MarkerConfig {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let [a, b, c] = &self.0;
+        write!(f, "{a} {b} {c}")
+    }
+}
+
+/// The patterns surrounding cog inline instructions. Should include three
+/// values separated by spaces, the start, end, and end-output markers.
+fn markers() -> impl Parser<MarkerConfig> {
+    long("markers")
+        .argument::<MarkerConfig>("START END END-OUTPUT")
+        .fallback(MarkerConfig::from_str("[[[cogsh ]]] [[[end]]]").unwrap())
+        .display_fallback()
+}
+
 pub struct Args {
     pub source_and_dest: SourceAndDestArgs,
     pub prologue: Vec<String>,
-    pub output_line_suffix: Option<String>,
+    pub output_line_suffix: String,
     pub markers: MarkerConfig,
 }
 
@@ -144,19 +154,20 @@ fn prologue() -> impl Parser<Vec<String>> {
 }
 
 /// Suffix to append to each output line
-fn output_line_suffix() -> impl Parser<Option<String>> {
-    long("suffix").short('s').argument("SUFFIX")
+fn output_line_suffix() -> impl Parser<String> {
+    long("suffix")
+        .short('s')
+        .argument("SUFFIX")
+        .fallback(String::new())
 }
 
 impl Args {
     pub fn parser() -> impl Parser<Self> {
-        let source_and_dest = SourceAndDestArgs::parser();
-        let markers = MarkerConfig::parser();
         construct!(Self {
-            source_and_dest,
+            source_and_dest(),
             prologue(),
             output_line_suffix(),
-            markers,
+            markers(),
         })
     }
 }

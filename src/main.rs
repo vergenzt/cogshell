@@ -7,6 +7,9 @@
 #![feature(slice_pattern)]
 #![feature(slice_concat_trait)]
 #![feature(slice_concat_ext)]
+#![feature(funnel_shifts)]
+#![feature(coroutines, coroutine_trait, stmt_expr_attributes)]
+#![feature(uint_gather_scatter_bits)]
 
 use std::sync::atomic::AtomicUsize;
 

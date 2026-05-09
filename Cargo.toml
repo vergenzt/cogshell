@@ -8,10 +8,8 @@ license = "MIT"
 readme = "README.md"
 
 [dependencies]
-annotate-snippets = { version = "0.12.13", default-features = false }
-base64 = { version = "0.22.1", default-features = false }
+base64_encode = { version = "0.1.0", path = "utils/base64_encode" }
 bpaf = { version = "0.9.24", default-features = false, features = ["derive"] }
-bstr = { version = "1.12.1", default-features = false, features = ["std", "alloc"] }
 hex = { version = "0.4.3", default-features = false }
 md5 = { version = "0.8.0", default-features = false }
 regex = { version = "1.12.3", default-features = false, features = ["std", "perf"] }
