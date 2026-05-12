@@ -10,8 +10,8 @@ readme = "README.md"
 [dependencies]
 base64_encode = { version = "0.1.0", path = "utils/base64_encode" }
 bpaf = { version = "0.9.24", default-features = false, features = ["derive"] }
+fastrand = "2.4.1"
 hex = { version = "0.4.3", default-features = false }
 md5 = { version = "0.8.0", default-features = false }
-regex = { version = "1.12.3", default-features = false, features = ["std", "perf"] }
+regex-automata = { version = "0.4.14", default-features = false }
 tempfile = { version = "3.26.0", default-features = false }
-uuid = { version = "1.23.0", features = ["v4"], default-features = false }

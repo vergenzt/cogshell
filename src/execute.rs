@@ -1,14 +1,7 @@
-use std::bstr::ByteStr;
-use std::collections::VecDeque;
 use std::fs::{self};
-use std::io::{self, BufRead, BufReader, BufWriter, Lines, Read, Write, stderr};
-use std::iter::{self, Peekable, chain, once};
-use std::ops::{ControlFlow, Deref, Index};
-
-#[cfg(unix)]
-use std::os::unix::ffi::OsStrExt;
-#[cfg(windows)]
-use std::os::windows::ffi::OsStrExt;
+use std::io::{self, BufReader, stderr};
+use std::iter::{self, repeat_with};
+use std::ops::Deref;
 
 use std::ffi::{OsStr, OsString};
 use std::path::{self, Path, PathBuf};
@@ -17,7 +10,6 @@ use std::slice::Join;
 use std::{array, mem, vec};
 
 use tempfile::{NamedTempFile, TempDir, TempPath};
-use uuid::Uuid;
 
 use crate::args::Args;
 use crate::args::io::{FileOrStream, Out};
@@ -28,7 +20,7 @@ struct OutputTerminator(String);
 
 impl OutputTerminator {
     fn new() -> Self {
-        Self(Uuid::new_v4().into())
+        Self(repeat_with(fastrand::alphanumeric).take(20).collect())
     }
 }
 
@@ -56,7 +48,7 @@ impl<'a> FileExecutor<'a> {
         let temp_dir = tempfile::Builder::new().prefix("cogshell-").tempdir()?;
         let temp_path = temp_dir.path();
 
-        let mut env: Vec<(String, &OsStr)> = vec![];
+        let mut env = vec![];
 
         macro_rules! var {
             ($namefmt:literal => $val:expr) => {
@@ -73,6 +65,7 @@ impl<'a> FileExecutor<'a> {
                 path
             }};
         }
+        PathBuf::new().to_string_lossy().to_str
 
         // nonces to figure out where output from one block ends and the next begins
         let output_terminators: Vec<_> = iter::repeat_with(OutputTerminator::new)
