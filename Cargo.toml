@@ -15,6 +15,3 @@ md5 = { version = "0.8.0", default-features = false }
 regex = { version = "1.12.3", default-features = false, features = ["std", "perf"] }
 tempfile = { version = "3.26.0", default-features = false }
 uuid = { version = "1.23.0", features = ["v4"], default-features = false }
-
-[dev-dependencies]
-yare = "3.0.0"
