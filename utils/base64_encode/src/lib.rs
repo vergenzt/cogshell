@@ -1,27 +1,30 @@
+#![cfg_attr(test, feature(macro_metavar_expr_concat))]
+
 #[cfg(test)]
 mod test;
 
+/// Base64-encodes the input bytes
+/// https://datatracker.ietf.org/doc/html/rfc4648#section-4
 pub fn base64_encode(input: &[u8]) -> String {
     const CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    let mut b64s = String::with_capacity((input.len() * 4).div_ceil(3));
-    let mut wind = input[0] as u32;
-    let mut mask = 0b_1111_1100 as u32;
-    for i in 1..input.len().next_multiple_of(3) {
-        wind <<= 8;
-        wind |= *input.get(i).unwrap_or(&0) as u32;
-        loop {
-            let zers = mask.trailing_zeros();
-            let indx = (wind & mask) >> zers;
-            let byte = CHARS[indx as usize];
-            b64s.push(byte as char);
-            if zers < 6 {
-                break;
+    const MASK: u32 = 0b111_111;
+    let outlen = (input.len() * 4).div_ceil(3) + 2;
+    let mut out = String::with_capacity(outlen);
+    for chunk in input.chunks(3) {
+        let word = u32::from_be_bytes({
+            let mut arr = [0, 0, 0, 0];
+            arr[1..=chunk.len()].copy_from_slice(chunk);
+            arr
+        });
+        for (offset, byte_idx) in [(18, 0), (12, 0), (6, 1), (0, 2)] {
+            out.push(if chunk.len() > byte_idx {
+                CHARS[((word & (MASK << offset)) >> offset) as usize] as char
             } else {
-                mask >>= 6;
-            }
+                '='
+            });
         }
-        mask <<= 8;
+        #[cfg(test)]
+        assert_eq!(out.capacity(), outlen);
     }
-    b64s.push_str(&"=".to_string().repeat(b64s.len().rem_euclid(3)));
-    b64s
+    out
 }
