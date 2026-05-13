@@ -9,14 +9,14 @@ use regex_automata::{
     util::lazy::Lazy,
 };
 
-pub static MULTI_PATTERN_V2: Lazy<Regex<DFA<&'static str>>> =
+pub static MULTI_PATTERN_V2: Lazy<Regex<DFA<&'static [u8]>>> =
     Lazy::new(|| {
         let dfafwd = {
             #[cfg(target_endian = "big")]
-            static BYTES: &'static str =
+            static BYTES: &'static [u8] =
                 include_bytes!("multi_pattern_v2_fwd.bigendian.dfa");
             #[cfg(target_endian = "little")]
-            static BYTES: &'static str =
+            static BYTES: &'static [u8] =
                 include_bytes!("multi_pattern_v2_fwd.littleendian.dfa");
             DFA::from_bytes(BYTES)
                 .expect("serialized forward DFA should be valid")
@@ -24,10 +24,10 @@ pub static MULTI_PATTERN_V2: Lazy<Regex<DFA<&'static str>>> =
         };
         let dfarev = {
             #[cfg(target_endian = "big")]
-            static BYTES: &'static str =
+            static BYTES: &'static [u8] =
                 include_bytes!("multi_pattern_v2_rev.bigendian.dfa");
             #[cfg(target_endian = "little")]
-            static BYTES: &'static str =
+            static BYTES: &'static [u8] =
                 include_bytes!("multi_pattern_v2_rev.littleendian.dfa");
             DFA::from_bytes(BYTES)
                 .expect("serialized reverse DFA should be valid")

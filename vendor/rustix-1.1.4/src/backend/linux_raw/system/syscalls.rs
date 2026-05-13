@@ -33,13 +33,13 @@ pub(crate) fn sysinfo() -> Sysinfo {
 }
 
 #[inline]
-pub(crate) fn sethostname(name: &str) -> io::Result<()> {
+pub(crate) fn sethostname(name: &[u8]) -> io::Result<()> {
     let (ptr, len) = slice(name);
     unsafe { ret(syscall_readonly!(__NR_sethostname, ptr, len)) }
 }
 
 #[inline]
-pub(crate) fn setdomainname(name: &str) -> io::Result<()> {
+pub(crate) fn setdomainname(name: &[u8]) -> io::Result<()> {
     let (ptr, len) = slice(name);
     unsafe { ret(syscall_readonly!(__NR_setdomainname, ptr, len)) }
 }
@@ -57,7 +57,7 @@ pub(crate) fn reboot(cmd: RebootCommand) -> io::Result<()> {
 }
 
 #[inline]
-pub(crate) fn init_module(image: &str, param_values: &CStr) -> io::Result<()> {
+pub(crate) fn init_module(image: &[u8], param_values: &CStr) -> io::Result<()> {
     let (image, len) = slice(image);
     unsafe {
         ret(syscall_readonly!(

@@ -32,7 +32,7 @@ pub(crate) unsafe fn read(fd: BorrowedFd<'_>, buf: (*mut u8, usize)) -> io::Resu
     ))
 }
 
-pub(crate) fn write(fd: BorrowedFd<'_>, buf: &str) -> io::Result<usize> {
+pub(crate) fn write(fd: BorrowedFd<'_>, buf: &[u8]) -> io::Result<usize> {
     unsafe {
         ret_usize(c::write(
             borrowed_fd(fd),
@@ -58,7 +58,7 @@ pub(crate) unsafe fn pread(
     ret_usize(c::pread(borrowed_fd(fd), buf.0.cast(), len, offset))
 }
 
-pub(crate) fn pwrite(fd: BorrowedFd<'_>, buf: &str, offset: u64) -> io::Result<usize> {
+pub(crate) fn pwrite(fd: BorrowedFd<'_>, buf: &[u8], offset: u64) -> io::Result<usize> {
     let len = min(buf.len(), READ_LIMIT);
 
     // Silently cast; we'll get `EINVAL` if the value is negative.

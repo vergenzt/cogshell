@@ -49,7 +49,7 @@ impl<'a> Cursor<'a> {
         self.rest.len()
     }
 
-    fn as_bytes(&self) -> &'a str {
+    fn as_bytes(&self) -> &'a [u8] {
         self.rest.as_bytes()
     }
 

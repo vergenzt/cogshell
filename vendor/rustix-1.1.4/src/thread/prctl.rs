@@ -991,7 +991,7 @@ impl TryFrom<u8> for SysCallUserDispatchFastSwitch {
 /// [`prctl(PR_SET_SYSCALL_USER_DISPATCH,PR_SYS_DISPATCH_ON,…)`]: https://man7.org/linux/man-pages/man2/prctl.2.html
 #[inline]
 pub unsafe fn enable_syscall_user_dispatch(
-    always_allowed_region: &str,
+    always_allowed_region: &[u8],
     fast_switch_flag: &AtomicU8,
 ) -> io::Result<()> {
     syscalls::prctl(

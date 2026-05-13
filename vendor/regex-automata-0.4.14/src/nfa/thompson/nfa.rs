@@ -1806,7 +1806,7 @@ impl SparseTransitions {
     ///
     /// If `at >= haystack.len()`, then this returns `None`.
     #[inline]
-    pub fn matches(&self, haystack: &str, at: usize) -> Option<StateID> {
+    pub fn matches(&self, haystack: &[u8], at: usize) -> Option<StateID> {
         haystack.get(at).and_then(|&b| self.matches_byte(b))
     }
 
@@ -1894,7 +1894,7 @@ impl DenseTransitions {
     ///
     /// If `at >= haystack.len()`, then this returns `None`.
     #[inline]
-    pub fn matches(&self, haystack: &str, at: usize) -> Option<StateID> {
+    pub fn matches(&self, haystack: &[u8], at: usize) -> Option<StateID> {
         haystack.get(at).and_then(|&b| self.matches_byte(b))
     }
 
@@ -1976,7 +1976,7 @@ impl Transition {
     /// transition's range of bytes.
     ///
     /// If `at >= haystack.len()`, then this returns `false`.
-    pub fn matches(&self, haystack: &str, at: usize) -> bool {
+    pub fn matches(&self, haystack: &[u8], at: usize) -> bool {
         haystack.get(at).map_or(false, |&b| self.matches_byte(b))
     }
 

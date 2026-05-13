@@ -94,7 +94,7 @@ fn test_array() {
     let ref_array: &[u8; 40] = &[0; 40];
     let _ = quote!(#(#ref_array #ref_array)*);
 
-    let ref_slice: &str = &[0; 40];
+    let ref_slice: &[u8] = &[0; 40];
     let _ = quote!(#(#ref_slice #ref_slice)*);
 
     let array: [X; 2] = [X, X]; // !Copy

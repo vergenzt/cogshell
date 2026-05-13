@@ -99,13 +99,13 @@ impl InlinedName {
     }
 
     /// Returns the bytes representation of the inlined name.
-    pub fn as_bytes(&self) -> &str {
+    pub fn as_bytes(&self) -> &[u8] {
         self.as_ref()
     }
 }
 
 impl AsRef<[u8]> for InlinedName {
-    fn as_ref(&self) -> &str {
+    fn as_ref(&self) -> &[u8] {
         &self.name[..self.len]
     }
 }

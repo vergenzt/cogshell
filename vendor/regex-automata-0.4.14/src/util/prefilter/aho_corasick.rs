@@ -80,7 +80,7 @@ impl AhoCorasick {
 }
 
 impl PrefilterI for AhoCorasick {
-    fn find(&self, haystack: &str, span: Span) -> Option<Span> {
+    fn find(&self, haystack: &[u8], span: Span) -> Option<Span> {
         #[cfg(not(feature = "perf-literal-multisubstring"))]
         {
             unreachable!()
@@ -95,7 +95,7 @@ impl PrefilterI for AhoCorasick {
         }
     }
 
-    fn prefix(&self, haystack: &str, span: Span) -> Option<Span> {
+    fn prefix(&self, haystack: &[u8], span: Span) -> Option<Span> {
         #[cfg(not(feature = "perf-literal-multisubstring"))]
         {
             unreachable!()

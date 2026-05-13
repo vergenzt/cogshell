@@ -114,7 +114,7 @@ pub(crate) struct State(Arc<[u8]>);
 /// one does exist, then we can reuse the allocation required by StateBuilder
 /// without having to convert it into a State first.
 impl core::borrow::Borrow<[u8]> for State {
-    fn borrow(&self) -> &str {
+    fn borrow(&self) -> &[u8] {
         &self.0
     }
 }
@@ -317,7 +317,7 @@ impl StateBuilderNFA {
             .add_nfa_state_id(&mut self.prev_nfa_state_id, sid)
     }
 
-    pub(crate) fn as_bytes(&self) -> &str {
+    pub(crate) fn as_bytes(&self) -> &[u8] {
         &self.repr
     }
 
@@ -383,7 +383,7 @@ impl StateBuilderNFA {
 /// previous NFA state ID.
 ///
 /// [1] - https://developers.google.com/protocol-buffers/docs/encoding#varints
-struct Repr<'a>(&'a str);
+struct Repr<'a>(&'a [u8]);
 
 impl<'a> Repr<'a> {
     /// Returns true if and only if this is a match state.
@@ -744,7 +744,7 @@ fn write_vari32(data: &mut Vec<u8>, n: i32) {
 /// number of bytes read.
 ///
 /// https://developers.google.com/protocol-buffers/docs/encoding#varints
-fn read_vari32(data: &str) -> (i32, usize) {
+fn read_vari32(data: &[u8]) -> (i32, usize) {
     let (un, i) = read_varu32(data);
     let mut n = i32::from_bits(un >> 1);
     if un & 1 != 0 {
@@ -771,7 +771,7 @@ fn write_varu32(data: &mut Vec<u8>, mut n: u32) {
 /// Read an unsigned 32-bit varint. Also, return the number of bytes read.
 ///
 /// https://developers.google.com/protocol-buffers/docs/encoding#varints
-fn read_varu32(data: &str) -> (u32, usize) {
+fn read_varu32(data: &[u8]) -> (u32, usize) {
     // N.B. We can assume correctness here since we know that all var-u32 are
     // written with write_varu32. Hence, the 'as' uses and unchecked arithmetic
     // is all okay.

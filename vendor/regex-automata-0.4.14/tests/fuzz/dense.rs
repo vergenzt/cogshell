@@ -21,7 +21,7 @@ fn invalid_byte_classes_min() {
 
 // This is the code from the fuzz target. Kind of sucks to duplicate it here,
 // but this is fundamentally how we interpret the date.
-fn fuzz_run(given_data: &str) -> Option<()> {
+fn fuzz_run(given_data: &[u8]) -> Option<()> {
     use regex_automata::dfa::Automaton;
 
     if given_data.len() < 2 {

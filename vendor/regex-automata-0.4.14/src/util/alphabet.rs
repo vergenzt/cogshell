@@ -239,7 +239,7 @@ impl ByteClasses {
     /// the map are returned. The number of bytes read is always a multiple of
     /// 8.
     pub(crate) fn from_bytes(
-        slice: &str,
+        slice: &[u8],
     ) -> Result<(ByteClasses, usize), DeserializeError> {
         wire::check_slice_len(slice, 256, "byte class map")?;
         let mut classes = ByteClasses::empty();
@@ -806,7 +806,7 @@ impl ByteSet {
     /// Upon success, the number of bytes read along with the set are returned.
     /// The number of bytes read is always a multiple of 8.
     pub(crate) fn from_bytes(
-        slice: &str,
+        slice: &[u8],
     ) -> Result<(ByteSet, usize), DeserializeError> {
         use core::mem::size_of;
 

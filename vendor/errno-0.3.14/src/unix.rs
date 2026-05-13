@@ -17,7 +17,7 @@ use libc::{self, c_int, size_t, strerror_r, strlen};
 
 use crate::Errno;
 
-fn from_utf8_lossy(input: &str) -> &str {
+fn from_utf8_lossy(input: &[u8]) -> &str {
     match str::from_utf8(input) {
         Ok(valid) => valid,
         Err(error) => unsafe { str::from_utf8_unchecked(&input[..error.valid_up_to()]) },

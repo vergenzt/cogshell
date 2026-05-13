@@ -218,9 +218,9 @@ fn sparse_serialization_unminimized_default() -> Result<()> {
             let fwd_bytes = re.forward().to_sparse()?.to_bytes_native_endian();
             let rev_bytes = re.reverse().to_sparse()?.to_bytes_native_endian();
             Ok(CompiledRegex::compiled(move |test| -> TestResult {
-                let fwd: sparse::DFA<&str> =
+                let fwd: sparse::DFA<&[u8]> =
                     sparse::DFA::from_bytes(&fwd_bytes).unwrap().0;
-                let rev: sparse::DFA<&str> =
+                let rev: sparse::DFA<&[u8]> =
                     sparse::DFA::from_bytes(&rev_bytes).unwrap().0;
                 let re = builder.build_from_dfas(fwd, rev);
                 run_test(&re, test)

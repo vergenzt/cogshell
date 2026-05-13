@@ -18,7 +18,7 @@ pub(crate) unsafe fn read(fd: BorrowedFd<'_>, buf: (*mut u8, usize)) -> io::Resu
     ))
 }
 
-pub(crate) fn write(fd: BorrowedFd<'_>, buf: &str) -> io::Result<usize> {
+pub(crate) fn write(fd: BorrowedFd<'_>, buf: &[u8]) -> io::Result<usize> {
     // `write` on a socket is equivalent to `send` with no flags.
     unsafe {
         ret_send_recv(c::send(

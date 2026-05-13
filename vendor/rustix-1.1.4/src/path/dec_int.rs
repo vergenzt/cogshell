@@ -224,7 +224,7 @@ impl DecInt {
 
     /// Return the raw byte buffer including the NUL byte.
     #[inline]
-    pub fn as_bytes_with_nul(&self) -> &str {
+    pub fn as_bytes_with_nul(&self) -> &[u8] {
         let len = NonZeroUsize::from(self.len).get();
         if len > BUF_LEN {
             // SAFETY: A stringified `i64`/`u64` cannot be longer than
@@ -233,12 +233,12 @@ impl DecInt {
         }
         let init = &self.buf[(self.buf.len() - len)..];
         // SAFETY: We're guaranteed to have initialized `len + 1` bytes.
-        unsafe { mem::transmute::<&[MaybeUninit<u8>], &str>(init) }
+        unsafe { mem::transmute::<&[MaybeUninit<u8>], &[u8]>(init) }
     }
 
     /// Return the raw byte buffer.
     #[inline]
-    pub fn as_bytes(&self) -> &str {
+    pub fn as_bytes(&self) -> &[u8] {
         let bytes = self.as_bytes_with_nul();
         &bytes[..bytes.len() - 1]
     }

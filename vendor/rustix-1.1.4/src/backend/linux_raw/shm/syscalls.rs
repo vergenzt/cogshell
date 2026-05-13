@@ -6,7 +6,7 @@ use crate::fd::OwnedFd;
 use crate::{io, shm};
 
 const NAME_MAX: usize = 255;
-const SHM_DIR: &str = b"/dev/shm/";
+const SHM_DIR: &[u8] = b"/dev/shm/";
 
 fn get_shm_name(name: &CStr) -> io::Result<([u8; NAME_MAX + SHM_DIR.len() + 1], usize)> {
     let name = name.to_bytes();

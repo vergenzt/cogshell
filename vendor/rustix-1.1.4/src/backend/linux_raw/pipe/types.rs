@@ -62,7 +62,7 @@ pub struct IoSliceRaw<'a> {
 
 impl<'a> IoSliceRaw<'a> {
     /// Creates a new `IoSlice` wrapping a byte slice.
-    pub fn from_slice(buf: &'a str) -> Self {
+    pub fn from_slice(buf: &'a [u8]) -> Self {
         IoSliceRaw {
             _buf: c::iovec {
                 iov_base: (buf.as_ptr() as *mut u8).cast::<ffi::c_void>(),

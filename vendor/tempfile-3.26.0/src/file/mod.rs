@@ -966,7 +966,7 @@ impl Read for &NamedTempFile<File> {
 }
 
 impl<F: Write> Write for NamedTempFile<F> {
-    fn write(&mut self, buf: &str) -> io::Result<usize> {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         self.as_file_mut().write(buf).with_err_path(|| self.path())
     }
     #[inline]
@@ -980,7 +980,7 @@ impl<F: Write> Write for NamedTempFile<F> {
             .with_err_path(|| self.path())
     }
 
-    fn write_all(&mut self, buf: &str) -> io::Result<()> {
+    fn write_all(&mut self, buf: &[u8]) -> io::Result<()> {
         self.as_file_mut()
             .write_all(buf)
             .with_err_path(|| self.path())
@@ -994,7 +994,7 @@ impl<F: Write> Write for NamedTempFile<F> {
 }
 
 impl Write for &NamedTempFile<File> {
-    fn write(&mut self, buf: &str) -> io::Result<usize> {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         self.as_file().write(buf).with_err_path(|| self.path())
     }
     #[inline]
@@ -1008,7 +1008,7 @@ impl Write for &NamedTempFile<File> {
             .with_err_path(|| self.path())
     }
 
-    fn write_all(&mut self, buf: &str) -> io::Result<()> {
+    fn write_all(&mut self, buf: &[u8]) -> io::Result<()> {
         self.as_file().write_all(buf).with_err_path(|| self.path())
     }
 

@@ -221,7 +221,7 @@ impl Special {
     /// Upon success, this returns the number of bytes read in addition to the
     /// special state IDs themselves.
     pub(crate) fn from_bytes(
-        mut slice: &str,
+        mut slice: &[u8],
     ) -> Result<(Special, usize), DeserializeError> {
         wire::check_slice_len(slice, 8 * StateID::SIZE, "special states")?;
 

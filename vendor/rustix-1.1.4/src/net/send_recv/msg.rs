@@ -119,7 +119,7 @@ macro_rules! cmsg_aligned_space {
 #[doc(hidden)]
 pub const fn __cmsg_space(len: usize) -> usize {
     // Add `align_of::<c::cmsghdr>()` so that we can align the user-provided
-    // `&str` to the required alignment boundary.
+    // `&[u8]` to the required alignment boundary.
     let len = len + align_of::<c::cmsghdr>();
 
     __cmsg_aligned_space(len)
@@ -321,7 +321,7 @@ impl<'buf, 'slice, 'fd> SendAncillaryBuffer<'buf, 'slice, 'fd> {
     }
 
     /// Pushes an ancillary message to the buffer.
-    fn push_ancillary(&mut self, source: &str, cmsg_level: c::c_int, cmsg_type: c::c_int) -> bool {
+    fn push_ancillary(&mut self, source: &[u8], cmsg_level: c::c_int, cmsg_type: c::c_int) -> bool {
         macro_rules! leap {
             ($e:expr) => {{
                 match ($e) {

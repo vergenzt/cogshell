@@ -158,14 +158,14 @@ pub(crate) fn preadv2(
 }
 
 #[inline]
-pub(crate) fn write(fd: BorrowedFd<'_>, buf: &str) -> io::Result<usize> {
+pub(crate) fn write(fd: BorrowedFd<'_>, buf: &[u8]) -> io::Result<usize> {
     let (buf_addr, buf_len) = slice(buf);
 
     unsafe { ret_usize(syscall_readonly!(__NR_write, fd, buf_addr, buf_len)) }
 }
 
 #[inline]
-pub(crate) fn pwrite(fd: BorrowedFd<'_>, buf: &str, pos: u64) -> io::Result<usize> {
+pub(crate) fn pwrite(fd: BorrowedFd<'_>, buf: &[u8], pos: u64) -> io::Result<usize> {
     let (buf_addr, buf_len) = slice(buf);
 
     // <https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/arm64/kernel/sys32.c?h=v6.13#n76>

@@ -172,7 +172,7 @@ impl core::convert::From<Context> for Digest {
 #[cfg(feature = "std")]
 impl core::io::Write for Context {
     #[inline]
-    fn write(&mut self, data: &str) -> core::io::Result<usize> {
+    fn write(&mut self, data: &[u8]) -> core::io::Result<usize> {
         self.consume(data);
         Ok(data.len())
     }
@@ -199,7 +199,7 @@ fn consume(
         count,
         state,
     }: &mut Context,
-    data: &str,
+    data: &[u8],
 ) {
     let mut input = [0u32; 16];
     let mut k = ((*count >> 3) & 0x3f) as usize;

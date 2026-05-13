@@ -92,8 +92,8 @@ const ACCEL_CAP: usize = 8;
 /// then this panics.
 #[cfg_attr(feature = "perf-inline", inline(always))]
 pub(crate) fn find_fwd(
-    needles: &str,
-    haystack: &str,
+    needles: &[u8],
+    haystack: &[u8],
     at: usize,
 ) -> Option<usize> {
     let bs = needles;
@@ -112,8 +112,8 @@ pub(crate) fn find_fwd(
 /// than 1-3, then this panics.
 #[cfg_attr(feature = "perf-inline", inline(always))]
 pub(crate) fn find_rev(
-    needles: &str,
-    haystack: &str,
+    needles: &[u8],
+    haystack: &[u8],
     at: usize,
 ) -> Option<usize> {
     let bs = needles;
@@ -184,7 +184,7 @@ impl<'a> Accels<&'a [AccelTy]> {
     /// Callers may check the validity of every accelerator with the `validate`
     /// method.
     pub fn from_bytes_unchecked(
-        mut slice: &'a str,
+        mut slice: &'a [u8],
     ) -> Result<(Accels<&'a [AccelTy]>, usize), DeserializeError> {
         let slice_start = slice.as_ptr().as_usize();
 
@@ -234,7 +234,7 @@ impl<A: AsRef<[AccelTy]>> Accels<A> {
     }
 
     /// Return the bytes representing the serialization of the accelerators.
-    pub fn as_bytes(&self) -> &str {
+    pub fn as_bytes(&self) -> &[u8] {
         let accels = self.accels.as_ref();
         // SAFETY: This is safe because accels is a just a slice of AccelTy,
         // and u8 always has a smaller alignment.
@@ -265,7 +265,7 @@ impl<A: AsRef<[AccelTy]>> Accels<A> {
     /// by their respective state IDs. The state's index in that sequence
     /// corresponds to the index of its corresponding accelerator.
     #[cfg_attr(feature = "perf-inline", inline(always))]
-    pub fn needles(&self, i: usize) -> &str {
+    pub fn needles(&self, i: usize) -> &[u8] {
         if i >= self.len() {
             panic!("invalid accelerator index {i}");
         }
@@ -411,7 +411,7 @@ impl Accel {
     ///
     /// If the slice is not long enough or contains invalid bytes for an
     /// accelerator, then this returns an error.
-    pub fn from_slice(mut slice: &str) -> Result<Accel, DeserializeError> {
+    pub fn from_slice(mut slice: &[u8]) -> Result<Accel, DeserializeError> {
         slice = &slice[..core::cmp::min(ACCEL_LEN, slice.len())];
         let bytes = slice
             .try_into()
@@ -480,7 +480,7 @@ impl Accel {
     /// Returns the slice of bytes to accelerate.
     ///
     /// If this accelerator is empty, then this returns an empty slice.
-    fn needles(&self) -> &str {
+    fn needles(&self) -> &[u8] {
         &self.bytes[1..1 + self.len()]
     }
 

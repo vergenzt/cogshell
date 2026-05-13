@@ -124,7 +124,7 @@ pub(crate) fn fsconfig_set_string(
 pub(crate) fn fsconfig_set_binary(
     fs_fd: BorrowedFd<'_>,
     key: &CStr,
-    value: &str,
+    value: &[u8],
 ) -> io::Result<()> {
     let (value_addr, value_len) = slice(value);
     unsafe {

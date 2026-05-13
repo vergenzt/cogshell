@@ -66,7 +66,7 @@ pub fn read<Fd: AsFd, Buf: Buffer<u8>>(fd: Fd, mut buf: Buf) -> io::Result<Buf::
 /// [illumos]: https://illumos.org/man/2/write
 /// [glibc]: https://sourceware.org/glibc/manual/latest/html_node/I_002fO-Primitives.html#index-writing-to-a-file-descriptor
 #[inline]
-pub fn write<Fd: AsFd>(fd: Fd, buf: &str) -> io::Result<usize> {
+pub fn write<Fd: AsFd>(fd: Fd, buf: &[u8]) -> io::Result<usize> {
     backend::io::syscalls::write(fd.as_fd(), buf)
 }
 
@@ -133,7 +133,7 @@ pub fn pread<Fd: AsFd, Buf: Buffer<u8>>(
 /// [glibc]: https://sourceware.org/glibc/manual/latest/html_node/I_002fO-Primitives.html#index-pwrite64
 #[cfg(not(windows))]
 #[inline]
-pub fn pwrite<Fd: AsFd>(fd: Fd, buf: &str, offset: u64) -> io::Result<usize> {
+pub fn pwrite<Fd: AsFd>(fd: Fd, buf: &[u8], offset: u64) -> io::Result<usize> {
     backend::io::syscalls::pwrite(fd.as_fd(), buf, offset)
 }
 

@@ -1481,7 +1481,7 @@ impl BoundedBacktracker {
                     // of the span the caller asked to search.
                     //
                     // We should perhaps make the 'trans.matches()' API accept
-                    // an '&Input' instead of a '&str'. Or at least, add a new
+                    // an '&Input' instead of a '&[u8]'. Or at least, add a new
                     // API that does it.
                     if at >= input.end() {
                         return None;

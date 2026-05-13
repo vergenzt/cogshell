@@ -130,7 +130,7 @@ impl SocketAddrAny {
 
     /// Gets the initialized part of the storage as bytes.
     #[inline]
-    fn bytes(&self) -> &str {
+    fn bytes(&self) -> &[u8] {
         let len = self.len.get() as usize;
         unsafe { core::slice::from_raw_parts(self.storage.as_ptr().cast(), len) }
     }

@@ -176,7 +176,7 @@ pub fn string(
 /// assert_eq!(&b"foo BAR baz"[..], dst);
 /// ```
 pub fn bytes(
-    mut replacement: &str,
+    mut replacement: &[u8],
     mut append: impl FnMut(usize, &mut Vec<u8>),
     mut name_to_index: impl FnMut(&str) -> Option<usize>,
     dst: &mut Vec<u8>,
@@ -257,9 +257,9 @@ impl From<usize> for Ref<'static> {
 /// Note that this returns a "possible" reference because this routine doesn't
 /// know whether the reference is to a valid group or not. If it winds up not
 /// being a valid reference, then it should be replaced with the empty string.
-fn find_cap_ref(replacement: &str) -> Option<CaptureRef<'_>> {
+fn find_cap_ref(replacement: &[u8]) -> Option<CaptureRef<'_>> {
     let mut i = 0;
-    let rep: &str = replacement;
+    let rep: &[u8] = replacement;
     if rep.len() <= 1 || rep[0] != b'$' {
         return None;
     }
@@ -277,8 +277,9 @@ fn find_cap_ref(replacement: &str) -> Option<CaptureRef<'_>> {
     // We just verified that the range 0..cap_end is valid ASCII, so it must
     // therefore be valid UTF-8. If we really cared, we could avoid this UTF-8
     // check via an unchecked conversion or by parsing the number straight from
-    // &str.
-    let cap = core::str::from_utf8(&rep[i..cap_end]).expect("valid UTF-8 capture name");
+    // &[u8].
+    let cap = core::str::from_utf8(&rep[i..cap_end])
+        .expect("valid UTF-8 capture name");
     Some(CaptureRef {
         cap: match cap.parse::<usize>() {
             Ok(i) => Ref::Number(i),
@@ -291,7 +292,7 @@ fn find_cap_ref(replacement: &str) -> Option<CaptureRef<'_>> {
 /// Looks for a braced reference, e.g., `${foo1}`. This assumes that an opening
 /// brace has been found at `i-1` in `rep`. This then looks for a closing
 /// brace and returns the capture reference within the brace.
-fn find_cap_ref_braced(rep: &str, mut i: usize) -> Option<CaptureRef<'_>> {
+fn find_cap_ref_braced(rep: &[u8], mut i: usize) -> Option<CaptureRef<'_>> {
     assert_eq!(b'{', rep[i.checked_sub(1).unwrap()]);
     let start = i;
     while rep.get(i).map_or(false, |&b| b != b'}') {
@@ -346,10 +347,7 @@ mod tests {
 
     macro_rules! c {
         ($name_or_number:expr, $pos:expr) => {
-            CaptureRef {
-                cap: $name_or_number.into(),
-                end: $pos,
-            }
+            CaptureRef { cap: $name_or_number.into(), end: $pos }
         };
     }
 

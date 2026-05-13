@@ -161,7 +161,7 @@ pub fn sysinfo() -> Sysinfo {
     target_os = "wasi"
 )))]
 #[inline]
-pub fn sethostname(name: &str) -> io::Result<()> {
+pub fn sethostname(name: &[u8]) -> io::Result<()> {
     backend::system::syscalls::sethostname(name)
 }
 
@@ -186,7 +186,7 @@ pub fn sethostname(name: &str) -> io::Result<()> {
     target_os = "wasi",
 )))]
 #[inline]
-pub fn setdomainname(name: &str) -> io::Result<()> {
+pub fn setdomainname(name: &[u8]) -> io::Result<()> {
     backend::system::syscalls::setdomainname(name)
 }
 
@@ -256,7 +256,7 @@ pub fn reboot(cmd: RebootCommand) -> io::Result<()> {
 /// [Linux]: https://man7.org/linux/man-pages/man2/init_module.2.html
 #[inline]
 #[cfg(linux_kernel)]
-pub fn init_module(image: &str, param_values: &CStr) -> io::Result<()> {
+pub fn init_module(image: &[u8], param_values: &CStr) -> io::Result<()> {
     backend::system::syscalls::init_module(image, param_values)
 }
 

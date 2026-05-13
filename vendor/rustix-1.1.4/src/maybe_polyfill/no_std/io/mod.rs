@@ -18,13 +18,13 @@ use linux_raw_sys::general::__kernel_size_t;
 #[repr(transparent)]
 pub struct IoSlice<'a> {
     vec: c::iovec,
-    _p: PhantomData<&'a str>,
+    _p: PhantomData<&'a [u8]>,
 }
 
 impl<'a> IoSlice<'a> {
     /// <https://doc.rust-lang.org/stable/std/io/struct.IoSlice.html#method.new>
     #[inline]
-    pub fn new(buf: &'a str) -> IoSlice<'a> {
+    pub fn new(buf: &'a [u8]) -> IoSlice<'a> {
         IoSlice {
             vec: c::iovec {
                 iov_base: buf.as_ptr() as *mut u8 as *mut c::c_void,
@@ -51,7 +51,7 @@ impl<'a> IoSlice<'a> {
 
     /// <https://doc.rust-lang.org/stable/std/io/struct.IoSlice.html#method.as_slice>
     #[inline]
-    pub fn as_slice(&self) -> &str {
+    pub fn as_slice(&self) -> &[u8] {
         unsafe { slice::from_raw_parts(self.vec.iov_base as *mut u8, self.vec.iov_len as usize) }
     }
 }
@@ -93,7 +93,7 @@ impl<'a> IoSliceMut<'a> {
 
     /// <https://doc.rust-lang.org/stable/std/io/struct.IoSliceMut.html#method.as_slice>
     #[inline]
-    pub fn as_slice(&self) -> &str {
+    pub fn as_slice(&self) -> &[u8] {
         unsafe { slice::from_raw_parts(self.vec.iov_base as *mut u8, self.vec.iov_len as usize) }
     }
 

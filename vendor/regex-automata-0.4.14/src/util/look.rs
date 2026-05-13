@@ -383,9 +383,7 @@ impl LookSet {
     /// returned set is equivalent to the original.
     #[inline]
     pub fn insert(self, look: Look) -> LookSet {
-        LookSet {
-            bits: self.bits | look.as_repr(),
-        }
+        LookSet { bits: self.bits | look.as_repr() }
     }
 
     /// Updates this set in place with the result of inserting the given
@@ -400,9 +398,7 @@ impl LookSet {
     /// returned set is equivalent to the original.
     #[inline]
     pub fn remove(self, look: Look) -> LookSet {
-        LookSet {
-            bits: self.bits & !look.as_repr(),
-        }
+        LookSet { bits: self.bits & !look.as_repr() }
     }
 
     /// Updates this set in place with the result of removing the given
@@ -416,9 +412,7 @@ impl LookSet {
     /// this set.
     #[inline]
     pub fn subtract(self, other: LookSet) -> LookSet {
-        LookSet {
-            bits: self.bits & !other.bits,
-        }
+        LookSet { bits: self.bits & !other.bits }
     }
 
     /// Updates this set in place with the result of subtracting the given set
@@ -431,9 +425,7 @@ impl LookSet {
     /// Returns a new set that is the union of this and the one given.
     #[inline]
     pub fn union(self, other: LookSet) -> LookSet {
-        LookSet {
-            bits: self.bits | other.bits,
-        }
+        LookSet { bits: self.bits | other.bits }
     }
 
     /// Updates this set in place with the result of unioning it with the one
@@ -446,9 +438,7 @@ impl LookSet {
     /// Returns a new set that is the intersection of this and the one given.
     #[inline]
     pub fn intersect(self, other: LookSet) -> LookSet {
-        LookSet {
-            bits: self.bits & other.bits,
-        }
+        LookSet { bits: self.bits & other.bits }
     }
 
     /// Updates this set in place with the result of intersecting it with the
@@ -465,7 +455,7 @@ impl LookSet {
     ///
     /// This panics if `slice.len() < 4`.
     #[inline]
-    pub fn read_repr(slice: &str) -> LookSet {
+    pub fn read_repr(slice: &[u8]) -> LookSet {
         let bits = u32::from_ne_bytes(slice[..4].try_into().unwrap());
         LookSet { bits }
     }
@@ -591,9 +581,7 @@ pub struct LookMatcher {
 impl LookMatcher {
     /// Creates a new default matcher for look-around assertions.
     pub fn new() -> LookMatcher {
-        LookMatcher {
-            lineterm: DebugByte(b'\n'),
-        }
+        LookMatcher { lineterm: DebugByte(b'\n') }
     }
 
     /// Sets the line terminator for use with `(?m:^)` and `(?m:$)`.
@@ -644,7 +632,7 @@ impl LookMatcher {
     /// This also may panic when `at > haystack.len()`. Note that `at ==
     /// haystack.len()` is legal and guaranteed not to panic.
     #[inline]
-    pub fn matches(&self, look: Look, haystack: &str, at: usize) -> bool {
+    pub fn matches(&self, look: Look, haystack: &[u8], at: usize) -> bool {
         self.matches_inline(look, haystack, at)
     }
 
@@ -667,7 +655,12 @@ impl LookMatcher {
     /// This also may panic when `at > haystack.len()`. Note that `at ==
     /// haystack.len()` is legal and guaranteed not to panic.
     #[cfg_attr(feature = "perf-inline", inline(always))]
-    pub(crate) fn matches_inline(&self, look: Look, haystack: &str, at: usize) -> bool {
+    pub(crate) fn matches_inline(
+        &self,
+        look: Look,
+        haystack: &[u8],
+        at: usize,
+    ) -> bool {
         match look {
             Look::Start => self.is_start(haystack, at),
             Look::End => self.is_end(haystack, at),
@@ -678,15 +671,29 @@ impl LookMatcher {
             Look::WordAscii => self.is_word_ascii(haystack, at),
             Look::WordAsciiNegate => self.is_word_ascii_negate(haystack, at),
             Look::WordUnicode => self.is_word_unicode(haystack, at).unwrap(),
-            Look::WordUnicodeNegate => self.is_word_unicode_negate(haystack, at).unwrap(),
+            Look::WordUnicodeNegate => {
+                self.is_word_unicode_negate(haystack, at).unwrap()
+            }
             Look::WordStartAscii => self.is_word_start_ascii(haystack, at),
             Look::WordEndAscii => self.is_word_end_ascii(haystack, at),
-            Look::WordStartUnicode => self.is_word_start_unicode(haystack, at).unwrap(),
-            Look::WordEndUnicode => self.is_word_end_unicode(haystack, at).unwrap(),
-            Look::WordStartHalfAscii => self.is_word_start_half_ascii(haystack, at),
-            Look::WordEndHalfAscii => self.is_word_end_half_ascii(haystack, at),
-            Look::WordStartHalfUnicode => self.is_word_start_half_unicode(haystack, at).unwrap(),
-            Look::WordEndHalfUnicode => self.is_word_end_half_unicode(haystack, at).unwrap(),
+            Look::WordStartUnicode => {
+                self.is_word_start_unicode(haystack, at).unwrap()
+            }
+            Look::WordEndUnicode => {
+                self.is_word_end_unicode(haystack, at).unwrap()
+            }
+            Look::WordStartHalfAscii => {
+                self.is_word_start_half_ascii(haystack, at)
+            }
+            Look::WordEndHalfAscii => {
+                self.is_word_end_half_ascii(haystack, at)
+            }
+            Look::WordStartHalfUnicode => {
+                self.is_word_start_half_unicode(haystack, at).unwrap()
+            }
+            Look::WordEndHalfUnicode => {
+                self.is_word_end_half_unicode(haystack, at).unwrap()
+            }
         }
     }
 
@@ -710,13 +717,23 @@ impl LookMatcher {
     /// This also may panic when `at > haystack.len()`. Note that `at ==
     /// haystack.len()` is legal and guaranteed not to panic.
     #[inline]
-    pub fn matches_set(&self, set: LookSet, haystack: &str, at: usize) -> bool {
+    pub fn matches_set(
+        &self,
+        set: LookSet,
+        haystack: &[u8],
+        at: usize,
+    ) -> bool {
         self.matches_set_inline(set, haystack, at)
     }
 
     /// Like `LookSet::matches`, but forcefully inlined for perf.
     #[cfg_attr(feature = "perf-inline", inline(always))]
-    pub(crate) fn matches_set_inline(&self, set: LookSet, haystack: &str, at: usize) -> bool {
+    pub(crate) fn matches_set_inline(
+        &self,
+        set: LookSet,
+        haystack: &[u8],
+        at: usize,
+    ) -> bool {
         // This used to use LookSet::iter with Look::matches on each element,
         // but that proved to be quite disastrous for perf. The manual "if
         // the set has this assertion, check it" turns out to be quite a bit
@@ -817,7 +834,11 @@ impl LookMatcher {
     /// Split up the given byte classes into equivalence classes in a way that
     /// is consistent with this look-around assertion.
     #[cfg(feature = "alloc")]
-    pub(crate) fn add_to_byteset(&self, look: Look, set: &mut crate::util::alphabet::ByteClassSet) {
+    pub(crate) fn add_to_byteset(
+        &self,
+        look: Look,
+        set: &mut crate::util::alphabet::ByteClassSet,
+    ) {
         match look {
             Look::Start | Look::End => {}
             Look::StartLF | Look::EndLF => {
@@ -883,7 +904,7 @@ impl LookMatcher {
     /// This may panic when `at > haystack.len()`. Note that `at ==
     /// haystack.len()` is legal and guaranteed not to panic.
     #[inline]
-    pub fn is_start(&self, _haystack: &str, at: usize) -> bool {
+    pub fn is_start(&self, _haystack: &[u8], at: usize) -> bool {
         at == 0
     }
 
@@ -895,7 +916,7 @@ impl LookMatcher {
     /// This may panic when `at > haystack.len()`. Note that `at ==
     /// haystack.len()` is legal and guaranteed not to panic.
     #[inline]
-    pub fn is_end(&self, haystack: &str, at: usize) -> bool {
+    pub fn is_end(&self, haystack: &[u8], at: usize) -> bool {
         at == haystack.len()
     }
 
@@ -907,7 +928,7 @@ impl LookMatcher {
     /// This may panic when `at > haystack.len()`. Note that `at ==
     /// haystack.len()` is legal and guaranteed not to panic.
     #[inline]
-    pub fn is_start_lf(&self, haystack: &str, at: usize) -> bool {
+    pub fn is_start_lf(&self, haystack: &[u8], at: usize) -> bool {
         self.is_start(haystack, at) || haystack[at - 1] == self.lineterm.0
     }
 
@@ -919,7 +940,7 @@ impl LookMatcher {
     /// This may panic when `at > haystack.len()`. Note that `at ==
     /// haystack.len()` is legal and guaranteed not to panic.
     #[inline]
-    pub fn is_end_lf(&self, haystack: &str, at: usize) -> bool {
+    pub fn is_end_lf(&self, haystack: &[u8], at: usize) -> bool {
         self.is_end(haystack, at) || haystack[at] == self.lineterm.0
     }
 
@@ -931,10 +952,11 @@ impl LookMatcher {
     /// This may panic when `at > haystack.len()`. Note that `at ==
     /// haystack.len()` is legal and guaranteed not to panic.
     #[inline]
-    pub fn is_start_crlf(&self, haystack: &str, at: usize) -> bool {
+    pub fn is_start_crlf(&self, haystack: &[u8], at: usize) -> bool {
         self.is_start(haystack, at)
             || haystack[at - 1] == b'\n'
-            || (haystack[at - 1] == b'\r' && (at >= haystack.len() || haystack[at] != b'\n'))
+            || (haystack[at - 1] == b'\r'
+                && (at >= haystack.len() || haystack[at] != b'\n'))
     }
 
     /// Returns true when [`Look::EndCRLF`] is satisfied `at` the given
@@ -945,10 +967,11 @@ impl LookMatcher {
     /// This may panic when `at > haystack.len()`. Note that `at ==
     /// haystack.len()` is legal and guaranteed not to panic.
     #[inline]
-    pub fn is_end_crlf(&self, haystack: &str, at: usize) -> bool {
+    pub fn is_end_crlf(&self, haystack: &[u8], at: usize) -> bool {
         self.is_end(haystack, at)
             || haystack[at] == b'\r'
-            || (haystack[at] == b'\n' && (at == 0 || haystack[at - 1] != b'\r'))
+            || (haystack[at] == b'\n'
+                && (at == 0 || haystack[at - 1] != b'\r'))
     }
 
     /// Returns true when [`Look::WordAscii`] is satisfied `at` the given
@@ -959,9 +982,10 @@ impl LookMatcher {
     /// This may panic when `at > haystack.len()`. Note that `at ==
     /// haystack.len()` is legal and guaranteed not to panic.
     #[inline]
-    pub fn is_word_ascii(&self, haystack: &str, at: usize) -> bool {
+    pub fn is_word_ascii(&self, haystack: &[u8], at: usize) -> bool {
         let word_before = at > 0 && utf8::is_word_byte(haystack[at - 1]);
-        let word_after = at < haystack.len() && utf8::is_word_byte(haystack[at]);
+        let word_after =
+            at < haystack.len() && utf8::is_word_byte(haystack[at]);
         word_before != word_after
     }
 
@@ -973,7 +997,7 @@ impl LookMatcher {
     /// This may panic when `at > haystack.len()`. Note that `at ==
     /// haystack.len()` is legal and guaranteed not to panic.
     #[inline]
-    pub fn is_word_ascii_negate(&self, haystack: &str, at: usize) -> bool {
+    pub fn is_word_ascii_negate(&self, haystack: &[u8], at: usize) -> bool {
         !self.is_word_ascii(haystack, at)
     }
 
@@ -993,7 +1017,7 @@ impl LookMatcher {
     #[inline]
     pub fn is_word_unicode(
         &self,
-        haystack: &str,
+        haystack: &[u8],
         at: usize,
     ) -> Result<bool, UnicodeWordBoundaryError> {
         let word_before = is_word_char::rev(haystack, at)?;
@@ -1017,7 +1041,7 @@ impl LookMatcher {
     #[inline]
     pub fn is_word_unicode_negate(
         &self,
-        haystack: &str,
+        haystack: &[u8],
         at: usize,
     ) -> Result<bool, UnicodeWordBoundaryError> {
         // This is pretty subtle. Why do we need to do UTF-8 decoding here?
@@ -1072,9 +1096,10 @@ impl LookMatcher {
     /// This may panic when `at > haystack.len()`. Note that `at ==
     /// haystack.len()` is legal and guaranteed not to panic.
     #[inline]
-    pub fn is_word_start_ascii(&self, haystack: &str, at: usize) -> bool {
+    pub fn is_word_start_ascii(&self, haystack: &[u8], at: usize) -> bool {
         let word_before = at > 0 && utf8::is_word_byte(haystack[at - 1]);
-        let word_after = at < haystack.len() && utf8::is_word_byte(haystack[at]);
+        let word_after =
+            at < haystack.len() && utf8::is_word_byte(haystack[at]);
         !word_before && word_after
     }
 
@@ -1086,9 +1111,10 @@ impl LookMatcher {
     /// This may panic when `at > haystack.len()`. Note that `at ==
     /// haystack.len()` is legal and guaranteed not to panic.
     #[inline]
-    pub fn is_word_end_ascii(&self, haystack: &str, at: usize) -> bool {
+    pub fn is_word_end_ascii(&self, haystack: &[u8], at: usize) -> bool {
         let word_before = at > 0 && utf8::is_word_byte(haystack[at - 1]);
-        let word_after = at < haystack.len() && utf8::is_word_byte(haystack[at]);
+        let word_after =
+            at < haystack.len() && utf8::is_word_byte(haystack[at]);
         word_before && !word_after
     }
 
@@ -1108,7 +1134,7 @@ impl LookMatcher {
     #[inline]
     pub fn is_word_start_unicode(
         &self,
-        haystack: &str,
+        haystack: &[u8],
         at: usize,
     ) -> Result<bool, UnicodeWordBoundaryError> {
         let word_before = is_word_char::rev(haystack, at)?;
@@ -1132,7 +1158,7 @@ impl LookMatcher {
     #[inline]
     pub fn is_word_end_unicode(
         &self,
-        haystack: &str,
+        haystack: &[u8],
         at: usize,
     ) -> Result<bool, UnicodeWordBoundaryError> {
         let word_before = is_word_char::rev(haystack, at)?;
@@ -1148,7 +1174,11 @@ impl LookMatcher {
     /// This may panic when `at > haystack.len()`. Note that `at ==
     /// haystack.len()` is legal and guaranteed not to panic.
     #[inline]
-    pub fn is_word_start_half_ascii(&self, haystack: &str, at: usize) -> bool {
+    pub fn is_word_start_half_ascii(
+        &self,
+        haystack: &[u8],
+        at: usize,
+    ) -> bool {
         let word_before = at > 0 && utf8::is_word_byte(haystack[at - 1]);
         !word_before
     }
@@ -1161,8 +1191,9 @@ impl LookMatcher {
     /// This may panic when `at > haystack.len()`. Note that `at ==
     /// haystack.len()` is legal and guaranteed not to panic.
     #[inline]
-    pub fn is_word_end_half_ascii(&self, haystack: &str, at: usize) -> bool {
-        let word_after = at < haystack.len() && utf8::is_word_byte(haystack[at]);
+    pub fn is_word_end_half_ascii(&self, haystack: &[u8], at: usize) -> bool {
+        let word_after =
+            at < haystack.len() && utf8::is_word_byte(haystack[at]);
         !word_after
     }
 
@@ -1182,7 +1213,7 @@ impl LookMatcher {
     #[inline]
     pub fn is_word_start_half_unicode(
         &self,
-        haystack: &str,
+        haystack: &[u8],
         at: usize,
     ) -> Result<bool, UnicodeWordBoundaryError> {
         // See `is_word_unicode_negate` for why we need to do this. We don't
@@ -1213,7 +1244,7 @@ impl LookMatcher {
     #[inline]
     pub fn is_word_end_half_unicode(
         &self,
-        haystack: &str,
+        haystack: &[u8],
         at: usize,
     ) -> Result<bool, UnicodeWordBoundaryError> {
         // See `is_word_unicode_negate` for why we need to do this. We don't
@@ -1376,7 +1407,7 @@ mod is_word_char {
 
     #[cfg_attr(feature = "perf-inline", inline(always))]
     pub(super) fn fwd(
-        haystack: &str,
+        haystack: &[u8],
         mut at: usize,
     ) -> Result<bool, super::UnicodeWordBoundaryError> {
         static WORD: Lazy<DFA> = Lazy::new(|| DFA::new(r"\w").unwrap());
@@ -1407,7 +1438,7 @@ mod is_word_char {
 
     #[cfg_attr(feature = "perf-inline", inline(always))]
     pub(super) fn rev(
-        haystack: &str,
+        haystack: &[u8],
         mut at: usize,
     ) -> Result<bool, super::UnicodeWordBoundaryError> {
         static WORD: Lazy<DFA> = Lazy::new(|| {
@@ -1467,7 +1498,7 @@ mod is_word_char {
 
     #[cfg_attr(feature = "perf-inline", inline(always))]
     pub(super) fn fwd(
-        haystack: &str,
+        haystack: &[u8],
         mut at: usize,
     ) -> Result<bool, super::UnicodeWordBoundaryError> {
         static WORD: Lazy<(DFA<Vec<u32>>, StateID)> = Lazy::new(|| {
@@ -1497,7 +1528,7 @@ mod is_word_char {
 
     #[cfg_attr(feature = "perf-inline", inline(always))]
     pub(super) fn rev(
-        haystack: &str,
+        haystack: &[u8],
         mut at: usize,
     ) -> Result<bool, super::UnicodeWordBoundaryError> {
         static WORD: Lazy<(DFA<Vec<u32>>, StateID)> = Lazy::new(|| {
@@ -1548,7 +1579,10 @@ mod is_word_char {
     }
 
     #[cfg_attr(feature = "perf-inline", inline(always))]
-    pub(super) fn fwd(haystack: &str, at: usize) -> Result<bool, super::UnicodeWordBoundaryError> {
+    pub(super) fn fwd(
+        haystack: &[u8],
+        at: usize,
+    ) -> Result<bool, super::UnicodeWordBoundaryError> {
         Ok(match utf8::decode(&haystack[at..]) {
             None | Some(Err(_)) => false,
             Some(Ok(ch)) => try_is_word_character(ch).expect(
@@ -1560,7 +1594,10 @@ mod is_word_char {
     }
 
     #[cfg_attr(feature = "perf-inline", inline(always))]
-    pub(super) fn rev(haystack: &str, at: usize) -> Result<bool, super::UnicodeWordBoundaryError> {
+    pub(super) fn rev(
+        haystack: &[u8],
+        at: usize,
+    ) -> Result<bool, super::UnicodeWordBoundaryError> {
         Ok(match utf8::decode_last(&haystack[..at]) {
             None | Some(Err(_)) => false,
             Some(Ok(ch)) => try_is_word_character(ch).expect(
@@ -1589,7 +1626,10 @@ mod is_word_char {
     }
 
     #[cfg_attr(feature = "perf-inline", inline(always))]
-    pub(super) fn fwd(haystack: &str, at: usize) -> Result<bool, super::UnicodeWordBoundaryError> {
+    pub(super) fn fwd(
+        haystack: &[u8],
+        at: usize,
+    ) -> Result<bool, super::UnicodeWordBoundaryError> {
         Ok(match utf8::decode(&haystack[at..]) {
             None | Some(Err(_)) => false,
             Some(Ok(ch)) => is_word_character(ch),
@@ -1597,7 +1637,10 @@ mod is_word_char {
     }
 
     #[cfg_attr(feature = "perf-inline", inline(always))]
-    pub(super) fn rev(haystack: &str, at: usize) -> Result<bool, super::UnicodeWordBoundaryError> {
+    pub(super) fn rev(
+        haystack: &[u8],
+        at: usize,
+    ) -> Result<bool, super::UnicodeWordBoundaryError> {
         Ok(match utf8::decode_last(&haystack[..at]) {
             None | Some(Err(_)) => false,
             Some(Ok(ch)) => is_word_character(ch),
@@ -1637,12 +1680,18 @@ mod is_word_char {
     }
 
     #[cfg_attr(feature = "perf-inline", inline(always))]
-    pub(super) fn fwd(_bytes: &str, _at: usize) -> Result<bool, super::UnicodeWordBoundaryError> {
+    pub(super) fn fwd(
+        _bytes: &[u8],
+        _at: usize,
+    ) -> Result<bool, super::UnicodeWordBoundaryError> {
         Err(super::UnicodeWordBoundaryError::new())
     }
 
     #[cfg_attr(feature = "perf-inline", inline(always))]
-    pub(super) fn rev(_bytes: &str, _at: usize) -> Result<bool, super::UnicodeWordBoundaryError> {
+    pub(super) fn rev(
+        _bytes: &[u8],
+        _at: usize,
+    ) -> Result<bool, super::UnicodeWordBoundaryError> {
         Err(super::UnicodeWordBoundaryError::new())
     }
 }
@@ -2473,9 +2522,8 @@ mod tests {
         let set = LookSet::full();
         assert_eq!(18, set.iter().count());
 
-        let set = LookSet::empty()
-            .insert(Look::StartLF)
-            .insert(Look::WordUnicode);
+        let set =
+            LookSet::empty().insert(Look::StartLF).insert(Look::WordUnicode);
         assert_eq!(2, set.iter().count());
 
         let set = LookSet::empty().insert(Look::StartLF);

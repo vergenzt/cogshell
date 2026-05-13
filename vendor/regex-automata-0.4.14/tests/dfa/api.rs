@@ -18,7 +18,10 @@ fn quit_fwd() -> Result<(), Box<dyn Error>> {
         dfa.try_search_fwd(&Input::new(b"abcxyz"))
     );
     assert_eq!(
-        dfa.try_search_overlapping_fwd(&Input::new(b"abcxyz"), &mut OverlappingState::start()),
+        dfa.try_search_overlapping_fwd(
+            &Input::new(b"abcxyz"),
+            &mut OverlappingState::start()
+        ),
         Err(MatchError::quit(b'x', 3)),
     );
 
@@ -47,9 +50,7 @@ fn quit_rev() -> Result<(), Box<dyn Error>> {
 #[test]
 #[should_panic]
 fn quit_panics() {
-    dense::Config::new()
-        .unicode_word_boundary(true)
-        .quit(b'\xFF', false);
+    dense::Config::new().unicode_word_boundary(true).quit(b'\xFF', false);
 }
 
 // This tests an intesting case where even if the Unicode word boundary option
@@ -73,7 +74,10 @@ fn unicode_word_implicitly_works() -> Result<(), Box<dyn Error>> {
 // See: https://github.com/rust-lang/regex/pull/1195
 #[test]
 fn universal_start_search() -> Result<(), Box<dyn Error>> {
-    fn find<A: Automaton>(dfa: &A, haystack: &str) -> Result<Option<HalfMatch>, MatchError> {
+    fn find<A: Automaton>(
+        dfa: &A,
+        haystack: &[u8],
+    ) -> Result<Option<HalfMatch>, MatchError> {
         let mut state = dfa
             .universal_start_state(Anchored::No)
             .expect("regex should not require lookbehind");
@@ -86,7 +90,8 @@ fn universal_start_search() -> Result<(), Box<dyn Error>> {
             state = dfa.next_state(state, b);
             if dfa.is_special_state(state) {
                 if dfa.is_match_state(state) {
-                    last_match = Some(HalfMatch::new(dfa.match_pattern(state, 0), i));
+                    last_match =
+                        Some(HalfMatch::new(dfa.match_pattern(state, 0), i));
                 } else if dfa.is_dead_state(state) {
                     return Ok(last_match);
                 } else if dfa.is_quit_state(state) {
@@ -107,7 +112,10 @@ fn universal_start_search() -> Result<(), Box<dyn Error>> {
         // the special "EOI" transition at the end of the search.
         state = dfa.next_eoi_state(state);
         if dfa.is_match_state(state) {
-            last_match = Some(HalfMatch::new(dfa.match_pattern(state, 0), haystack.len()));
+            last_match = Some(HalfMatch::new(
+                dfa.match_pattern(state, 0),
+                haystack.len(),
+            ));
         }
         Ok(last_match)
     }

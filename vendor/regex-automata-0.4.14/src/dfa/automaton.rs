@@ -421,7 +421,7 @@ pub unsafe trait Automaton {
     ///
     /// fn find<A: Automaton>(
     ///     dfa: &A,
-    ///     haystack: &str,
+    ///     haystack: &[u8],
     /// ) -> Result<Option<HalfMatch>, MatchError> {
     ///     // The start state is determined by inspecting the position and the
     ///     // initial bytes of the haystack. Note that start states can never
@@ -651,7 +651,7 @@ pub unsafe trait Automaton {
     ///     HalfMatch, MatchError, Input,
     /// };
     ///
-    /// fn find_byte(slice: &str, at: usize, byte: u8) -> Option<usize> {
+    /// fn find_byte(slice: &[u8], at: usize, byte: u8) -> Option<usize> {
     ///     // Would be faster to use the memchr crate, but this is still
     ///     // faster than running through the DFA.
     ///     slice[at..].iter().position(|&b| b == byte).map(|i| at + i)
@@ -659,7 +659,7 @@ pub unsafe trait Automaton {
     ///
     /// fn find<A: Automaton>(
     ///     dfa: &A,
-    ///     haystack: &str,
+    ///     haystack: &[u8],
     ///     prefix_byte: Option<u8>,
     /// ) -> Result<Option<HalfMatch>, MatchError> {
     ///     // See the Automaton::is_special_state example for similar code
@@ -1140,7 +1140,7 @@ pub unsafe trait Automaton {
     /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
     #[inline]
-    fn accelerator(&self, _id: StateID) -> &str {
+    fn accelerator(&self, _id: StateID) -> &[u8] {
         &[]
     }
 
@@ -1936,7 +1936,7 @@ unsafe impl<'a, A: Automaton + ?Sized> Automaton for &'a A {
     }
 
     #[inline]
-    fn accelerator(&self, id: StateID) -> &str {
+    fn accelerator(&self, id: StateID) -> &[u8] {
         (**self).accelerator(id)
     }
 

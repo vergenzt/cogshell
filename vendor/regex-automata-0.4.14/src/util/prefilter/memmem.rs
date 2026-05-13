@@ -33,7 +33,7 @@ impl Memmem {
 }
 
 impl PrefilterI for Memmem {
-    fn find(&self, haystack: &str, span: Span) -> Option<Span> {
+    fn find(&self, haystack: &[u8], span: Span) -> Option<Span> {
         #[cfg(not(all(feature = "std", feature = "perf-literal-substring")))]
         {
             unreachable!()
@@ -48,7 +48,7 @@ impl PrefilterI for Memmem {
         }
     }
 
-    fn prefix(&self, haystack: &str, span: Span) -> Option<Span> {
+    fn prefix(&self, haystack: &[u8], span: Span) -> Option<Span> {
         #[cfg(not(all(feature = "std", feature = "perf-literal-substring")))]
         {
             unreachable!()

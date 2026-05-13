@@ -85,8 +85,8 @@ use crate::util::{escape::DebugByte, primitives::PatternID, utf8};
 /// Any regex engine accepting an `Input` must support at least the following
 /// things:
 ///
-/// * Searching a `&str` for matches.
-/// * Searching a substring of `&str` for a match, such that any match
+/// * Searching a `&[u8]` for matches.
+/// * Searching a substring of `&[u8]` for a match, such that any match
 /// reported must appear entirely within that substring.
 /// * For a forwards search, a match should never be reported when
 /// [`Input::is_done`] returns true. (For reverse searches, termination should
@@ -100,7 +100,7 @@ use crate::util::{escape::DebugByte, primitives::PatternID, utf8};
 /// results in no match being reported.
 #[derive(Clone)]
 pub struct Input<'h> {
-    haystack: &'h str,
+    haystack: &'h [u8],
     span: Span,
     anchored: Anchored,
     earliest: bool,
@@ -590,7 +590,7 @@ impl<'h> Input<'h> {
     /// assert_eq!(b"foobar", input.haystack());
     /// ```
     #[inline]
-    pub fn haystack(&self) -> &'h str {
+    pub fn haystack(&self) -> &'h [u8] {
         self.haystack
     }
 
@@ -859,7 +859,7 @@ impl core::ops::Index<Span> for [u8] {
     type Output = [u8];
 
     #[inline]
-    fn index(&self, index: Span) -> &str {
+    fn index(&self, index: Span) -> &[u8] {
         &self[index.range()]
     }
 }
@@ -1972,7 +1972,7 @@ mod tests {
         struct Bad(std::cell::Cell<bool>);
 
         impl AsRef<[u8]> for Bad {
-            fn as_ref(&self) -> &str {
+            fn as_ref(&self) -> &[u8] {
                 if self.0.replace(false) {
                     &[]
                 } else {

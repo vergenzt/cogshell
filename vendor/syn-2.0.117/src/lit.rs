@@ -280,7 +280,7 @@ impl LitStr {
 }
 
 impl LitByteStr {
-    pub fn new(value: &str, span: Span) -> Self {
+    pub fn new(value: &[u8], span: Span) -> Self {
         let mut token = Literal::byte_string(value);
         token.set_span(span);
         LitByteStr {

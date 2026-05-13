@@ -74,7 +74,7 @@ lock for synchronization.
 implementation is also provided that requires use of `unsafe`.
 * The `dfa` module makes extensive use of `unsafe` to support zero-copy
 deserialization of DFAs. The high level problem is that you need to get from
-`&str` to the internal representation of a DFA without doing any copies.
+`&[u8]` to the internal representation of a DFA without doing any copies.
 This is required for support in no-std no-alloc environments. It also makes
 deserialization extremely cheap.
 * The `dfa` and `hybrid` modules use `unsafe` to explicitly elide bounds checks

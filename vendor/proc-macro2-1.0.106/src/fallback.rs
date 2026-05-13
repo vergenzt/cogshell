@@ -1092,7 +1092,7 @@ impl Literal {
         Literal::_new(repr)
     }
 
-    pub(crate) fn byte_string(bytes: &str) -> Literal {
+    pub(crate) fn byte_string(bytes: &[u8]) -> Literal {
         let mut repr = "b\"".to_string();
         let mut bytes = bytes.iter();
         while let Some(&b) = bytes.next() {

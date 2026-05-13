@@ -2479,7 +2479,7 @@ pub(crate) unsafe fn fgetxattr(
 pub(crate) fn setxattr(
     path: &CStr,
     name: &CStr,
-    value: &str,
+    value: &[u8],
     flags: XattrFlags,
 ) -> io::Result<()> {
     #[cfg(not(apple))]
@@ -2510,7 +2510,7 @@ pub(crate) fn setxattr(
 pub(crate) fn lsetxattr(
     path: &CStr,
     name: &CStr,
-    value: &str,
+    value: &[u8],
     flags: XattrFlags,
 ) -> io::Result<()> {
     #[cfg(not(apple))]
@@ -2541,7 +2541,7 @@ pub(crate) fn lsetxattr(
 pub(crate) fn fsetxattr(
     fd: BorrowedFd<'_>,
     name: &CStr,
-    value: &str,
+    value: &[u8],
     flags: XattrFlags,
 ) -> io::Result<()> {
     #[cfg(not(apple))]

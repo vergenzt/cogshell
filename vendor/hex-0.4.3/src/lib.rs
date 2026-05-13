@@ -90,7 +90,7 @@ struct BytesToHexChars<'a> {
 }
 
 impl<'a> BytesToHexChars<'a> {
-    fn new(inner: &'a str, table: &'static [u8; 16]) -> BytesToHexChars<'a> {
+    fn new(inner: &'a [u8], table: &'static [u8; 16]) -> BytesToHexChars<'a> {
         BytesToHexChars {
             inner: inner.iter(),
             table,
@@ -130,7 +130,7 @@ impl<'a> iter::ExactSizeIterator for BytesToHexChars<'a> {
 }
 
 #[inline]
-fn encode_to_iter<T: iter::FromIterator<char>>(table: &'static [u8; 16], source: &str) -> T {
+fn encode_to_iter<T: iter::FromIterator<char>>(table: &'static [u8; 16], source: &[u8]) -> T {
     BytesToHexChars::new(source, table).collect()
 }
 

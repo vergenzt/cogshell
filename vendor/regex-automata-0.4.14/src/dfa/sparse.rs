@@ -93,7 +93,7 @@ const VERSION: u32 = 2;
 /// # Type parameters
 ///
 /// A `DFA` has one type parameter, `T`, which is used to represent the parts
-/// of a sparse DFA. `T` is typically a `Vec<u8>` or a `&str`.
+/// of a sparse DFA. `T` is typically a `Vec<u8>` or a `&[u8]`.
 ///
 /// # The `Automaton` trait
 ///
@@ -406,8 +406,8 @@ impl DFA<Vec<u8>> {
 
 impl<T: AsRef<[u8]>> DFA<T> {
     /// Cheaply return a borrowed version of this sparse DFA. Specifically, the
-    /// DFA returned always uses `&str` for its transitions.
-    pub fn as_ref<'a>(&'a self) -> DFA<&'a str> {
+    /// DFA returned always uses `&[u8]` for its transitions.
+    pub fn as_ref<'a>(&'a self) -> DFA<&'a [u8]> {
         DFA {
             tt: self.tt.as_ref(),
             st: self.st.as_ref(),
@@ -521,7 +521,7 @@ impl<T: AsRef<[u8]>> DFA<T> {
     /// let buf = original_dfa.to_bytes_native_endian();
     /// // Even if buf has initial padding, DFA::from_bytes will automatically
     /// // ignore it.
-    /// let dfa: DFA<&str> = DFA::from_bytes(&buf)?.0;
+    /// let dfa: DFA<&[u8]> = DFA::from_bytes(&buf)?.0;
     ///
     /// let expected = Some(HalfMatch::must(0, 8));
     /// assert_eq!(expected, dfa.try_search_fwd(&Input::new("foo12345"))?);
@@ -562,7 +562,7 @@ impl<T: AsRef<[u8]>> DFA<T> {
     /// let buf = original_dfa.to_bytes_native_endian();
     /// // Even if buf has initial padding, DFA::from_bytes will automatically
     /// // ignore it.
-    /// let dfa: DFA<&str> = DFA::from_bytes(&buf)?.0;
+    /// let dfa: DFA<&[u8]> = DFA::from_bytes(&buf)?.0;
     ///
     /// let expected = Some(HalfMatch::must(0, 8));
     /// assert_eq!(expected, dfa.try_search_fwd(&Input::new("foo12345"))?);
@@ -610,7 +610,7 @@ impl<T: AsRef<[u8]>> DFA<T> {
     /// let buf = original_dfa.to_bytes_native_endian();
     /// // Even if buf has initial padding, DFA::from_bytes will automatically
     /// // ignore it.
-    /// let dfa: DFA<&str> = DFA::from_bytes(&buf)?.0;
+    /// let dfa: DFA<&[u8]> = DFA::from_bytes(&buf)?.0;
     ///
     /// let expected = Some(HalfMatch::must(0, 8));
     /// assert_eq!(expected, dfa.try_search_fwd(&Input::new("foo12345"))?);
@@ -667,7 +667,7 @@ impl<T: AsRef<[u8]>> DFA<T> {
     /// // N.B. We use native endianness here to make the example work, but
     /// // using write_to_little_endian would work on a little endian target.
     /// let written = original_dfa.write_to_native_endian(&mut buf)?;
-    /// let dfa: DFA<&str> = DFA::from_bytes(&buf[..written])?.0;
+    /// let dfa: DFA<&[u8]> = DFA::from_bytes(&buf[..written])?.0;
     ///
     /// let expected = Some(HalfMatch::must(0, 8));
     /// assert_eq!(expected, dfa.try_search_fwd(&Input::new("foo12345"))?);
@@ -714,7 +714,7 @@ impl<T: AsRef<[u8]>> DFA<T> {
     /// // N.B. We use native endianness here to make the example work, but
     /// // using write_to_big_endian would work on a big endian target.
     /// let written = original_dfa.write_to_native_endian(&mut buf)?;
-    /// let dfa: DFA<&str> = DFA::from_bytes(&buf[..written])?.0;
+    /// let dfa: DFA<&[u8]> = DFA::from_bytes(&buf[..written])?.0;
     ///
     /// let expected = Some(HalfMatch::must(0, 8));
     /// assert_eq!(expected, dfa.try_search_fwd(&Input::new("foo12345"))?);
@@ -768,7 +768,7 @@ impl<T: AsRef<[u8]>> DFA<T> {
     /// // Create a 4KB buffer on the stack to store our serialized DFA.
     /// let mut buf = [0u8; 4 * (1<<10)];
     /// let written = original_dfa.write_to_native_endian(&mut buf)?;
-    /// let dfa: DFA<&str> = DFA::from_bytes(&buf[..written])?.0;
+    /// let dfa: DFA<&[u8]> = DFA::from_bytes(&buf[..written])?.0;
     ///
     /// let expected = Some(HalfMatch::must(0, 8));
     /// assert_eq!(expected, dfa.try_search_fwd(&Input::new("foo12345"))?);
@@ -829,7 +829,7 @@ impl<T: AsRef<[u8]>> DFA<T> {
     ///
     /// let mut buf = vec![0; original_dfa.write_to_len()];
     /// let written = original_dfa.write_to_native_endian(&mut buf)?;
-    /// let dfa: DFA<&str> = DFA::from_bytes(&buf[..written])?.0;
+    /// let dfa: DFA<&[u8]> = DFA::from_bytes(&buf[..written])?.0;
     ///
     /// let expected = Some(HalfMatch::must(0, 8));
     /// assert_eq!(expected, dfa.try_search_fwd(&Input::new("foo12345"))?);
@@ -848,7 +848,7 @@ impl<T: AsRef<[u8]>> DFA<T> {
     }
 }
 
-impl<'a> DFA<&'a str> {
+impl<'a> DFA<&'a [u8]> {
     /// Safely deserialize a sparse DFA with a specific state identifier
     /// representation. Upon success, this returns both the deserialized DFA
     /// and the number of bytes read from the given slice. Namely, the contents
@@ -909,7 +909,7 @@ impl<'a> DFA<&'a str> {
     ///
     /// let initial = DFA::new("foo[0-9]+")?;
     /// let bytes = initial.to_bytes_native_endian();
-    /// let dfa: DFA<&str> = DFA::from_bytes(&bytes)?.0;
+    /// let dfa: DFA<&[u8]> = DFA::from_bytes(&bytes)?.0;
     ///
     /// let expected = Some(HalfMatch::must(0, 8));
     /// assert_eq!(expected, dfa.try_search_fwd(&Input::new("foo12345"))?);
@@ -959,14 +959,14 @@ impl<'a> DFA<&'a str> {
     /// // lazy_static! or once_cell::sync::Lazy. But it works in no-alloc
     /// // no-std environments and let's us write this using completely
     /// // safe code.
-    /// static RE: Lazy<DFA<&'static str>> = Lazy::new(|| {
+    /// static RE: Lazy<DFA<&'static [u8]>> = Lazy::new(|| {
     ///     # const _: &str = stringify! {
     ///     #[cfg(target_endian = "big")]
-    ///     static BYTES: &str = include_bytes!("foo.bigendian.dfa");
+    ///     static BYTES: &[u8] = include_bytes!("foo.bigendian.dfa");
     ///     #[cfg(target_endian = "little")]
-    ///     static BYTES: &str = include_bytes!("foo.littleendian.dfa");
+    ///     static BYTES: &[u8] = include_bytes!("foo.littleendian.dfa");
     ///     # };
-    ///     # static BYTES: &str = b"";
+    ///     # static BYTES: &[u8] = b"";
     ///
     ///     let (dfa, _) = DFA::from_bytes(BYTES)
     ///         .expect("serialized DFA should be valid");
@@ -983,8 +983,8 @@ impl<'a> DFA<&'a str> {
     /// [`once_cell`](https://crates.io/crates/once_cell),
     /// which will guarantee safety for you.
     pub fn from_bytes(
-        slice: &'a str,
-    ) -> Result<(DFA<&'a str>, usize), DeserializeError> {
+        slice: &'a [u8],
+    ) -> Result<(DFA<&'a [u8]>, usize), DeserializeError> {
         // SAFETY: This is safe because we validate both the sparse transitions
         // (by trying to decode every state) and start state ID list below. If
         // either validation fails, then we return an error.
@@ -1028,15 +1028,15 @@ impl<'a> DFA<&'a str> {
     /// let bytes = initial.to_bytes_native_endian();
     /// // SAFETY: This is guaranteed to be safe since the bytes given come
     /// // directly from a compatible serialization routine.
-    /// let dfa: DFA<&str> = unsafe { DFA::from_bytes_unchecked(&bytes)?.0 };
+    /// let dfa: DFA<&[u8]> = unsafe { DFA::from_bytes_unchecked(&bytes)?.0 };
     ///
     /// let expected = Some(HalfMatch::must(0, 8));
     /// assert_eq!(expected, dfa.try_search_fwd(&Input::new("foo12345"))?);
     /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
     pub unsafe fn from_bytes_unchecked(
-        slice: &'a str,
-    ) -> Result<(DFA<&'a str>, usize), DeserializeError> {
+        slice: &'a [u8],
+    ) -> Result<(DFA<&'a [u8]>, usize), DeserializeError> {
         let mut nr = 0;
 
         nr += wire::read_label(&slice[nr..], LABEL)?;
@@ -1076,7 +1076,7 @@ impl<'a> DFA<&'a str> {
 impl<T> DFA<T> {
     /// Set or unset the prefilter attached to this DFA.
     ///
-    /// This is useful when one has deserialized a DFA from `&str`.
+    /// This is useful when one has deserialized a DFA from `&[u8]`.
     /// Deserialization does not currently include prefilters, so if you
     /// want prefilter acceleration, you'll need to rebuild it and attach
     /// it here.
@@ -1235,7 +1235,7 @@ unsafe impl<T: AsRef<[u8]>> Automaton for DFA<T> {
     }
 
     #[inline]
-    fn accelerator(&self, id: StateID) -> &str {
+    fn accelerator(&self, id: StateID) -> &[u8] {
         self.tt.state(id).accelerator()
     }
 
@@ -1270,7 +1270,7 @@ struct Transitions<T> {
     ///
     /// To decode a state, use Transitions::state.
     ///
-    /// In practice, T is either Vec<u8> or &str.
+    /// In practice, T is either Vec<u8> or &[u8].
     sparse: T,
     /// A set of equivalence classes, where a single equivalence class
     /// represents a set of bytes that never discriminate between a match
@@ -1310,10 +1310,10 @@ struct Transitions<T> {
     pattern_len: usize,
 }
 
-impl<'a> Transitions<&'a str> {
+impl<'a> Transitions<&'a [u8]> {
     unsafe fn from_bytes_unchecked(
-        mut slice: &'a str,
-    ) -> Result<(Transitions<&'a str>, usize), DeserializeError> {
+        mut slice: &'a [u8],
+    ) -> Result<(Transitions<&'a [u8]>, usize), DeserializeError> {
         let slice_start = slice.as_ptr().as_usize();
 
         let (state_len, nr) =
@@ -1480,7 +1480,7 @@ impl<T: AsRef<[u8]>> Transitions<T> {
     }
 
     /// Converts these transitions to a borrowed value.
-    fn as_ref(&self) -> Transitions<&'_ str> {
+    fn as_ref(&self) -> Transitions<&'_ [u8]> {
         Transitions {
             sparse: self.sparse(),
             classes: self.classes.clone(),
@@ -1587,7 +1587,7 @@ impl<T: AsRef<[u8]>> Transitions<T> {
         }
 
         // And now extract the corresponding sequence of state IDs. We leave
-        // this sequence as a &str instead of a &[S] because sparse DFAs do
+        // this sequence as a &[u8] instead of a &[S] because sparse DFAs do
         // not have any alignment requirements.
         let next_len = ntrans
             .checked_mul(self.id_len())
@@ -1709,7 +1709,7 @@ impl<T: AsRef<[u8]>> Transitions<T> {
     }
 
     /// Returns the sparse transitions as raw bytes.
-    fn sparse(&self) -> &str {
+    fn sparse(&self) -> &[u8] {
         self.sparse.as_ref()
     }
 
@@ -1769,7 +1769,7 @@ impl<T: AsMut<[u8]>> Transitions<T> {
 ///
 /// See the eponymous type in the `dense` module for more details. This type
 /// is very similar to `dense::StartTable`, except that its underlying
-/// representation is `&str` instead of `&[S]`. (The latter would require
+/// representation is `&[u8]` instead of `&[S]`. (The latter would require
 /// sparse DFAs to be aligned, which is explicitly something we do not require
 /// because we don't really need it.)
 #[derive(Clone)]
@@ -1777,7 +1777,7 @@ struct StartTable<T> {
     /// The initial start state IDs as a contiguous table of native endian
     /// encoded integers, represented by `S`.
     ///
-    /// In practice, T is either Vec<u8> or &str and has no alignment
+    /// In practice, T is either Vec<u8> or &[u8] and has no alignment
     /// requirements.
     ///
     /// The first `2 * stride` (currently always 8) entries always correspond
@@ -1870,10 +1870,10 @@ impl StartTable<Vec<u8>> {
     }
 }
 
-impl<'a> StartTable<&'a str> {
+impl<'a> StartTable<&'a [u8]> {
     unsafe fn from_bytes_unchecked(
-        mut slice: &'a str,
-    ) -> Result<(StartTable<&'a str>, usize), DeserializeError> {
+        mut slice: &'a [u8],
+    ) -> Result<(StartTable<&'a [u8]>, usize), DeserializeError> {
         let slice_start = slice.as_ptr().as_usize();
 
         let (kind, nr) = StartKind::from_bytes(slice)?;
@@ -2055,7 +2055,7 @@ impl<T: AsRef<[u8]>> StartTable<T> {
     }
 
     /// Converts this start list to a borrowed value.
-    fn as_ref(&self) -> StartTable<&'_ str> {
+    fn as_ref(&self) -> StartTable<&'_ [u8]> {
         StartTable {
             table: self.table(),
             kind: self.kind,
@@ -2138,7 +2138,7 @@ impl<T: AsRef<[u8]>> StartTable<T> {
     }
 
     /// Returns the table as a raw slice of bytes.
-    fn table(&self) -> &str {
+    fn table(&self) -> &[u8] {
         self.table.as_ref()
     }
 
@@ -2268,21 +2268,21 @@ struct State<'a> {
     /// Pairs of input ranges, where there is one pair for each transition.
     /// Each pair specifies an inclusive start and end byte range for the
     /// corresponding transition.
-    input_ranges: &'a str,
+    input_ranges: &'a [u8],
     /// Transitions to the next state. This slice contains native endian
     /// encoded state identifiers, with `S` as the representation. Thus, there
     /// are `ntrans * size_of::<S>()` bytes in this slice.
-    next: &'a str,
+    next: &'a [u8],
     /// If this is a match state, then this contains the pattern IDs that match
     /// when the DFA is in this state.
     ///
     /// This is a contiguous sequence of 32-bit native endian encoded integers.
-    pattern_ids: &'a str,
+    pattern_ids: &'a [u8],
     /// An accelerator for this state, if present. If this state has no
     /// accelerator, then this is an empty slice. When non-empty, this slice
     /// has length at most 3 and corresponds to the exhaustive set of bytes
     /// that must be seen in order to transition out of this state.
-    accel: &'a str,
+    accel: &'a [u8],
 }
 
 impl<'a> State<'a> {
@@ -2351,7 +2351,7 @@ impl<'a> State<'a> {
     }
 
     /// Return an accelerator for this state.
-    fn accelerator(&self) -> &'a str {
+    fn accelerator(&self) -> &'a [u8] {
         self.accel
     }
 
@@ -2470,7 +2470,7 @@ struct StateMut<'a> {
     /// when the DFA is in this state.
     ///
     /// This is a contiguous sequence of 32-bit native endian encoded integers.
-    pattern_ids: &'a str,
+    pattern_ids: &'a [u8],
     /// An accelerator for this state, if present. If this state has no
     /// accelerator, then this is an empty slice. When non-empty, this slice
     /// has length at most 3 and corresponds to the exhaustive set of bytes
@@ -2576,12 +2576,12 @@ impl Seen {
 /// for posterity in case we can find a way to use it.
 ///
 /// In theory, we could use the standard library's search routine if we could
-/// cast a `&str` to a `&[(u8, u8)]`, but I don't believe this is currently
+/// cast a `&[u8]` to a `&[(u8, u8)]`, but I don't believe this is currently
 /// guaranteed to be safe and is thus UB (since I don't think the in-memory
 /// representation of `(u8, u8)` has been nailed down). One could define a
 /// repr(C) type, but the casting doesn't seem justified.
 #[cfg_attr(feature = "perf-inline", inline(always))]
-fn binary_search_ranges(ranges: &str, needle: u8) -> Option<usize> {
+fn binary_search_ranges(ranges: &[u8], needle: u8) -> Option<usize> {
     debug_assert!(ranges.len() % 2 == 0, "ranges must have even length");
     debug_assert!(ranges.len() <= 512, "ranges should be short");
 

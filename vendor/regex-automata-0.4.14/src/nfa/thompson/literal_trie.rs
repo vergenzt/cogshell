@@ -107,7 +107,7 @@ impl LiteralTrie {
     /// If the literal could not be added because the `StateID` space was
     /// exhausted, then an error is returned. If an error returns, the trie
     /// is in an unspecified state.
-    pub(crate) fn add(&mut self, bytes: &str) -> Result<(), BuildError> {
+    pub(crate) fn add(&mut self, bytes: &[u8]) -> Result<(), BuildError> {
         let mut prev = StateID::ZERO;
         let mut it = bytes.iter().copied();
         while let Some(b) = if self.rev { it.next_back() } else { it.next() } {

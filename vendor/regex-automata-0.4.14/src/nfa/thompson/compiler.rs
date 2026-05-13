@@ -1595,7 +1595,7 @@ impl Compiler {
     }
 
     /// Compile the given byte string to a concatenation of bytes.
-    fn c_literal(&self, bytes: &str) -> Result<ThompsonRef, BuildError> {
+    fn c_literal(&self, bytes: &[u8]) -> Result<ThompsonRef, BuildError> {
         self.c_concat(bytes.iter().copied().map(|b| self.c_range(b, b)))
     }
 

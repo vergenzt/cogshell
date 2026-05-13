@@ -43,7 +43,7 @@ pub(crate) unsafe fn recv(
     ))
 }
 
-pub(crate) fn send(fd: BorrowedFd<'_>, buf: &str, flags: SendFlags) -> io::Result<usize> {
+pub(crate) fn send(fd: BorrowedFd<'_>, buf: &[u8], flags: SendFlags) -> io::Result<usize> {
     unsafe {
         ret_send_recv(c::send(
             borrowed_fd(fd),
@@ -80,7 +80,7 @@ pub(crate) unsafe fn recvfrom(
 
 pub(crate) fn sendto(
     fd: BorrowedFd<'_>,
-    buf: &str,
+    buf: &[u8],
     flags: SendFlags,
     addr: &impl SocketAddrArg,
 ) -> io::Result<usize> {

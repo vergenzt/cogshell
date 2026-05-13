@@ -653,7 +653,7 @@ cfg_if! {
     if #[cfg(feature = "extra_traits")] {
         #[allow(deprecated)]
         impl af_alg_iv {
-            fn as_slice(&self) -> &str {
+            fn as_slice(&self) -> &[u8] {
                 unsafe { ::core::slice::from_raw_parts(self.iv.as_ptr(), self.ivlen as usize) }
             }
         }

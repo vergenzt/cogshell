@@ -75,7 +75,7 @@ fn strings() {
 #[test]
 fn byte_strings() {
     #[track_caller]
-    fn test_byte_string(s: &str, value: &str) {
+    fn test_byte_string(s: &str, value: &[u8]) {
         let s = s.trim();
         match lit(s) {
             Lit::ByteStr(lit) => {

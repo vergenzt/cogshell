@@ -1579,7 +1579,7 @@ pub(crate) unsafe fn fgetxattr(
 pub(crate) fn setxattr(
     path: &CStr,
     name: &CStr,
-    value: &str,
+    value: &[u8],
     flags: XattrFlags,
 ) -> io::Result<()> {
     let (value_addr, value_len) = slice(value);
@@ -1599,7 +1599,7 @@ pub(crate) fn setxattr(
 pub(crate) fn lsetxattr(
     path: &CStr,
     name: &CStr,
-    value: &str,
+    value: &[u8],
     flags: XattrFlags,
 ) -> io::Result<()> {
     let (value_addr, value_len) = slice(value);
@@ -1619,7 +1619,7 @@ pub(crate) fn lsetxattr(
 pub(crate) fn fsetxattr(
     fd: BorrowedFd<'_>,
     name: &CStr,
-    value: &str,
+    value: &[u8],
     flags: XattrFlags,
 ) -> io::Result<()> {
     let (value_addr, value_len) = slice(value);

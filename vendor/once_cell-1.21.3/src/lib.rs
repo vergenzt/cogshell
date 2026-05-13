@@ -184,7 +184,7 @@
 //!     pub const fn new(path: &'static str) -> TestResource {
 //!         TestResource { path, cell: OnceCell::new() }
 //!     }
-//!     pub fn bytes(&self) -> &str {
+//!     pub fn bytes(&self) -> &[u8] {
 //!         self.cell.get_or_init(|| {
 //!             let dir = std::env::var("CARGO_MANIFEST_DIR").unwrap();
 //!             let path = Path::new(dir.as_str()).join(self.path);
@@ -199,7 +199,7 @@
 //!
 //! #[test]
 //! fn test_sobel_filter() {
-//!     let rgb: &str = TEST_IMAGE.bytes();
+//!     let rgb: &[u8] = TEST_IMAGE.bytes();
 //!     // ...
 //! # drop(rgb);
 //! }
