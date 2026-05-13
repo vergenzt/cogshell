@@ -7,12 +7,12 @@ use regex::Regex;
 use super::block::Block;
 use super::errors::{ParseError, ParseErrorKind};
 use super::marker::MarkerKind;
-use crate::args::{Args, Pipe, Read};
+use crate::args::{Args, Pipe, PipeDir, PipeWithDir};
 use crate::parse::{BlockMarkers, Loc, MarkerInst, Span};
 
 pub struct FileContext<'a> {
     /// The filename or input stream containing CogShell block(s)
-    pub source: Pipe<Read>,
+    pub source: PipeWithDir,
     /// The original content of the source
     pub content: String,
     /// Config used to parse the source
@@ -20,11 +20,11 @@ pub struct FileContext<'a> {
 }
 
 impl<'a> FileContext<'a> {
-    pub fn new(source: Pipe<Read>, config: &'a Args) -> io::Result<Self> {
+    pub fn new(source: Pipe, config: &'a Args) -> io::Result<Self> {
         let mut content = String::new();
-        source.open().read_to_string(&mut content)?;
+        source.open_for_read()?.read_to_string(&mut content)?;
         Ok(Self {
-            source,
+            source: PipeWithDir(source, PipeDir::Read),
             content,
             config,
         })
@@ -51,7 +51,7 @@ impl<'a> File<'a> {
         let content = &ctx.content;
 
         let markers_re = {
-            let parts = ctx.config.markers.clone().map(|m| regex::escape(&m));
+            let parts = ctx.config.markers.each_ref().map(|m| regex::escape(m));
             Regex::new(&parts.join("|")).unwrap()
         };
 

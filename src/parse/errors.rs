@@ -70,7 +70,7 @@ impl ParseError<'_> {
             });
         let error = error.elements(prev_markers);
 
-        let report = Renderer::styled().render(&[error]);
-        anstream::eprintln!("{}", report);
+        let report = Renderer::plain().render(&[error]);
+        eprintln!("{}", report);
     }
 }

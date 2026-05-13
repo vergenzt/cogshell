@@ -1,18 +1,16 @@
 use std::fs::{self};
-use std::io::{self, BufReader, stderr};
+use std::io::{self, BufRead, BufReader, Write, stderr};
 use std::iter::{self, repeat_with};
 use std::ops::Deref;
 
-use std::ffi::{OsStr, OsString};
 use std::path::{self, Path, PathBuf};
 use std::process::{self, Output, Stdio};
 use std::slice::Join;
 use std::{array, mem, vec};
 
-use tempfile::{NamedTempFile, TempDir, TempPath};
+use tempfile::{NamedTempFile, TempDir};
 
-use crate::args::Args;
-use crate::args::io::{FileOrStream, Out};
+use crate::args::{Args, Pipe, PipeWithDir};
 use crate::parse::{Block, BlockMarkers, File, Loc, MarkerInst, Span};
 
 #[derive(Debug, Clone)]
@@ -25,7 +23,7 @@ impl OutputTerminator {
 }
 
 impl Deref for OutputTerminator {
-    type Target = String;
+    type Target = str;
     fn deref(&self) -> &Self::Target {
         &self.0
     }
@@ -41,7 +39,7 @@ pub struct FileExecutor<'a> {
 impl<'a> FileExecutor<'a> {
     /// Construct a command
     pub fn new(file: &'a File<'a>) -> io::Result<FileExecutor<'a>> {
-        let source_ext = match file.source.to_str().rsplit_once('.') {
+        let source_ext = match file.source.to_string().rsplit_once('.') {
             Some((_, ext)) => ext,
             None => "",
         };
@@ -65,36 +63,33 @@ impl<'a> FileExecutor<'a> {
                 path
             }};
         }
-        PathBuf::new().to_string_lossy().to_str
 
         // nonces to figure out where output from one block ends and the next begins
         let output_terminators: Vec<_> = iter::repeat_with(OutputTerminator::new)
             .take(file.blocks.len() + 1)
             .collect();
 
-        var!("TEMP_DIR" => temp_path.as_os_str());
-        var!("SOURCE" => OsStrExt::from_bytes(file.source.to_str().as_bytes()) );
-        var!("NUM_BLOCKS" => OsStrExt::from_bytes(file.blocks.len().to_string().as_bytes()));
-
-        file.config.prologue.join(b'\n');
-        var!("PROLOGUE" => path!("prologue.sh", pr).as_os_str());
+        var!("TEMP_DIR" => temp_path.to_str().unwrap());
+        var!("SOURCE" => &file.source.to_string());
+        var!("NUM_BLOCKS" => &file.blocks.len().to_string());
+        var!("PROLOGUE" => path!("prologue.sh", file.config.prologue.join("\n")).to_str().unwrap());
 
         for (i0, block) in file.blocks.iter().enumerate() {
             let i1 = i0 + 1; // 1-based indexing for var names
 
             let span = block.markers.prog_beg.span;
-            var!("BLOCK_LINE" [i1] => OsStrExt::from_bytes(span.start.line.to_string().as_bytes()));
-            var!("BLOCK_COL" [i1] => OsStrExt::from_bytes(span.start.col.to_string().as_bytes()));
-            var!("BLOCK_OFFSET" [i1] => OsStrExt::from_bytes(span.start.offset.to_string().as_bytes()));
+            var!("BLOCK_LINE" [i1] => &span.start.line.to_string());
+            var!("BLOCK_COL" [i1] => &span.start.col.to_string());
+            var!("BLOCK_OFFSET" [i1] => &span.start.offset.to_string());
 
-            var!("BLOCK_PROG" [i1] => path!(format!("block_{i1}.sh"), block.prog_lines.join("\n")).as_os_str());
-            var!("BLOCK_OUTPUT_LINE_PFX" [i1] => OsStrExt::from_bytes(block.prog_whitespace_pfx.as_bytes()));
-            var!("BLOCK_OUTPUT_PREV" [i1] => path!(format!("output_prev_{i1}{source_ext}"), block.output_prev));
+            var!("BLOCK_PROG" [i1] => path!(format!("block_{i1}.sh"), block.prog_lines.join("\n")).to_str().unwrap());
+            var!("BLOCK_OUTPUT_LINE_PFX" [i1] => block.prog_whitespace_pfx);
+            var!("BLOCK_OUTPUT_PREV" [i1] => path!(format!("output_prev_{i1}{source_ext}"), block.output_prev).to_str().unwrap());
         }
 
         let mut cmd = process::Command::new("bash");
         cmd.args(["-c", include_str!("program.sh")]);
-        cmd.arg(&file.source.to_str()); // make $COGSH_SOURCE also available as $0
+        cmd.arg(&file.source.to_string()); // make $COGSH_SOURCE also available as $0
         cmd.args(output_terminators); // pass output terminators as $1..$N rather than in env to reduce visibility to block code
         cmd.envs(env);
         cmd.stdin(Stdio::null());
@@ -102,7 +97,7 @@ impl<'a> FileExecutor<'a> {
         cmd.stderr(Stdio::inherit());
 
         // set current directory to parent dir of source file (if source is not stdin)
-        if let FileOrStream::File(input_path, _) = &file.source {
+        if let Pipe::File(input_path) = &file.source.0 {
             let input_path_abs = path::absolute(input_path)?;
             cmd.current_dir(input_path_abs.parent().unwrap());
         }
@@ -115,41 +110,24 @@ impl<'a> FileExecutor<'a> {
         })
     }
 
-    pub fn execute_in_place(&mut self) -> io::Result<()> {
-        match &self.file.source {
-            FileOrStream::File(orig_path, _) => {
-                let temp_path = NamedTempFile::new_in(orig_path.parent().unwrap())?
-                    .into_temp_path()
-                    .to_path_buf();
-                let output = FileOrStream::file(temp_path.clone());
-                self.execute(output)?;
-                fs::rename(temp_path, orig_path)?;
-            }
-            FileOrStream::Stream(_) => {
-                self.execute(FileOrStream::stream())?;
-            }
-        };
-        Ok(())
-    }
-
-    pub fn execute(&mut self, output: FileOrStream<Out>) -> io::Result<()> {
-        let mut outp_writer = output.open()?;
+    pub fn execute(&mut self, output: Pipe) -> io::Result<()> {
+        let mut outp_writer = output.open_for_write()?;
 
         let proc = self.cmd.spawn()?;
         let mut proc_reader = BufReader::new(proc.stdout.unwrap());
 
         macro_rules! nonce_terminated {
             (until $term:expr, for $line:ident in $reader:expr, $body:expr) => {
-                let mut curr_line = ByteStr::new(b"").to_owned();
-                let mut next_line = ByteStr::new(b"").to_owned();
+                let mut curr_line = String::new();
+                let mut next_line = String::new();
                 loop {
                     mem::swap(&mut curr_line, &mut next_line); // avoid re-allocating vectors
                     next_line.clear();
-                    match $reader.read_until(b'\n', &mut next_line)? {
+                    match $reader.read_line(&mut next_line)? {
                         0 => return Err(io::Error::from(io::ErrorKind::UnexpectedEof)),
                         _ => {
-                            if next_line.split_last() == Some((&b'\n', $term.as_bytes())) {
-                                assert_eq!(curr_line.pop(), Some(b'\n'));
+                            if next_line.strip_suffix("\n") == Some($term) {
+                                assert_eq!(curr_line.pop(), Some('\n'));
                                 let $line = &curr_line[..];
                                 $body;
                                 break;
@@ -166,55 +144,50 @@ impl<'a> FileExecutor<'a> {
         // write each line of output until terminator to output with the given prefix
         macro_rules! tee_prefixed {
             (to: $to_output:expr, prefix: $prefix:expr, until: $terminator:expr) => {
-                let mut output = $to_output;
+                let output = &mut $to_output;
                 nonce_terminated! {
                   until $terminator, for line in proc_reader, {
-                    output.write_all($prefix)?;
-                    output.write_all(line)?;
+                    output.write_all($prefix.as_bytes())?;
+                    output.write_all(line.as_bytes())?;
                   }
                 }
             };
         }
 
+        // write any output of prologue to stderr
         tee_prefixed!(
           to: io::stderr(),
-          prefix: format!("[PROLOGUE {}] ", self.file.source.to_str()).as_bytes(),
-          until: self.output_terminators[0]
+          prefix: format!("[PROLOGUE {}] ", self.file.source.to_string()),
+          until: &*self.output_terminators[0]
         );
 
         // portion of the file before the first block
         let head = &self.file.content[..*self.file.blocks[0].span.start];
-        outp_writer.write_all(head);
+        outp_writer.write_all(head.as_bytes())?;
 
         // for each block
         for i in 0..self.file.blocks.len() {
             let block = &self.file.blocks[i];
-            let terminator = &self.output_terminators[i + 1];
+            let terminator = &*self.output_terminators[i + 1];
 
             // write output of block itself
             tee_prefixed!(
-              to: &mut outp_writer,
+              to: outp_writer,
               prefix: block.prog_whitespace_pfx,
               until: terminator
             );
 
-            // write
+            // write portion of file between block and next block (or EOF)
+            let block_tail = {
+                let next_block_start_or_eof = match self.file.blocks.get(i + 1) {
+                    Some(next_block) => *next_block.span.start,
+                    None => self.file.content.len(),
+                };
+                &self.file.content[*block.span.end..next_block_start_or_eof]
+            };
+            outp_writer.write_all(block_tail.as_bytes())?;
         }
 
         Ok(())
-        //   match line {
-        //     Err(e) => Some(Err(e)),
-        //     Ok(0) => {
-        //       let err = io::Error::from(io::ErrorKind::UnexpectedEof);
-        //       Some(Err(err))
-        //     },
-        //     Ok(_) if next_line[..] == terminator.as_bytes() => {
-        //       None
-        //     },
-        //     Ok(_) => {
-        //       Some(Ok(&curr_line))
-        //     }
-        //   }
-        // });
     }
 }

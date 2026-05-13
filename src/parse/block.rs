@@ -1,9 +1,8 @@
 extern crate proc_macro;
 
-use crate::{
-    parse::{Checksum, FileContext, MarkerInst, Span},
-    utils::common_prefixes::{common_prefix_of_chars, leading_whitespace},
-};
+use common_prefix::{common_prefix_of_chars, leading_whitespace};
+
+use crate::parse::{Checksum, FileContext, MarkerInst, Span};
 
 pub struct BlockMarkers<'a> {
     pub prog_beg: MarkerInst<'a>,

@@ -11,11 +11,8 @@
 #![feature(coroutines, coroutine_trait, stmt_expr_attributes)]
 #![feature(uint_gather_scatter_bits)]
 
-use std::sync::atomic::AtomicUsize;
-
 mod args;
 mod execute;
 mod parse;
-mod utils;
 
 pub fn main() {}

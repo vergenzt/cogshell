@@ -1,8 +1,7 @@
 use std::sync::LazyLock;
 
+use base64_encode::base64_encode;
 use regex::Regex;
-
-use crate::utils::base64::base64_encode;
 
 #[derive(Copy, Clone, Debug)]
 pub enum ChecksumKind {

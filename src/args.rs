@@ -1,17 +1,14 @@
 use std::{
-    any::TypeId,
     fmt::Display,
     fs::File,
-    io::{self, BufRead, BufReader, Read, Write, stdin, stdout},
-    marker::PhantomData,
+    io::{self, BufRead, BufReader, Write, stdin, stdout},
     ops::Deref,
     path::PathBuf,
     str::FromStr,
 };
 
+use atomic_writer::AtomicFileWriter;
 use bpaf::{Parser, construct, long, positional};
-
-use crate::utils::atomic_writer::AtomicFileWriter;
 
 /// A "path" to read or write from (where `-` means stdin or stdout)
 pub enum Pipe {
@@ -24,7 +21,7 @@ pub enum PipeDir {
     Write,
 }
 
-pub struct PipeWithDir(Pipe, PipeDir);
+pub struct PipeWithDir(pub Pipe, pub PipeDir);
 
 impl Display for PipeWithDir {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
