@@ -3,6 +3,10 @@
 version = 4
 
 [[package]]
+name = "atomic_writer"
+version = "0.1.0"
+
+[[package]]
 name = "base64_encode"
 version = "0.1.0"
 
@@ -36,14 +40,20 @@ dependencies = [
 name = "cogshell"
 version = "0.1.0"
 dependencies = [
+ "atomic_writer",
  "base64_encode",
  "bpaf",
+ "common_prefix",
  "fastrand",
  "hex",
  "md5",
  "regex-automata",
  "tempfile",
 ]
+
+[[package]]
+name = "common_prefix"
+version = "0.1.0"
 
 [[package]]
 name = "errno"

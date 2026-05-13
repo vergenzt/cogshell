@@ -18,6 +18,4 @@ mod execute;
 mod parse;
 mod utils;
 
-static ERROR_COUNT: AtomicUsize = AtomicUsize::new(0);
-
 pub fn main() {}

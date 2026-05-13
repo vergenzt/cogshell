@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod test;
+
 use std::{borrow::Borrow, iter::zip};
 
 /// Length of the longest common prefix of characters from the given lines. If there is

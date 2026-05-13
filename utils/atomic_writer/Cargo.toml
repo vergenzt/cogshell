@@ -1,0 +1,9 @@
+[package]
+name = "atomic_writer"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+
+[dev-dependencies]
+tempfile = { version = "3.26.0", default-features = false }

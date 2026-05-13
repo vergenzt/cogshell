@@ -1,11 +1,19 @@
+#![cfg_attr(test, feature(macro_metavar_expr_concat))]
+
+#[cfg(test)]
+mod test;
+
 use std::{
     fs::write,
     io::{Cursor, Write},
     ops::Deref,
     path::PathBuf,
-    sync::atomic::Ordering,
+    sync::atomic::{AtomicUsize, Ordering},
 };
 
+pub static ERROR_COUNT: AtomicUsize = AtomicUsize::new(0);
+
+/// Accumulates writes into a buffer, then only writes to the output file when dropped.
 pub struct AtomicFileWriter {
     curs: Cursor<Vec<u8>>,
     path: PathBuf,
