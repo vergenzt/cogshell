@@ -1,13 +1,14 @@
 use std::ops::Deref;
 
 use std::io;
+use std::str::FromStr;
 
 use regex::Regex;
 
 use super::block::Block;
 use super::errors::{ParseError, ParseErrorKind};
 use super::marker::MarkerKind;
-use crate::args::{Args, Pipe};
+use crate::args::{Args, MarkerDefs, Pipe, SourceAndDestArgs};
 use crate::parse::{BlockMarkers, Loc, MarkerInst, Span};
 
 #[derive(Debug)]
@@ -32,6 +33,61 @@ impl<'a> FileContext<'a> {
     }
 }
 
+struct BlockBuilder<'a> {
+    ctx: &'a FileContext<'a>,
+    state: Vec<MarkerInst<'a>>,
+    blocks: Vec<Block<'a>>,
+}
+
+impl<'a> BlockBuilder<'a> {
+    pub fn new(ctx: &'a FileContext<'a>) -> Self {
+        Self {
+            ctx,
+            state: vec![],
+            blocks: vec![],
+        }
+    }
+
+    pub fn push_marker(
+        &mut self,
+        kind_idx: usize,
+        marker: MarkerInst<'a>,
+    ) -> Result<(), ParseError<'a>> {
+        if kind_idx == self.state.len() {
+            self.state.push(marker);
+            if self.state.len() == MarkerKind::ALL.len() {
+                let markers = BlockMarkers::new(self.state.split_off(0).as_array().unwrap());
+                let block = Block::new(self.ctx, markers);
+                self.blocks.push(block);
+            }
+            Ok(())
+        } else {
+            let kind = MarkerKind::ALL[kind_idx];
+            let ekind = ParseErrorKind::UnexpectedMarker(kind, marker);
+            let state = self.state.clone();
+            let ctx = self.ctx;
+            Err(ParseError { ekind, state, ctx })
+        }
+    }
+
+    pub fn finish(self) -> Result<Vec<Block<'a>>, ParseError<'a>> {
+        // unmatched markers left over
+        if self.state.is_empty() {
+            Ok(self.blocks)
+        } else {
+            let Self { state, ctx, .. } = self;
+            Err(ParseError {
+                ekind: ParseErrorKind::UnexpectedEOF,
+                state,
+                ctx,
+            })
+        }
+    }
+}
+
+impl MarkerDefs {}
+
+#[derive(Debug)]
 pub struct File<'a> {
     /// The context used to parse the file
     pub ctx: &'a FileContext<'a>,
@@ -52,14 +108,19 @@ impl<'a> File<'a> {
         let content = &ctx.content;
 
         let markers_re = {
-            let parts = ctx.config.markers.each_ref().map(|m| regex::escape(m));
-            Regex::new(&parts.join("|")).unwrap()
+            let mut re = String::new();
+            re.push_str(r"\n");
+            for marker in ctx.config.markers.each_ref() {
+                re.push_str("|(");
+                re.push_str(&regex::escape(marker));
+                re.push_str(")");
+            }
+            Regex::new(&re).unwrap()
         };
 
-        let mut line: usize = 0;
-        let mut line_start: usize = 0;
-        let mut blocks: Vec<Block> = Vec::new();
-        let mut state: Vec<MarkerInst> = Vec::with_capacity(3);
+        let mut builder = BlockBuilder::new(ctx);
+        let mut line = 0;
+        let mut line_start = 0;
 
         for caps in markers_re.captures_iter(content) {
             let mat = caps.get_match();
@@ -71,48 +132,40 @@ impl<'a> File<'a> {
                 continue;
             }
 
-            // determine marker kind based on
-            let kind: MarkerKind = {
-                let grp_idx = (1..=3).find_map(|i| caps.get(i).and(Some(i))).unwrap();
-                (grp_idx - 1).into()
-            };
-            let start = Loc {
-                offset: mat.range().start,
-                line,
-                col: mat.range().start - line_start,
-            };
-            let end = start + mat.as_str();
-            let span = Span { start, end };
-            let marker = MarkerInst::new(content, span);
+            // determine marker kind based on which capture group matched
+            let kind_idx = (0..3).find(|i| caps.get(i + 1).is_some()).unwrap();
+            let marker = MarkerInst::new(content, mat, line, line_start);
 
-            if kind as usize == state.len() {
-                state.push(marker);
-
-                // check for complete marker set
-                if state.len() == 3 {
-                    let markers = BlockMarkers::new(state.split_off(0).as_array().unwrap());
-                    let block = Block::new(ctx, markers);
-                    blocks.push(block);
-                }
-            } else {
-                return Err(ParseError {
-                    kind: ParseErrorKind::UnexpectedMarker(kind, marker),
-                    state,
-                    ctx,
-                });
-            }
+            builder.push_marker(kind_idx, marker)?;
         }
 
-        // unmatched markers left over
-        if !state.is_empty() {
-            return Err(ParseError {
-                kind: ParseErrorKind::UnexpectedEOF,
-                state,
-                ctx,
-            });
-        }
+        let blocks = builder.finish()?;
 
         // all markers matched
         Ok(File { ctx, blocks })
     }
+}
+
+#[test]
+fn test() {
+    let content = String::from(
+        "\
+content before
+<!--[[[cogsh echo hello]]]-->
+STALE OUTPUT
+<!--[[[end]]]-->
+content after
+",
+    );
+    let ctx = FileContext {
+        source: &Pipe::Stream,
+        content,
+        config: &Args {
+            source_and_dest: SourceAndDestArgs::SingleSourceAndDest(Pipe::Stream, Pipe::Stream),
+            prologue: vec![],
+            output_line_suffix: String::new(),
+            markers: MarkerDefs::from_str("[[[cogsh ]]] [[[end]]]").unwrap(),
+        },
+    };
+    println!("{:?}", File::from(&ctx).unwrap());
 }

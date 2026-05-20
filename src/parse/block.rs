@@ -1,20 +1,23 @@
 extern crate proc_macro;
 
+use std::io::Cursor;
+
 use common_prefix::{common_prefix_of_chars, leading_whitespace};
 
 use crate::parse::{Checksum, FileContext, MarkerInst, Span};
 
+#[derive(Debug)]
 pub struct BlockMarkers<'a> {
-    pub prog_beg: MarkerInst<'a>,
+    pub prog_start: MarkerInst<'a>,
     pub prog_end: MarkerInst<'a>,
     pub outp_end: MarkerInst<'a>,
 }
 
 impl<'a> BlockMarkers<'a> {
     pub fn new(markers: &[MarkerInst<'a>; 3]) -> BlockMarkers<'a> {
-        let [prog_beg, prog_end, outp_end] = *markers;
+        let [prog_start, prog_end, outp_end] = *markers;
         Self {
-            prog_beg,
+            prog_start,
             prog_end,
             outp_end,
         }
@@ -22,6 +25,7 @@ impl<'a> BlockMarkers<'a> {
 }
 
 /// Everything needed to execute an embedded code block
+#[derive(Debug)]
 pub struct Block<'a> {
     /// The markers which delimit this block
     pub markers: BlockMarkers<'a>,
@@ -42,23 +46,25 @@ impl<'a> Block<'a> {
     pub fn new(ctx: &'a FileContext, markers: BlockMarkers<'a>) -> Self {
         let FileContext { content, .. } = ctx;
         let BlockMarkers {
-            prog_beg,
+            prog_start,
             prog_end,
             outp_end,
-        } = &markers;
+        } = markers;
 
         // find beginning of line containing start marker
-        let prog_pfx = &content[..*prog_beg.span.start];
-        let prog_start_line_idx = prog_pfx.rfind('\n').map(|i| i + 1).unwrap_or(0);
-        let mut prog_lines: Vec<_> = content[prog_start_line_idx..*prog_end.span.start]
+        let prog_content_pfx = &content[..*prog_start.span.start];
+        let prog_line1_start_idx = prog_content_pfx.rfind('\n').map(|i| i + 1).unwrap_or(0);
+
+        let mut prog_full_lines: Vec<_> = content[prog_line1_start_idx..*prog_end.span.start]
             .split('\n')
             .collect();
 
         // save whitespace prefix of the marker lines for prepending to output
         // https://github.com/nedbat/cog/blob/05842d65800458b1a18eba89770d8cb705cb503a/cogapp/cogapp.py#L57-L58
         let prog_whitespace_pfx = {
-            let start_ws = leading_whitespace(&content[prog_start_line_idx..*prog_beg.span.start]);
-            if let Some(&prog_end_line_pfx) = prog_lines[1..].last() {
+            let start_ws =
+                leading_whitespace(&content[prog_line1_start_idx..*prog_start.span.start]);
+            if let Some(&prog_end_line_pfx) = prog_full_lines[1..].last() {
                 let end_ws = leading_whitespace(&prog_end_line_pfx);
                 common_prefix_of_chars(&vec![start_ws, end_ws]).unwrap_or("")
             } else {
@@ -69,20 +75,21 @@ impl<'a> Block<'a> {
         // from cog implementation: "If the markers and lines all have the same prefix (end-of-line comment chars, for
         // example), then remove it from all the lines."
         // https://github.com/nedbat/cog/blob/05842d65800458b1a18eba89770d8cb705cb503a/cogapp/cogapp.py#L46-L48
-        if let Some(prog_pfx_to_strip) = common_prefix_of_chars(&prog_lines) {
-            for line in prog_lines.iter_mut() {
+        if let Some(prog_pfx_to_strip) = common_prefix_of_chars(&prog_full_lines) {
+            for line in prog_full_lines.iter_mut() {
                 *line = line.strip_prefix(prog_pfx_to_strip).unwrap();
             }
         }
 
-        // remove start marker from first line
-        prog_lines[0] = prog_lines[0][prog_beg.span.len()..].trim_ascii_start();
+        // remove pfx and start marker from first line
+        let prog_line1_end_idx = prog_line1_start_idx + prog_full_lines[0].len();
+        prog_full_lines[0] = &content[(*prog_start.span.end + 1)..prog_line1_end_idx];
 
         // dedent program lines after the first
-        let lines_to_dedent = prog_lines[1..].iter().filter(|l| !l.is_empty());
+        let lines_to_dedent = prog_full_lines[1..].iter().filter(|l| !l.is_empty());
         let line_indents: Vec<_> = lines_to_dedent.map(|l| leading_whitespace(l)).collect();
         if let Some(indent) = common_prefix_of_chars(&line_indents) {
-            for line in prog_lines[1..].iter_mut() {
+            for line in prog_full_lines[1..].iter_mut() {
                 *line = line.strip_prefix(indent).unwrap_or(line);
             }
         }
@@ -94,12 +101,12 @@ impl<'a> Block<'a> {
         let output_prev_hash = Checksum::from_block_suffix(block_sfx);
 
         let span = Span {
-            start: prog_beg.span.start,
+            start: prog_start.span.start,
             end: outp_end.span.end,
         };
 
         Self {
-            prog_lines,
+            prog_lines: prog_full_lines,
             prog_whitespace_pfx,
             markers,
             output_prev,

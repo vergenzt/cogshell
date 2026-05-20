@@ -1,6 +1,8 @@
 use std::fmt::Display;
 
-use crate::parse::Span;
+use regex::Match;
+
+use crate::parse::{Loc, Span};
 
 #[derive(Debug, Clone, Copy)]
 pub struct MarkerInst<'a> {
@@ -11,7 +13,15 @@ pub struct MarkerInst<'a> {
 }
 
 impl<'a> MarkerInst<'a> {
-    pub fn new(content: &'a str, span: Span) -> Self {
+    pub fn new(content: &'a str, mat: Match<'a>, line: usize, line_start: usize) -> Self {
+        let start = {
+            let offset = mat.range().start;
+            let line = line;
+            let col = offset - line_start;
+            Loc { offset, line, col }
+        };
+        let end = start + mat.as_str();
+        let span = Span { start, end };
         Self { content, span }
     }
 
@@ -33,22 +43,14 @@ pub enum MarkerKind {
 }
 
 impl MarkerKind {
+    pub const ALL: [Self; 3] = [Self::ProgramStart, Self::ProgramEnd, Self::OutputEnd];
+
     pub fn description(self: MarkerKind) -> &'static str {
         match self {
             MarkerKind::ProgramStart => "program start marker",
             MarkerKind::ProgramEnd => "program end marker",
             MarkerKind::OutputEnd => "output end marker",
         }
-    }
-}
-
-impl From<usize> for MarkerKind {
-    fn from(i: usize) -> MarkerKind {
-        [
-            MarkerKind::ProgramStart,
-            MarkerKind::ProgramEnd,
-            MarkerKind::OutputEnd,
-        ][i]
     }
 }
 

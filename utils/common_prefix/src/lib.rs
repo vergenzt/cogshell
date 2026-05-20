@@ -6,7 +6,10 @@ use std::{borrow::Borrow, iter::zip};
 /// Length of the longest common prefix of characters from the given lines. If there is
 /// not more than one line, result is None.
 pub fn common_prefix_of_chars<'a>(lines: &[&'a str]) -> Option<&'a str> {
-    let mut lines = lines.iter();
+    if lines.len() < 2 {
+        return None;
+    }
+    let mut lines = lines.iter().peekable();
     let mut comm_pfx = *lines.next()?;
     for line in lines {
         let divergence_idx = zip(comm_pfx.bytes(), line.bytes())

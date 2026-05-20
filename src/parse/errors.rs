@@ -14,23 +14,23 @@ pub enum ParseErrorKind<'a> {
 }
 
 pub struct ParseError<'a> {
-    pub kind: ParseErrorKind<'a>,
+    pub ekind: ParseErrorKind<'a>,
     pub state: Vec<MarkerInst<'a>>,
     pub ctx: &'a FileContext<'a>,
 }
 
 impl Debug for ParseError<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let ParseError { kind, ctx, state } = self;
+        let ParseError { ekind, ctx, state } = self;
         let sought_idx = state.len();
         let sought_str = &ctx.config.markers[sought_idx];
-        let sought_kind: MarkerKind = sought_idx.into();
+        let sought_kind = MarkerKind::ALL[sought_idx];
 
         let source =
             Snippet::source(&ctx.content).path(ctx.source.with_dir(PipeDir::Read).to_string());
         let error = Level::ERROR;
 
-        let error = match kind {
+        let error = match ekind {
             ParseErrorKind::UnexpectedMarker(kind, marker) => {
                 let str = marker.bytes();
                 error
@@ -65,7 +65,7 @@ impl Debug for ParseError<'_> {
                     AnnotationKind::Context
                         .span(prev_marker.span.into())
                         .label({
-                            let kind: MarkerKind = i.into();
+                            let kind = MarkerKind::ALL[i];
                             kind.description()
                         }),
                 )

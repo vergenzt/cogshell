@@ -75,7 +75,7 @@ impl<'a> FileExecutor<'a> {
         for (i0, block) in file.blocks.iter().enumerate() {
             let i1 = i0 + 1; // 1-based indexing for var names
 
-            let span = block.markers.prog_beg.span;
+            let span = block.markers.prog_start.span;
             var!("BLOCK_LINE" [i1] => span.start.line.to_string());
             var!("BLOCK_COL" [i1] => span.start.col.to_string());
             var!("BLOCK_OFFSET" [i1] => span.start.offset.to_string());

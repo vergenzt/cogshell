@@ -110,16 +110,16 @@ fn source_and_dest_args() -> impl Parser<SourceAndDestArgs> {
 }
 
 #[derive(Clone, Debug)]
-pub struct MarkerConfig([String; 3]);
+pub struct MarkerDefs([String; 3]);
 
-impl Deref for MarkerConfig {
+impl Deref for MarkerDefs {
     type Target = [String; 3];
-    fn deref(self: &MarkerConfig) -> &Self::Target {
+    fn deref(self: &MarkerDefs) -> &Self::Target {
         &self.0
     }
 }
 
-impl FromStr for MarkerConfig {
+impl FromStr for MarkerDefs {
     type Err = String;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let parts: Vec<_> = s.split_ascii_whitespace().collect();
@@ -132,7 +132,7 @@ impl FromStr for MarkerConfig {
     }
 }
 
-impl Display for MarkerConfig {
+impl Display for MarkerDefs {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let [a, b, c] = &self.0;
         write!(f, "{a} {b} {c}")
@@ -141,10 +141,10 @@ impl Display for MarkerConfig {
 
 /// The patterns surrounding cog inline instructions. Should include three
 /// values separated by spaces, the start, end, and end-output markers.
-fn markers() -> impl Parser<MarkerConfig> {
+fn markers() -> impl Parser<MarkerDefs> {
     long("markers")
-        .argument::<MarkerConfig>("START END END-OUTPUT")
-        .fallback(MarkerConfig::from_str("[[[cogsh ]]] [[[end]]]").unwrap())
+        .argument::<MarkerDefs>("START END END-OUTPUT")
+        .fallback(MarkerDefs::from_str("[[[cogsh ]]] [[[end]]]").unwrap())
         .display_fallback()
 }
 
@@ -153,7 +153,7 @@ pub struct Args {
     pub source_and_dest: SourceAndDestArgs,
     pub prologue: Vec<String>,
     pub output_line_suffix: String,
-    pub markers: MarkerConfig,
+    pub markers: MarkerDefs,
 }
 
 /// Statements to execute before running CogShell scripts. Executed once per file before

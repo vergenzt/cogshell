@@ -41,6 +41,7 @@ static CHECKSUM_RE: LazyLock<Regex> = LazyLock::new(|| {
     .unwrap()
 });
 
+#[derive(Debug)]
 pub struct Checksum<'a> {
     kind: ChecksumKind,
     hash: &'a str,
