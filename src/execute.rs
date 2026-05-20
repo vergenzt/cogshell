@@ -1,17 +1,16 @@
 use std::fs::{self};
-use std::io::{self, BufRead, BufReader, Write, stderr};
+use std::io::{self, BufRead, BufReader, Write};
 use std::iter::{self, repeat_with};
 use std::ops::Deref;
 
-use std::path::{self, Path, PathBuf};
-use std::process::{self, Output, Stdio};
-use std::slice::Join;
-use std::{array, mem, vec};
+use std::path::{self};
+use std::process::{self, Stdio};
+use std::{mem, vec};
 
-use tempfile::{NamedTempFile, TempDir};
+use tempfile::TempDir;
 
-use crate::args::{Args, Pipe, PipeWithDir};
-use crate::parse::{Block, BlockMarkers, File, Loc, MarkerInst, Span};
+use crate::args::{Pipe, PipeDir};
+use crate::parse::File;
 
 #[derive(Debug, Clone)]
 struct OutputTerminator(String);
@@ -33,16 +32,15 @@ pub struct FileExecutor<'a> {
     pub file: &'a File<'a>,
     cmd: process::Command,
     output_terminators: Vec<OutputTerminator>,
+    #[allow(dead_code)]
     temp_dir: TempDir,
 }
 
 impl<'a> FileExecutor<'a> {
     /// Construct a command
     pub fn new(file: &'a File<'a>) -> io::Result<FileExecutor<'a>> {
-        let source_ext = match file.source.to_string().rsplit_once('.') {
-            Some((_, ext)) => ext,
-            None => "",
-        };
+        let source = file.source.with_dir(PipeDir::Read).to_string();
+        let source_ext = source.rsplit_terminator('.').next().unwrap_or("");
         let temp_dir = tempfile::Builder::new().prefix("cogshell-").tempdir()?;
         let temp_path = temp_dir.path();
 
@@ -60,7 +58,7 @@ impl<'a> FileExecutor<'a> {
             ($fname:expr, $content:expr) => {{
                 let path = temp_path.join($fname);
                 fs::write(&path, $content)?;
-                path
+                path.to_str().unwrap().to_owned()
             }};
         }
 
@@ -69,35 +67,37 @@ impl<'a> FileExecutor<'a> {
             .take(file.blocks.len() + 1)
             .collect();
 
-        var!("TEMP_DIR" => temp_path.to_str().unwrap());
-        var!("SOURCE" => &file.source.to_string());
-        var!("NUM_BLOCKS" => &file.blocks.len().to_string());
-        var!("PROLOGUE" => path!("prologue.sh", file.config.prologue.join("\n")).to_str().unwrap());
+        var!("TEMP_DIR" => temp_path.to_str().unwrap().to_owned());
+        var!("SOURCE" => source.clone());
+        var!("NUM_BLOCKS" => file.blocks.len().to_string());
+        var!("PROLOGUE" => path!("prologue.sh", file.config.prologue.join("\n")));
 
         for (i0, block) in file.blocks.iter().enumerate() {
             let i1 = i0 + 1; // 1-based indexing for var names
 
             let span = block.markers.prog_beg.span;
-            var!("BLOCK_LINE" [i1] => &span.start.line.to_string());
-            var!("BLOCK_COL" [i1] => &span.start.col.to_string());
-            var!("BLOCK_OFFSET" [i1] => &span.start.offset.to_string());
+            var!("BLOCK_LINE" [i1] => span.start.line.to_string());
+            var!("BLOCK_COL" [i1] => span.start.col.to_string());
+            var!("BLOCK_OFFSET" [i1] => span.start.offset.to_string());
 
-            var!("BLOCK_PROG" [i1] => path!(format!("block_{i1}.sh"), block.prog_lines.join("\n")).to_str().unwrap());
-            var!("BLOCK_OUTPUT_LINE_PFX" [i1] => block.prog_whitespace_pfx);
-            var!("BLOCK_OUTPUT_PREV" [i1] => path!(format!("output_prev_{i1}{source_ext}"), block.output_prev).to_str().unwrap());
+            var!("BLOCK_PROG" [i1] => path!(format!("block_{i1}.sh"), block.prog_lines.join("\n")));
+            var!("BLOCK_OUTPUT_LINE_PFX" [i1] => block.prog_whitespace_pfx.to_owned());
+            var!("BLOCK_OUTPUT_PREV" [i1] => path!(format!("output_prev_{i1}{source_ext}"), block.output_prev));
         }
 
         let mut cmd = process::Command::new("bash");
         cmd.args(["-c", include_str!("program.sh")]);
-        cmd.arg(&file.source.to_string()); // make $COGSH_SOURCE also available as $0
-        cmd.args(output_terminators); // pass output terminators as $1..$N rather than in env to reduce visibility to block code
+        cmd.arg(&source.clone()); // make $COGSH_SOURCE also available as $0
+        for term in &output_terminators {
+            cmd.arg(&*term as &str);
+        }
         cmd.envs(env);
         cmd.stdin(Stdio::null());
         cmd.stdout(Stdio::piped());
         cmd.stderr(Stdio::inherit());
 
         // set current directory to parent dir of source file (if source is not stdin)
-        if let Pipe::File(input_path) = &file.source.0 {
+        if let Pipe::File(input_path) = &file.source {
             let input_path_abs = path::absolute(input_path)?;
             cmd.current_dir(input_path_abs.parent().unwrap());
         }
@@ -110,7 +110,7 @@ impl<'a> FileExecutor<'a> {
         })
     }
 
-    pub fn execute(&mut self, output: Pipe) -> io::Result<()> {
+    pub fn execute(&mut self, output: &Pipe) -> io::Result<()> {
         let mut outp_writer = output.open_for_write()?;
 
         let proc = self.cmd.spawn()?;
@@ -142,7 +142,7 @@ impl<'a> FileExecutor<'a> {
         }
 
         // write each line of output until terminator to output with the given prefix
-        macro_rules! tee_prefixed {
+        macro_rules! tee_wrapped {
             (to: $to_output:expr, prefix: $prefix:expr, until: $terminator:expr) => {
                 let output = &mut $to_output;
                 nonce_terminated! {
@@ -155,9 +155,9 @@ impl<'a> FileExecutor<'a> {
         }
 
         // write any output of prologue to stderr
-        tee_prefixed!(
+        tee_wrapped!(
           to: io::stderr(),
-          prefix: format!("[PROLOGUE {}] ", self.file.source.to_string()),
+          prefix: format!("[PROLOGUE {}] ", self.file.source.with_dir(PipeDir::Read)),
           until: &*self.output_terminators[0]
         );
 
@@ -171,7 +171,7 @@ impl<'a> FileExecutor<'a> {
             let terminator = &*self.output_terminators[i + 1];
 
             // write output of block itself
-            tee_prefixed!(
+            tee_wrapped!(
               to: outp_writer,
               prefix: block.prog_whitespace_pfx,
               until: terminator

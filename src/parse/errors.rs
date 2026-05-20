@@ -1,7 +1,8 @@
-use std::fmt::Display;
+use std::fmt::Debug;
 
 use annotate_snippets::{AnnotationKind, Level, Renderer, Snippet};
 
+use crate::args::PipeDir;
 use crate::parse::FileContext;
 use crate::parse::MarkerInst;
 use crate::parse::MarkerKind;
@@ -18,14 +19,15 @@ pub struct ParseError<'a> {
     pub ctx: &'a FileContext<'a>,
 }
 
-impl ParseError<'_> {
-    fn print(&self) {
+impl Debug for ParseError<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let ParseError { kind, ctx, state } = self;
         let sought_idx = state.len();
         let sought_str = &ctx.config.markers[sought_idx];
         let sought_kind: MarkerKind = sought_idx.into();
 
-        let source = Snippet::source(&ctx.content).path(ctx.source.to_string());
+        let source =
+            Snippet::source(&ctx.content).path(ctx.source.with_dir(PipeDir::Read).to_string());
         let error = Level::ERROR;
 
         let error = match kind {
@@ -71,6 +73,6 @@ impl ParseError<'_> {
         let error = error.elements(prev_markers);
 
         let report = Renderer::plain().render(&[error]);
-        eprintln!("{}", report);
+        writeln!(f, "{}", report)
     }
 }

@@ -1,18 +1,26 @@
 #![feature(trim_prefix_suffix)]
 #![feature(file_buffered)]
-#![feature(never_type)]
-#![feature(exit_status_error)]
-#![feature(macro_metavar_expr_concat)]
-#![feature(iter_intersperse)]
-#![feature(slice_pattern)]
-#![feature(slice_concat_trait)]
-#![feature(slice_concat_ext)]
-#![feature(funnel_shifts)]
-#![feature(coroutines, coroutine_trait, stmt_expr_attributes)]
-#![feature(uint_gather_scatter_bits)]
 
 mod args;
 mod execute;
 mod parse;
 
-pub fn main() {}
+pub fn main() {
+    let args = args::Args::to_options().run();
+    match args.source_and_dest {
+        args::SourceAndDestArgs::SourcesInPlace(ref pipes) => {
+            for pipe in pipes {
+                let fctx = parse::FileContext::new(pipe, &args).unwrap();
+                let file = parse::File::from(&fctx).unwrap();
+                let mut exec = execute::FileExecutor::new(&file).unwrap();
+                exec.execute(pipe).unwrap();
+            }
+        }
+        args::SourceAndDestArgs::SingleSourceAndDest(ref src, ref dst) => {
+            let fctx = parse::FileContext::new(src, &args).unwrap();
+            let file = parse::File::from(&fctx).unwrap();
+            let mut exec = execute::FileExecutor::new(&file).unwrap();
+            exec.execute(dst).unwrap();
+        }
+    }
+}

@@ -6,7 +6,6 @@ mod test;
 use std::{
     fs::write,
     io::{Cursor, Write},
-    ops::Deref,
     path::PathBuf,
     sync::atomic::{AtomicUsize, Ordering},
 };
@@ -14,12 +13,12 @@ use std::{
 pub static ERROR_COUNT: AtomicUsize = AtomicUsize::new(0);
 
 /// Accumulates writes into a buffer, then only writes to the output file when dropped.
-pub struct AtomicFileWriter {
+pub struct AtomicFileWriter<'a> {
     curs: Cursor<Vec<u8>>,
-    path: PathBuf,
+    path: &'a PathBuf,
 }
 
-impl Write for AtomicFileWriter {
+impl<'a> Write for AtomicFileWriter<'a> {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
         self.curs.write(buf)
     }
@@ -28,22 +27,15 @@ impl Write for AtomicFileWriter {
     }
 }
 
-impl AtomicFileWriter {
-    pub fn new(path: PathBuf) -> Self {
+impl<'a> AtomicFileWriter<'a> {
+    pub fn new(path: &'a PathBuf) -> Self {
         let buf = Vec::new();
         let curs = Cursor::new(buf);
         Self { curs, path }
     }
 }
 
-impl Deref for AtomicFileWriter {
-    type Target = dyn Write;
-    fn deref(&self) -> &Self::Target {
-        &self.curs
-    }
-}
-
-impl Drop for AtomicFileWriter {
+impl Drop for AtomicFileWriter<'_> {
     fn drop(&mut self) {
         let result = write(&self.path, self.curs.get_ref());
         if let Err(err) = result {

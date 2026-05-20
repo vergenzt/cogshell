@@ -1,18 +1,19 @@
 use std::ops::Deref;
 
-use std::{fs, io};
+use std::io;
 
 use regex::Regex;
 
 use super::block::Block;
 use super::errors::{ParseError, ParseErrorKind};
 use super::marker::MarkerKind;
-use crate::args::{Args, Pipe, PipeDir, PipeWithDir};
+use crate::args::{Args, Pipe};
 use crate::parse::{BlockMarkers, Loc, MarkerInst, Span};
 
+#[derive(Debug)]
 pub struct FileContext<'a> {
     /// The filename or input stream containing CogShell block(s)
-    pub source: PipeWithDir,
+    pub source: &'a Pipe,
     /// The original content of the source
     pub content: String,
     /// Config used to parse the source
@@ -20,11 +21,11 @@ pub struct FileContext<'a> {
 }
 
 impl<'a> FileContext<'a> {
-    pub fn new(source: Pipe, config: &'a Args) -> io::Result<Self> {
+    pub fn new(source: &'a Pipe, config: &'a Args) -> io::Result<Self> {
         let mut content = String::new();
         source.open_for_read()?.read_to_string(&mut content)?;
         Ok(Self {
-            source: PipeWithDir(source, PipeDir::Read),
+            source,
             content,
             config,
         })

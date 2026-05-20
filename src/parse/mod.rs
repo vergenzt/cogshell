@@ -8,7 +8,6 @@ mod span;
 
 pub use block::*;
 pub use checksum::*;
-pub use errors::*;
 pub use file::*;
 pub use loc::*;
 pub use marker::*;

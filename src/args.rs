@@ -1,4 +1,5 @@
 use std::{
+    convert::Infallible,
     fmt::Display,
     fs::File,
     io::{self, BufRead, BufReader, Write, stdin, stdout},
@@ -8,22 +9,31 @@ use std::{
 };
 
 use atomic_writer::AtomicFileWriter;
-use bpaf::{Parser, construct, long, positional};
+use bpaf::{OptionParser, Parser, construct, long, positional};
 
 /// A "path" to read or write from (where `-` means stdin or stdout)
+#[derive(Debug)]
 pub enum Pipe {
     File(PathBuf),
     Stream,
 }
 
+impl Pipe {
+    pub fn with_dir(&self, dir: PipeDir) -> PipeWithDir {
+        PipeWithDir(self, dir)
+    }
+}
+
+#[derive(Debug)]
 pub enum PipeDir {
     Read,
     Write,
 }
 
-pub struct PipeWithDir(pub Pipe, pub PipeDir);
+#[derive(Debug)]
+pub struct PipeWithDir<'a>(pub &'a Pipe, pub PipeDir);
 
-impl Display for PipeWithDir {
+impl Display for PipeWithDir<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self(Pipe::File(path), _) => {
@@ -40,7 +50,7 @@ impl Display for PipeWithDir {
 }
 
 impl FromStr for Pipe {
-    type Err = !;
+    type Err = Infallible;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if s == "-" {
             Ok(Self::Stream)
@@ -50,14 +60,14 @@ impl FromStr for Pipe {
     }
 }
 
-impl Pipe {
-    pub fn open_for_read(&self) -> io::Result<Box<dyn BufRead>> {
+impl<'a> Pipe {
+    pub fn open_for_read(&'a self) -> io::Result<Box<dyn BufRead + 'a>> {
         match self {
             Self::Stream => Ok(Box::new(BufReader::new(stdin()))),
             Self::File(path) => Ok(Box::new(File::open_buffered(path)?)),
         }
     }
-    pub fn open_for_write(self) -> io::Result<Box<dyn Write>> {
+    pub fn open_for_write(&'a self) -> io::Result<Box<dyn Write + 'a>> {
         match self {
             Self::Stream => Ok(Box::new(stdout())),
             Self::File(path) => Ok(Box::new(AtomicFileWriter::new(path))),
@@ -67,11 +77,12 @@ impl Pipe {
 
 /// Enum to restrict combinations of source/dest args. (Output destination can only be
 /// specified if there is exactly one source arg.)
+#[derive(Debug)]
 pub enum SourceAndDestArgs {
     /// Process any number of files in-place
     SourcesInPlace(Vec<Pipe>),
     /// Process exactly one input (stdin or file) to one output (stdout or file)
-    SourceAndDest(Pipe, Pipe),
+    SingleSourceAndDest(Pipe, Pipe),
 }
 
 fn source() -> impl Parser<Pipe> {
@@ -83,7 +94,7 @@ fn dest() -> impl Parser<Pipe> {
 }
 
 fn source_and_dest() -> impl Parser<SourceAndDestArgs> {
-    construct!(SourceAndDestArgs::SourceAndDest(source(), dest()))
+    construct!(SourceAndDestArgs::SingleSourceAndDest(source(), dest()))
 }
 
 fn sources() -> impl Parser<Vec<Pipe>> {
@@ -98,7 +109,7 @@ fn source_and_dest_args() -> impl Parser<SourceAndDestArgs> {
     construct!([source_and_dest(), sources_in_place()])
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct MarkerConfig([String; 3]);
 
 impl Deref for MarkerConfig {
@@ -137,6 +148,7 @@ fn markers() -> impl Parser<MarkerConfig> {
         .display_fallback()
 }
 
+#[derive(Debug)]
 pub struct Args {
     pub source_and_dest: SourceAndDestArgs,
     pub prologue: Vec<String>,
@@ -159,12 +171,13 @@ fn output_line_suffix() -> impl Parser<String> {
 }
 
 impl Args {
-    pub fn parser() -> impl Parser<Self> {
+    pub fn to_options() -> OptionParser<Self> {
         construct!(Self {
             source_and_dest(),
             prologue(),
             output_line_suffix(),
             markers(),
         })
+        .to_options()
     }
 }
