@@ -1,20 +1,16 @@
-extern crate proc_macro;
-
-use std::io::Cursor;
-
 use common_prefix::{common_prefix_of_chars, leading_whitespace};
 
-use crate::parse::{Checksum, FileContext, MarkerInst, Span};
+use super::{checksum::*, marker_inst::*, span::*};
 
 #[derive(Debug)]
-pub struct BlockMarkers<'a> {
-    pub prog_start: MarkerInst<'a>,
-    pub prog_end: MarkerInst<'a>,
-    pub outp_end: MarkerInst<'a>,
+pub struct BlockMarkers<'i> {
+    pub prog_start: MarkerInst<'i>,
+    pub prog_end: MarkerInst<'i>,
+    pub outp_end: MarkerInst<'i>,
 }
 
-impl<'a> BlockMarkers<'a> {
-    pub fn new(markers: &[MarkerInst<'a>; 3]) -> BlockMarkers<'a> {
+impl<'i> BlockMarkers<'i> {
+    pub fn new(markers: &[MarkerInst<'i>; 3]) -> BlockMarkers<'i> {
         let [prog_start, prog_end, outp_end] = *markers;
         Self {
             prog_start,
@@ -26,25 +22,24 @@ impl<'a> BlockMarkers<'a> {
 
 /// Everything needed to execute an embedded code block
 #[derive(Debug)]
-pub struct Block<'a> {
+pub struct Block<'i> {
     /// The markers which delimit this block
-    pub markers: BlockMarkers<'a>,
+    pub markers: BlockMarkers<'i>,
     /// The (pre-trimmed) lines of the program to run
-    pub prog_lines: Vec<&'a str>,
+    pub prog_lines: Vec<&'i str>,
     /// The text to prepend to lines of output
-    pub prog_whitespace_pfx: &'a str,
+    pub prog_whitespace_pfx: &'i str,
     /// The unmodified previous output bytes found between the program end and output end markers
-    pub output_prev: &'a str,
+    pub output_prev: &'i str,
     /// The previous output checksum which followed this block's output end marker, if present
-    pub output_prev_hash: Option<Checksum<'a>>,
+    pub output_prev_hash: Option<Checksum<'i>>,
     /// The full span of (the parsed version of) this block from start to end
     pub span: Span,
 }
 
-impl<'a> Block<'a> {
+impl<'strs> Block<'strs> {
     /// Parse a CogShell block from matched markers
-    pub fn new(ctx: &'a FileContext, markers: BlockMarkers<'a>) -> Self {
-        let FileContext { content, .. } = ctx;
+    pub fn new(lines: &Vec<String>, markers: BlockMarkers<'strs>) -> Self {
         let BlockMarkers {
             prog_start,
             prog_end,

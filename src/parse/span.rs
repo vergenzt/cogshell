@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-use crate::parse::Loc;
+use super::loc::*;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Span {

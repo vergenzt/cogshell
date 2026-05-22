@@ -30,7 +30,7 @@ static CHECKSUM_RE: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(
         r"(?x-u)
           \A # must start immediately
-          [ ]*
+          \x20*  # (spaces)
           \(
             (?<kind> checksum | sum )
             :
@@ -42,14 +42,14 @@ static CHECKSUM_RE: LazyLock<Regex> = LazyLock::new(|| {
 });
 
 #[derive(Debug)]
-pub struct Checksum<'a> {
+pub struct Checksum<'strs> {
     kind: ChecksumKind,
-    hash: &'a str,
+    hash: &'strs str,
 }
 
-impl<'a> Checksum<'a> {
+impl<'strs> Checksum<'strs> {
     /// Search for an output hash suffix following a CogShell block, given the str starting immediately after output end mark
-    pub fn from_block_suffix(block_sfx: &'a str) -> Option<Checksum<'a>> {
+    pub fn from_block_suffix(block_sfx: &'strs str) -> Option<Checksum<'strs>> {
         let caps = CHECKSUM_RE.captures(block_sfx)?;
         let kind = ChecksumKind::from_label(caps.name("kind")?.as_str())?;
         let hash = caps.name("hash")?.as_str();

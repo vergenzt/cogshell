@@ -1,7 +1,8 @@
+pub mod terminators;
+
 use std::fs::{self};
-use std::io::{self, BufRead, BufReader, Write};
-use std::iter::{self, repeat_with};
-use std::ops::Deref;
+use std::io::{self, BufRead as _, Write as _};
+use std::iter::{self};
 
 use std::path::{self};
 use std::process::{self, Stdio};
@@ -9,37 +10,32 @@ use std::{mem, vec};
 
 use tempfile::TempDir;
 
-use crate::args::{Pipe, PipeDir};
-use crate::parse::File;
+use crate::deref_field;
 
-#[derive(Debug, Clone)]
-struct OutputTerminator(String);
+use super::args::{File, FileArg, Write};
+use super::parse::ParsedFile;
+use terminators::OutputTerminator;
 
-impl OutputTerminator {
-    fn new() -> Self {
-        Self(repeat_with(fastrand::alphanumeric).take(20).collect())
-    }
-}
-
-impl Deref for OutputTerminator {
-    type Target = str;
-    fn deref(&self) -> &Self::Target {
-        &self.0
+impl ParsedFile<'_, '_> {
+    pub fn execute(&self) -> io::Result<()> {
+        let mut state = FileExecutor::initialize(self)?;
+        let out: File<Write> = (&self.source.arg).into();
+        state.execute(&out)
     }
 }
 
 pub struct FileExecutor<'a> {
-    pub file: &'a File<'a>,
+    pub file: &'_ ParsedFile<'a>,
     cmd: process::Command,
     output_terminators: Vec<OutputTerminator>,
-    #[allow(dead_code)]
     temp_dir: TempDir,
 }
 
-impl<'a> FileExecutor<'a> {
-    /// Construct a command
-    pub fn new(file: &'a File<'a>) -> io::Result<FileExecutor<'a>> {
-        let source = file.source.with_dir(PipeDir::Read).to_string();
+deref_field! { impl<'a> *FileExecutor<'a> = .file: ParsedFile<'a> }
+
+impl<'strs> FileExecutor<'strs> {
+    pub fn initialize(file: &'strs ParsedFile<'strs>) -> io::Result<FileExecutor<'strs>> {
+        let source = file.source.to_string();
         let source_ext = source.rsplit_terminator('.').next().unwrap_or("");
         let temp_dir = tempfile::Builder::new().prefix("cogshell-").tempdir()?;
         let temp_path = temp_dir.path();
@@ -70,7 +66,7 @@ impl<'a> FileExecutor<'a> {
         var!("TEMP_DIR" => temp_path.to_str().unwrap().to_owned());
         var!("SOURCE" => source.clone());
         var!("NUM_BLOCKS" => file.blocks.len().to_string());
-        var!("PROLOGUE" => path!("prologue.sh", file.config.prologue.join("\n")));
+        var!("PROLOGUE" => path!("prologue.sh", file.args.prologue.join("\n")));
 
         for (i0, block) in file.blocks.iter().enumerate() {
             let i1 = i0 + 1; // 1-based indexing for var names
@@ -86,7 +82,7 @@ impl<'a> FileExecutor<'a> {
         }
 
         let mut cmd = process::Command::new("bash");
-        cmd.args(["-c", include_str!("program.sh")]);
+        cmd.args(["-c", include_str!("executor.sh")]);
         cmd.arg(&source.clone()); // make $COGSH_SOURCE also available as $0
         for term in &output_terminators {
             cmd.arg(&*term as &str);
@@ -97,7 +93,7 @@ impl<'a> FileExecutor<'a> {
         cmd.stderr(Stdio::inherit());
 
         // set current directory to parent dir of source file (if source is not stdin)
-        if let Pipe::File(input_path) = &file.source {
+        if let FileArg::OnDisk(input_path) = &file.source.arg {
             let input_path_abs = path::absolute(input_path)?;
             cmd.current_dir(input_path_abs.parent().unwrap());
         }
@@ -110,11 +106,15 @@ impl<'a> FileExecutor<'a> {
         })
     }
 
-    pub fn execute(&mut self, output: &Pipe) -> io::Result<()> {
-        let mut outp_writer = output.open_for_write()?;
+    pub fn execute(&mut self, output: &File<Write>) -> io::Result<()> {
+        let output_line_mut = |line: String| -> String {
+          let pfx = self.
+          format!
+        };
+        let mut outp_writer = output.open()?;
 
         let proc = self.cmd.spawn()?;
-        let mut proc_reader = BufReader::new(proc.stdout.unwrap());
+        let mut proc_reader = io::BufReader::new(proc.stdout.unwrap());
 
         macro_rules! nonce_terminated {
             (until $term:expr, for $line:ident in $reader:expr, $body:expr) => {
@@ -157,7 +157,7 @@ impl<'a> FileExecutor<'a> {
         // write any output of prologue to stderr
         tee_wrapped!(
           to: io::stderr(),
-          prefix: format!("[PROLOGUE {}] ", self.file.source.with_dir(PipeDir::Read)),
+          prefix: format!("[PROLOGUE {}] ", self.file.source),
           until: &*self.output_terminators[0]
         );
 

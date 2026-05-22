@@ -1,34 +1,6 @@
 use std::fmt::Display;
 
-use regex::Match;
-
-use crate::parse::{Loc, Span};
-
-#[derive(Debug, Clone, Copy)]
-pub struct MarkerInst<'a> {
-    /// The content this marker was matched from
-    content: &'a str,
-    /// The span within the content where the marker was found
-    pub span: Span,
-}
-
-impl<'a> MarkerInst<'a> {
-    pub fn new(content: &'a str, mat: Match<'a>, line: usize, line_start: usize) -> Self {
-        let start = {
-            let offset = mat.range().start;
-            let line = line;
-            let col = offset - line_start;
-            Loc { offset, line, col }
-        };
-        let end = start + mat.as_str();
-        let span = Span { start, end };
-        Self { content, span }
-    }
-
-    pub fn bytes(&self) -> &'a str {
-        &self.content[*self.span.start..*self.span.end]
-    }
-}
+use regex::CaptureLocations;
 
 /// A kind of marker
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -51,6 +23,19 @@ impl MarkerKind {
             MarkerKind::ProgramEnd => "program end marker",
             MarkerKind::OutputEnd => "output end marker",
         }
+    }
+}
+
+impl From<&mut CaptureLocations> for MarkerKind {
+    fn from(caps: &mut CaptureLocations) -> Self {
+        // markers_re contains 3 capture groups, one for each marker kind
+        let kind_idx = (0..3)
+            .find(|grp_idx| {
+                // find index of the first non-None capture group
+                caps.get(grp_idx + 1).is_some()
+            })
+            .unwrap();
+        Self::ALL[kind_idx]
     }
 }
 

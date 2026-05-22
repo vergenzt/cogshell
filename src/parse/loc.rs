@@ -1,7 +1,9 @@
 use std::{
     fmt::Display,
-    ops::{Add, Deref, Sub},
+    ops::{Add, Sub},
 };
+
+use crate::deref_field;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Loc {
@@ -13,13 +15,7 @@ pub struct Loc {
     pub col: usize,
 }
 
-impl Deref for Loc {
-    type Target = usize;
-
-    fn deref(&self) -> &Self::Target {
-        &self.offset
-    }
-}
+deref_field! { impl *Loc = .offset: usize }
 
 impl Display for Loc {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

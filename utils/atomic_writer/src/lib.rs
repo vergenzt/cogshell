@@ -4,21 +4,21 @@
 mod test;
 
 use std::{
-    fs::write,
-    io::{Cursor, Write},
-    path::PathBuf,
+    fs::{self, write},
+    io::{self, Cursor, Write},
+    path::{self, PathBuf},
     sync::atomic::{AtomicUsize, Ordering},
 };
 
 pub static ERROR_COUNT: AtomicUsize = AtomicUsize::new(0);
 
 /// Accumulates writes into a buffer, then only writes to the output file when dropped.
-pub struct AtomicFileWriter<'a> {
+pub struct AtomicFileWriter {
     curs: Cursor<Vec<u8>>,
-    path: &'a PathBuf,
+    path: PathBuf,
 }
 
-impl<'a> Write for AtomicFileWriter<'a> {
+impl Write for AtomicFileWriter {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
         self.curs.write(buf)
     }
@@ -27,15 +27,23 @@ impl<'a> Write for AtomicFileWriter<'a> {
     }
 }
 
-impl<'a> AtomicFileWriter<'a> {
-    pub fn new(path: &'a PathBuf) -> Self {
+impl AtomicFileWriter {
+    pub fn new(path: PathBuf) -> io::Result<Self> {
+        // open the file for append as rudimentary check that we will be able to write to
+        // the file later on
+        if let Err(e) = fs::OpenOptions::new().append(true).open(path.clone())
+            && e.kind() != io::ErrorKind::NotFound
+        {
+            return Err(e);
+        }
+
         let buf = Vec::new();
         let curs = Cursor::new(buf);
-        Self { curs, path }
+        Ok(Self { curs, path })
     }
 }
 
-impl Drop for AtomicFileWriter<'_> {
+impl Drop for AtomicFileWriter {
     fn drop(&mut self) {
         let result = write(&self.path, self.curs.get_ref());
         if let Err(err) = result {

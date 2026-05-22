@@ -1,39 +1,36 @@
-use std::fmt::Debug;
+use std::io;
 
-use annotate_snippets::{AnnotationKind, Level, Renderer, Snippet};
+use annotate_snippets::{AnnotationKind, Level, Origin, Renderer};
 
-use crate::args::PipeDir;
-use crate::parse::FileContext;
-use crate::parse::MarkerInst;
-use crate::parse::MarkerKind;
+use super::{marker_inst::*, marker_kind::*, parse_state::*};
+use crate::args;
 
-#[derive(Debug)]
-pub enum ParseErrorKind<'a> {
-    UnexpectedMarker(MarkerKind, MarkerInst<'a>),
-    UnexpectedEOF,
-}
+/// Construct an `io::Error` for the given state. If `found_marker_kind` is `Some(...)`,
+/// then returns an `io::ErrorKind::InvalidData`. If `None`, then returns an
+/// `io::ErrorKind::UnexpectedEof`.
+pub fn err_unexpected_marker<'a>(
+    state: &ParseFileState<'a>,
+    found_marker: Option<(MarkerKind, MarkerInst<'a>)>,
+) -> io::Error {
+    let sought_idx = state.open_markers.len();
+    let sought_str = &args.markers[sought_idx];
+    let sought_kind = MarkerKind::ALL[sought_idx];
 
-pub struct ParseError<'a> {
-    pub ekind: ParseErrorKind<'a>,
-    pub state: Vec<MarkerInst<'a>>,
-    pub ctx: &'a FileContext<'a>,
-}
+    // let source = Snippet::source(&state.content).path(state.source.to_string());
 
-impl Debug for ParseError<'_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let ParseError { ekind, ctx, state } = self;
-        let sought_idx = state.len();
-        let sought_str = &ctx.config.markers[sought_idx];
-        let sought_kind = MarkerKind::ALL[sought_idx];
+    let (ekind, report) = match found_marker {
+        Some((kind, marker)) => {
+            let origin = {
+                let loc = marker.span.start;
+                Origin::path(state.source.to_string())
+                    .line(loc.line)
+                    .char_column(loc.col)
+            };
+            let str = marker.as_str();
 
-        let source =
-            Snippet::source(&ctx.content).path(ctx.source.with_dir(PipeDir::Read).to_string());
-        let error = Level::ERROR;
-
-        let error = match ekind {
-            ParseErrorKind::UnexpectedMarker(kind, marker) => {
-                let str = marker.bytes();
-                error
+            (
+                io::ErrorKind::InvalidData,
+                Level::ERROR
                     .primary_title(format!(
                         "unexpected {kind} {str}, expected {sought_kind} {sought_str}"
                     ))
@@ -43,11 +40,14 @@ impl Debug for ParseError<'_> {
                                 .span(marker.span.into())
                                 .label(format!("unexpected {kind}")),
                         ),
-                    )
-            }
-            ParseErrorKind::UnexpectedEOF => {
-                let eof = ctx.content.len();
-                error
+                    ),
+            )
+        }
+        None => {
+            let eof = state.content.len();
+            (
+                io::ErrorKind::UnexpectedEof,
+                Level::ERROR
                     .primary_title(format!(
                         "unexpected end of file, expected {sought_kind} {sought_str}"
                     ))
@@ -55,12 +55,17 @@ impl Debug for ParseError<'_> {
                         source
                             .clone()
                             .annotation(AnnotationKind::Primary.span(eof..eof).label("EOF"))
-                    })
-            }
-        };
+                    }),
+            )
+        }
+    };
 
-        let prev_markers =
-            state.iter().enumerate().map(|(i, prev_marker)| {
+    let prev_markers =
+        state
+            .open_markers
+            .iter()
+            .enumerate()
+            .map(|(i, prev_marker)| {
                 source.clone().annotation(
                     AnnotationKind::Context
                         .span(prev_marker.span.into())
@@ -70,9 +75,8 @@ impl Debug for ParseError<'_> {
                         }),
                 )
             });
-        let error = error.elements(prev_markers);
+    let report = report.elements(prev_markers);
+    let msg = Renderer::plain().render(&[report]);
 
-        let report = Renderer::plain().render(&[error]);
-        writeln!(f, "{}", report)
-    }
+    io::Error::new(ekind, msg)
 }
