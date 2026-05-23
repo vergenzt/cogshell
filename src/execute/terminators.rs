@@ -1,4 +1,4 @@
-use std::{iter::repeat_with, ops::Deref};
+use std::iter::repeat_with;
 
 use crate::deref_field;
 

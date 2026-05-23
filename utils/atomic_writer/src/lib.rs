@@ -6,7 +6,7 @@ mod test;
 use std::{
     fs::{self, write},
     io::{self, Cursor, Write},
-    path::{self, PathBuf},
+    path::PathBuf,
     sync::atomic::{AtomicUsize, Ordering},
 };
 

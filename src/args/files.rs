@@ -2,7 +2,7 @@ use std::{
     convert::Infallible,
     fmt::{Debug, Display},
     fs,
-    io::{self, BufRead},
+    io::{self, Read as _},
     marker::PhantomData,
     os::unix::ffi::OsStrExt,
     path::PathBuf,
@@ -88,31 +88,27 @@ impl<RW: ReadOrWrite> Debug for File<RW> {
 }
 
 impl File<Read> {
-    /// Reads the full line-split contents of the file into memory
-    pub fn read(&mut self) -> io::Result<Vec<String>> {
-        let mut reader: Read = match &self.arg {
-            FileArg::Stream => Box::new(io::stdin().lock()),
-            FileArg::OnDisk(path) => Box::new(io::BufReader::new(fs::File::open(path)?)),
-        };
-        let lines = std::iter::from_fn(|| {
-            let mut next_line = String::new();
-            match reader.read_line(&mut next_line) {
-                Ok(0) => None,
-                Ok(_) => Some(Ok(next_line)),
-                Err(e) => Some(Err(e)),
+    /// Reads the full contents of the file into memory.
+    pub fn read(&mut self) -> io::Result<String> {
+        let mut content = String::new();
+        match &self.arg {
+            FileArg::Stream => {
+                io::stdin().lock().read_to_string(&mut content)?;
             }
-        })
-        .try_collect::<Vec<_>>()?;
-        Ok(lines)
+            FileArg::OnDisk(path) => {
+                fs::File::open(path)?.read_to_string(&mut content)?;
+            }
+        }
+        Ok(content)
     }
 }
 
-// impl File<Write> {
-//     pub fn open(&self, line_transformer: impl FnMut(String) -> String) -> io::Result<Write> {
-//         let mut writer = match &self.arg {
-//             FileArg::Stream => Box::new(io::stdout()),
-//             FileArg::OnDisk(path) => Box::new(AtomicFileWriter::new(path.clone())),
-//         };
-//         todo!()
-//     }
-// }
+impl File<Write> {
+    /// Open this file (or stdout) for writing.
+    pub fn open(&self) -> io::Result<Box<dyn io::Write>> {
+        match &self.arg {
+            FileArg::Stream => Ok(Box::new(io::stdout())),
+            FileArg::OnDisk(path) => Ok(Box::new(AtomicFileWriter::new(path.clone())?)),
+        }
+    }
+}

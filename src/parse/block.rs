@@ -39,7 +39,7 @@ pub struct Block<'i> {
 
 impl<'strs> Block<'strs> {
     /// Parse a CogShell block from matched markers
-    pub fn new(lines: &Vec<String>, markers: BlockMarkers<'strs>) -> Self {
+    pub fn new(content: &'strs str, markers: BlockMarkers<'strs>) -> Self {
         let BlockMarkers {
             prog_start,
             prog_end,

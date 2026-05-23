@@ -1,13 +1,7 @@
 use std::io;
 
-use super::{
-    block::*, errors::*, loc_line::*, marker_inst::*, marker_kind::*, parse_input::*,
-    parse_state::*,
-};
-use crate::{
-    args::{files::*, *},
-    deref_field,
-};
+use super::{block::*, parse_input::*, parse_state::*};
+use crate::deref_field;
 
 pub struct ParsedFile<'a, 'i> {
     pub input: &'i ParseInput<'a>,
@@ -19,25 +13,17 @@ deref_field! {
 }
 
 impl<'a, 'i> ParsedFile<'a, 'i> {
-    pub fn from(args: &'a Args, source: &'a mut File<Read>) -> io::Result<Self> {
-        let input = &ParseInput::from(args, source)?;
-
+    pub fn from(input: &'i ParseInput<'a>) -> io::Result<Self> {
         let mut state = ParseFileState::init(input);
 
         for line in input.iter_lines() {
-            let open_markers = state.open_markers;
-            let line_markers = state.find_markers(&line);
-
-            match (state.open_markers[..], ) {
-                // no markers on the line, that's fine
-                ([..], []) => continue,
-                ([], [marker @ MarkerInst { kind: MarkerKind::ProgramStart, ..}]) =>
-                Some(marker_match) => {
-                    state.add_marker(kind, marker);
-                }
+            let markers = state.find_markers(&line);
+            for marker in markers {
+                state.add_marker(marker)?;
             }
         }
 
-        state.finish()
+        let blocks = state.finalize_parsed_blocks()?;
+        Ok(Self { input, blocks })
     }
 }

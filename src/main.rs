@@ -1,38 +1,59 @@
 #![feature(trim_prefix_suffix)]
-#![feature(file_buffered)]
-#![feature(iterator_try_collect)]
 
-use std::{io::stderr, thread};
+use std::io;
+use std::process::ExitCode;
 
 mod args;
-mod errors;
+mod deref_util;
 mod execute;
 mod parse;
-mod deref_util;
 
 pub(crate) use deref_util::*;
 
-pub fn main() {
-    let args = args::Args::to_options().run();
-    let threads = args.files.map(|f| {
-      thread::spawn(|| {
+use args::{Args, File, FileArg, Read};
+use execute::FileExecutor;
+use parse::{ParseInput, ParsedFile};
 
-      })
-    })
-    match args.files {
-        args::SourceAndDestArgs::SourcesInPlace(ref pipes) => {
-            for pipe in pipes {
-                let fctx = parse::ParsedFile::new(pipe, &args).unwrap();
-                let file = parse::ParsedFile::from(&fctx).unwrap();
-                let mut exec = execute::FileExecutor::initialize(&file).unwrap();
-                exec.execute(pipe).unwrap();
-            }
-        }
-        args::SourceAndDestArgs::SingleSourceAndDest(ref src, ref dst) => {
-            let fctx = parse::ParsedFile::new(src, &args).unwrap();
-            let file = parse::ParsedFile::from(&fctx).unwrap();
-            let mut exec = execute::FileExecutor::initialize(&file).unwrap();
-            exec.execute(dst).unwrap();
+pub fn main() -> ExitCode {
+    let args = Args::to_options().run();
+    match run(&args) {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(e) => {
+            eprintln!("cogsh: {e}");
+            ExitCode::FAILURE
         }
     }
+}
+
+fn run(args: &Args) -> io::Result<()> {
+    match &args.output {
+        Some(out_arg) => {
+            let out_file: File<args::Write> = out_arg.into();
+            let mut writer = out_file.open()?;
+            for src_arg in &args.files {
+                process_one(args, src_arg, &mut *writer)?;
+            }
+        }
+        None => {
+            for src_arg in &args.files {
+                let out_file: File<args::Write> = src_arg.into();
+                let mut writer = out_file.open()?;
+                process_one(args, src_arg, &mut *writer)?;
+            }
+        }
+    }
+    Ok(())
+}
+
+fn process_one(args: &Args, src_arg: &FileArg, writer: &mut dyn io::Write) -> io::Result<()> {
+    let mut src_file: File<Read> = src_arg.into();
+    let input = ParseInput::from(args, &mut src_file)?;
+    // input owns its content; parsed file borrows from input
+    process_with_input(&input, writer)
+}
+
+fn process_with_input(input: &ParseInput<'_>, writer: &mut dyn io::Write) -> io::Result<()> {
+    let parsed = ParsedFile::from(input)?;
+    let mut exec = FileExecutor::initialize(&parsed)?;
+    exec.execute(writer)
 }

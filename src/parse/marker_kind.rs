@@ -26,8 +26,8 @@ impl MarkerKind {
     }
 }
 
-impl From<&mut CaptureLocations> for MarkerKind {
-    fn from(caps: &mut CaptureLocations) -> Self {
+impl From<&CaptureLocations> for MarkerKind {
+    fn from(caps: &CaptureLocations) -> Self {
         // markers_re contains 3 capture groups, one for each marker kind
         let kind_idx = (0..3)
             .find(|grp_idx| {

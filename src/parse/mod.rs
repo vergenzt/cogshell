@@ -9,3 +9,6 @@ mod parse_input;
 mod parse_state;
 mod parsed_file;
 mod span;
+
+pub use parse_input::ParseInput;
+pub use parsed_file::ParsedFile;

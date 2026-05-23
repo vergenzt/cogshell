@@ -27,21 +27,18 @@ impl Add<&str> for Loc {
     type Output = Loc;
 
     fn add(self, rhs: &str) -> Self::Output {
-        let (lines, last_line_len) = match rhs
-            .as_bytes()
-            .iter()
-            .enumerate()
-            .filter(|(_, c)| **c == b'\n')
-            .enumerate()
-            .last()
-        {
-            None => (0, rhs.len()),
-            Some((nl_idx, (nl_pos, _))) => (nl_idx + 1, rhs.len() - nl_pos),
+        let last_nl = rhs.rfind('\n');
+        let nl_count = rhs.bytes().filter(|b| *b == b'\n').count();
+        let col = match last_nl {
+            // chars after the last newline form the new line; col resets
+            Some(nl_pos) => rhs.len() - nl_pos - 1,
+            // no newline: continue on the same line
+            None => self.col + rhs.len(),
         };
         Loc {
             offset: self.offset + rhs.len(),
-            line: self.line + lines,
-            col: last_line_len,
+            line: self.line + nl_count,
+            col,
         }
     }
 }

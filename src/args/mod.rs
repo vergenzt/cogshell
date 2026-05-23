@@ -3,14 +3,15 @@ pub(crate) mod marker_defs;
 
 use std::str::FromStr as _;
 
-use files::*;
-use marker_defs::*;
+pub use files::{File, FileArg, Read, Write};
+pub use marker_defs::MarkerDefs;
 
 use bpaf::{OptionParser, Parser, construct, long, positional};
 
 #[derive(Debug)]
 pub struct Args {
     pub files: Vec<FileArg>,
+    pub output: Option<FileArg>,
     pub prologue: Vec<String>,
     pub output_line_suffix: String,
     pub markers: MarkerDefs,
@@ -19,10 +20,11 @@ pub struct Args {
 impl Args {
     pub fn to_options() -> OptionParser<Self> {
         construct!(Self {
-            files(),
+            output(),
             prologue(),
             output_line_suffix(),
             markers(),
+            files(),
         })
         .to_options()
     }
@@ -30,6 +32,15 @@ impl Args {
 
 fn files() -> impl Parser<Vec<FileArg>> {
     positional::<FileArg>("FILE").some("Must specify at least one FILE!")
+}
+
+/// Single output destination (`-` for stdout, otherwise a path). If omitted, each
+/// FILE is updated in place (or stdin → stdout).
+fn output() -> impl Parser<Option<FileArg>> {
+    long("output")
+        .short('o')
+        .argument::<FileArg>("DEST")
+        .optional()
 }
 
 /// Statements to execute before running CogShell scripts. Executed once per file before

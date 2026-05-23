@@ -1,7 +1,5 @@
 use regex::Match;
 
-use crate::deref_field;
-
 use super::{loc_line::*, marker_kind::*, span::*};
 
 #[derive(Debug, Clone, Copy)]
@@ -9,12 +7,17 @@ pub struct MarkerInst<'s> {
     /// The kind of marker this is
     pub kind: MarkerKind,
     /// The line of content this marker was found in
-    pub line: &'s String,
+    pub line: &'s str,
     /// The span within the content where the marker was found
     pub span: Span,
 }
 
-deref_field! { impl<'s> *MarkerInst<'s> = .as_str(): str }
+impl<'s> std::ops::Deref for MarkerInst<'s> {
+    type Target = str;
+    fn deref(&self) -> &str {
+        self.as_str()
+    }
+}
 
 impl<'s> MarkerInst<'s> {
     pub fn new(
@@ -25,14 +28,16 @@ impl<'s> MarkerInst<'s> {
         let start = *line_start + &line[..mtch.start()];
         let end = start + mtch.as_str();
         let span = Span { start, end };
-        Self { kind, line, span }
-    }
-
-    pub fn line(&self) -> &'s String {
-        &self.line
+        Self {
+            kind,
+            line: *line,
+            span,
+        }
     }
 
     pub fn as_str(&self) -> &'s str {
-        &self.line()[self.span.start.col..self.span.end.col]
+        let col_start = self.span.start.col;
+        let col_end = self.span.end.col;
+        &self.line[col_start..col_end]
     }
 }

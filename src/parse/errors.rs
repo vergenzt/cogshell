@@ -1,33 +1,31 @@
 use std::io;
 
-use annotate_snippets::{AnnotationKind, Level, Origin, Renderer};
+use annotate_snippets::{AnnotationKind, Level, Renderer, Snippet};
 
 use super::{marker_inst::*, marker_kind::*, parse_state::*};
-use crate::args;
 
-/// Construct an `io::Error` for the given state. If `found_marker_kind` is `Some(...)`,
-/// then returns an `io::ErrorKind::InvalidData`. If `None`, then returns an
-/// `io::ErrorKind::UnexpectedEof`.
-pub fn err_unexpected_marker<'a>(
-    state: &ParseFileState<'a>,
-    found_marker: Option<(MarkerKind, MarkerInst<'a>)>,
+/// Construct an `io::Error` describing a marker-sequence problem.
+///
+/// `Some((kind, marker))` → `InvalidData` (saw a marker we didn't expect).
+/// `None` → `UnexpectedEof` (hit EOF mid-block).
+pub fn err_unexpected_marker<'a, 'i>(
+    state: &ParseFileState<'a, 'i>,
+    found_marker: Option<MarkerInst<'i>>,
 ) -> io::Error {
+    let args = state.input.args;
     let sought_idx = state.open_markers.len();
     let sought_str = &args.markers[sought_idx];
     let sought_kind = MarkerKind::ALL[sought_idx];
 
-    // let source = Snippet::source(&state.content).path(state.source.to_string());
+    let source_path = state.input.source.to_string();
+    let content = &state.input.content;
+
+    let snippet = || Snippet::source(content.as_str()).path(source_path.clone());
 
     let (ekind, report) = match found_marker {
-        Some((kind, marker)) => {
-            let origin = {
-                let loc = marker.span.start;
-                Origin::path(state.source.to_string())
-                    .line(loc.line)
-                    .char_column(loc.col)
-            };
-            let str = marker.as_str();
-
+        Some(marker) => {
+            let kind = marker.kind;
+            let str = marker.as_str().to_string();
             (
                 io::ErrorKind::InvalidData,
                 Level::ERROR
@@ -35,7 +33,7 @@ pub fn err_unexpected_marker<'a>(
                         "unexpected {kind} {str}, expected {sought_kind} {sought_str}"
                     ))
                     .element(
-                        source.clone().annotation(
+                        snippet().annotation(
                             AnnotationKind::Primary
                                 .span(marker.span.into())
                                 .label(format!("unexpected {kind}")),
@@ -44,37 +42,27 @@ pub fn err_unexpected_marker<'a>(
             )
         }
         None => {
-            let eof = state.content.len();
+            let eof = content.len();
             (
                 io::ErrorKind::UnexpectedEof,
                 Level::ERROR
                     .primary_title(format!(
                         "unexpected end of file, expected {sought_kind} {sought_str}"
                     ))
-                    .element({
-                        source
-                            .clone()
-                            .annotation(AnnotationKind::Primary.span(eof..eof).label("EOF"))
-                    }),
+                    .element(
+                        snippet().annotation(AnnotationKind::Primary.span(eof..eof).label("EOF")),
+                    ),
             )
         }
     };
 
-    let prev_markers =
-        state
-            .open_markers
-            .iter()
-            .enumerate()
-            .map(|(i, prev_marker)| {
-                source.clone().annotation(
-                    AnnotationKind::Context
-                        .span(prev_marker.span.into())
-                        .label({
-                            let kind = MarkerKind::ALL[i];
-                            kind.description()
-                        }),
-                )
-            });
+    let prev_markers = state.open_markers.iter().enumerate().map(|(i, prev_marker)| {
+        snippet().annotation(
+            AnnotationKind::Context
+                .span(prev_marker.span.into())
+                .label(MarkerKind::ALL[i].description()),
+        )
+    });
     let report = report.elements(prev_markers);
     let msg = Renderer::plain().render(&[report]);
 
