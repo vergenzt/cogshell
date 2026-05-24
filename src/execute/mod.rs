@@ -55,12 +55,12 @@ impl<'a, 'i> FileExecutor<'a, 'i> {
         var!("TEMP_DIR" => temp_path.to_str().unwrap().to_owned());
         var!("SOURCE" => source.clone());
         var!("NUM_BLOCKS" => file.blocks.len().to_string());
-        var!("PROLOGUE" => path!("prologue.sh", file.input.args.prologue.join("\n")));
+        var!("PROLOGUE" => path!("prologue.sh", file.prologue.join("\n")));
 
         for (i0, block) in file.blocks.iter().enumerate() {
             let i1 = i0 + 1;
 
-            let span = block.markers.prog_start.span;
+            let span = block.markers.prog_start().span;
             var!("BLOCK_LINE" [i1] => span.start.line.to_string());
             var!("BLOCK_COL" [i1] => span.start.col.to_string());
             var!("BLOCK_OFFSET" [i1] => span.start.offset.to_string());
@@ -81,7 +81,7 @@ impl<'a, 'i> FileExecutor<'a, 'i> {
         cmd.stdout(Stdio::piped());
         cmd.stderr(Stdio::inherit());
 
-        if let FileArg::OnDisk(input_path) = &file.input.source.arg {
+        if let FileArg::OnDisk(input_path) = &file.source.arg {
             let input_path_abs = path::absolute(input_path)?;
             if let Some(parent) = input_path_abs.parent() {
                 cmd.current_dir(parent);
@@ -98,8 +98,7 @@ impl<'a, 'i> FileExecutor<'a, 'i> {
 
     pub fn execute(&mut self, output: &mut dyn io::Write) -> io::Result<()> {
         let mut proc = self.cmd.spawn()?;
-        let stdout = proc.stdout.take().expect("child stdout missing");
-        let mut proc_reader = io::BufReader::new(stdout);
+        let mut proc_reader = io::BufReader::new(proc.stdout.take().unwrap());
 
         let suffix = self.file.input.args.output_line_suffix.clone();
         let content = &self.file.input.content;
@@ -138,13 +137,13 @@ impl<'a, 'i> FileExecutor<'a, 'i> {
         let mut cursor: usize = 0;
         let blocks = &self.file.blocks;
         for (i, block) in blocks.iter().enumerate() {
-            let prog_marker_end = *block.markers.prog_end.span.end;
+            let prog_marker_end = *block.markers.prog_end().span.end;
             let prog_line_end = content[prog_marker_end..]
                 .find('\n')
                 .map(|n| prog_marker_end + n + 1)
                 .unwrap_or(content.len());
 
-            let outp_marker_start = *block.markers.outp_end.span.start;
+            let outp_marker_start = *block.markers.outp_end().span.start;
             let outp_line_start = content[..outp_marker_start]
                 .rfind('\n')
                 .map(|i| i + 1)

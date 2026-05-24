@@ -11,8 +11,6 @@ use std::{
 
 use atomic_writer::AtomicFileWriter;
 
-use crate::deref_field;
-
 pub type Read = Box<dyn io::BufRead>;
 pub type Write = Box<dyn io::Write>;
 
@@ -46,15 +44,12 @@ impl FromStr for FileArg {
     }
 }
 
+/// A [`FileArg`] associated with either read or write behavior
 pub struct File<RW: ReadOrWrite> {
     /// The argument string representing the file as provided on the command line
     pub arg: FileArg,
     /// PhantomData reference to record that this struct's behavior does depend on the RW param
     pd: PhantomData<RW>,
-}
-
-deref_field! {
-  impl<RW: ReadOrWrite> *File<RW> = .arg: FileArg
 }
 
 impl<RW: ReadOrWrite> From<&FileArg> for File<RW> {
@@ -88,7 +83,7 @@ impl<RW: ReadOrWrite> Debug for File<RW> {
 }
 
 impl File<Read> {
-    /// Reads the full contents of the file into memory.
+    /// Read the full contents of the file (or stdin) into memory.
     pub fn read(&mut self) -> io::Result<String> {
         let mut content = String::new();
         match &self.arg {
@@ -105,10 +100,15 @@ impl File<Read> {
 
 impl File<Write> {
     /// Open this file (or stdout) for writing.
-    pub fn open(&self) -> io::Result<Box<dyn io::Write>> {
+    ///
+    /// SAFETY: The caller is responsible for checking [`ERROR_COUNT`] and incorporating a
+    /// non-zero count into a non-zero exit code. (Not actually UB to not do that... but
+    /// this is a convenient way to make sure the caller keeps track of that they need to
+    /// do this.)
+    pub unsafe fn open(&self) -> io::Result<Box<dyn io::Write>> {
         match &self.arg {
             FileArg::Stream => Ok(Box::new(io::stdout())),
-            FileArg::OnDisk(path) => Ok(Box::new(AtomicFileWriter::new(path.clone())?)),
+            FileArg::OnDisk(path) => Ok(Box::new(unsafe { AtomicFileWriter::new(path.clone())? })),
         }
     }
 }

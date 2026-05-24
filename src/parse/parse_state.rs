@@ -1,4 +1,4 @@
-use std::io;
+use std::{io, mem::take};
 
 use regex::{CaptureLocations, Regex};
 
@@ -30,7 +30,12 @@ impl<'a, 'i> ParseFileState<'a, 'i> {
         }
     }
 
-    /// Find every marker in `line`.
+    fn last_marker(&self) -> Option<&MarkerInst<'i>> {
+        self.open_markers
+            .last()
+            .or_else(|| Some(&self.blocks.last()?.markers.2))
+    }
+
     pub(super) fn find_markers(&mut self, line: &LocatedLine<'i>) -> Vec<MarkerInst<'i>> {
         let re = &self.markers_re;
         let caps = &mut self.marker_caps;
@@ -40,7 +45,7 @@ impl<'a, 'i> ParseFileState<'a, 'i> {
             match re.captures_read_at(caps, line.1, last_marker_end) {
                 Some(mtch) => {
                     let kind: MarkerKind = (&*caps).into();
-                    let marker = MarkerInst::new(kind, mtch, line);
+                    let marker = MarkerInst::new(kind, mtch, &line);
                     markers.push(marker);
                 }
                 None => break markers,
@@ -48,30 +53,40 @@ impl<'a, 'i> ParseFileState<'a, 'i> {
         }
     }
 
-    pub(super) fn add_marker(&mut self, marker: MarkerInst<'i>) -> io::Result<()> {
-        if marker.kind == self.expected_marker_kind() {
-            self.open_markers.push(marker);
-
-            // check for completed block
-            if self.open_markers.len() == MarkerKind::ALL.len() {
-                let mut taken = std::mem::take(&mut self.open_markers);
-                let arr: [MarkerInst<'i>; 3] = [taken.remove(0), taken.remove(0), taken.remove(0)];
-                let markers = BlockMarkers::new(&arr);
-                let block = Block::new(&self.input.content, markers);
-                self.blocks.push(block);
-            }
-
-            Ok(())
-        } else {
-            Err(err_unexpected_marker(self, Some(marker)))
+    pub(super) fn push_marker(&mut self, this: MarkerInst<'i>) -> io::Result<()> {
+        if this.kind != self.expected_marker_kind() {
+            return Err(err_unexpected_marker(self, Some(this)));
         }
+
+        if self.last_marker().is_some_and(|prev| !this.ok_after(prev)) {
+            return Err(err_same_line(self, this));
+        }
+
+        self.open_markers.push(this);
+
+        // check for completed block
+        if self.open_markers.len() == MarkerKind::ALL.len() {
+            let new_block = self.finalize_block();
+            self.blocks.push(new_block);
+        }
+
+        Ok(())
+    }
+
+    fn finalize_block(&mut self) -> Block<'i> {
+        let content = &self.input.content;
+        let markers = BlockMarkers::from({
+            let owned = take(&mut self.open_markers);
+            *owned.as_array().unwrap()
+        });
+        Block::from(content, markers)
     }
 
     pub(super) fn expected_marker_kind(&self) -> MarkerKind {
         MarkerKind::ALL[self.open_markers.len()]
     }
 
-    pub(crate) fn finalize_parsed_blocks(self) -> Result<Vec<Block<'i>>, std::io::Error> {
+    pub(crate) fn finalize_file(self) -> Result<Vec<Block<'i>>, std::io::Error> {
         if !self.open_markers.is_empty() {
             return Err(err_unexpected_marker(&self, None));
         }

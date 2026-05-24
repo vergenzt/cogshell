@@ -17,12 +17,38 @@ pub enum MarkerKind {
 impl MarkerKind {
     pub const ALL: [Self; 3] = [Self::ProgramStart, Self::ProgramEnd, Self::OutputEnd];
 
+    /// Used by error reporting.
     pub fn description(self: MarkerKind) -> &'static str {
         match self {
             MarkerKind::ProgramStart => "program start marker",
             MarkerKind::ProgramEnd => "program end marker",
             MarkerKind::OutputEnd => "output end marker",
         }
+    }
+
+    /// See [`IsInlineOk`]. Called by [`super::marker_inst::MarkerInst::ok_after`].
+    pub fn inline_ok(self: &MarkerKind) -> IsInlineOk {
+        match self {
+            MarkerKind::ProgramStart => IsInlineOk::MustFollowOnSeparateLine,
+            MarkerKind::ProgramEnd => IsInlineOk::InlineOk,
+            MarkerKind::OutputEnd => IsInlineOk::MustFollowOnSeparateLine,
+        }
+    }
+}
+
+/// Bool-equivalent enum describing whether a marker kind is allowed to appear on the same
+/// line as a marker preceding it (whether in the same block or a previous one).
+///
+/// Used by [`MarkerKind::inline_ok`].
+#[derive(PartialEq)]
+pub enum IsInlineOk {
+    MustFollowOnSeparateLine,
+    InlineOk,
+}
+
+impl From<IsInlineOk> for bool {
+    fn from(value: IsInlineOk) -> bool {
+        value == IsInlineOk::InlineOk
     }
 }
 

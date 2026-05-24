@@ -18,12 +18,22 @@ impl<'a, 'i> ParsedFile<'a, 'i> {
 
         for line in input.iter_lines() {
             let markers = state.find_markers(&line);
-            for marker in markers {
-                state.add_marker(marker)?;
+
+            // always use the first marker found on a line
+            if let [marker, ..] = markers[..] {
+                state.push_marker(marker)?;
+
+                for (i, addl_marker) in markers.iter().enumerate().skip(1) {
+                    match (&marker.kind, addl_marker.kind) {
+                        (MarkerKind::ProgramStart, MarkerKind::ProgramEnd) => {
+                            state.push_marker(addl_marker)?
+                        }
+                    }
+                }
             }
         }
 
-        let blocks = state.finalize_parsed_blocks()?;
+        let blocks = state.finalize_file()?;
         Ok(Self { input, blocks })
     }
 }

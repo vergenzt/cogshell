@@ -28,7 +28,11 @@ impl Write for AtomicFileWriter {
 }
 
 impl AtomicFileWriter {
-    pub fn new(path: PathBuf) -> io::Result<Self> {
+    /// SAFETY: The caller is responsible for checking [`ERROR_COUNT`] and incorporating a
+    /// non-zero count into a non-zero exit code. (Not actually UB to not do that... but
+    /// this is a convenient way to make sure the caller keeps track of that they need to
+    /// do this.)
+    pub unsafe fn new(path: PathBuf) -> io::Result<Self> {
         // open the file for append as rudimentary check that we will be able to write to
         // the file later on
         if let Err(e) = fs::OpenOptions::new().append(true).open(path.clone())
@@ -47,7 +51,7 @@ impl Drop for AtomicFileWriter {
     fn drop(&mut self) {
         let result = write(&self.path, self.curs.get_ref());
         if let Err(err) = result {
-            crate::ERROR_COUNT.fetch_add(1, Ordering::Relaxed);
+            ERROR_COUNT.fetch_add(1, Ordering::Relaxed);
             eprint!("{err}")
         }
     }

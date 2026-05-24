@@ -23,16 +23,19 @@ impl<'s> MarkerInst<'s> {
     pub fn new(
         kind: MarkerKind,
         mtch: Match<'s>,
-        LocatedLine(line_start, line): &LocatedLine<'s>,
+        &LocatedLine(line_start, line): &LocatedLine<'s>,
     ) -> Self {
-        let start = *line_start + &line[..mtch.start()];
+        let start = line_start + &line[..mtch.start()];
         let end = start + mtch.as_str();
         let span = Span { start, end };
-        Self {
-            kind,
-            line: *line,
-            span,
-        }
+        Self { kind, line, span }
+    }
+
+    /// In upstream `cogapp`, some markers are silently ignored if they appear on the same
+    /// line as a preceding marker. This method supports us reporting such cases as errors
+    /// instead.
+    pub fn ok_after(&self, prev: &MarkerInst) -> bool {
+        (self.span.line() == prev.span.line()) == self.kind.inline_ok().into()
     }
 
     pub fn as_str(&self) -> &'s str {

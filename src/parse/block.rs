@@ -3,20 +3,19 @@ use common_prefix::{common_prefix_of_chars, leading_whitespace};
 use super::{checksum::*, marker_inst::*, span::*};
 
 #[derive(Debug)]
-pub struct BlockMarkers<'i> {
-    pub prog_start: MarkerInst<'i>,
-    pub prog_end: MarkerInst<'i>,
-    pub outp_end: MarkerInst<'i>,
+pub struct BlockMarkers<'i>(pub MarkerInst<'i>, pub MarkerInst<'i>, pub MarkerInst<'i>);
+
+#[rustfmt::skip]
+impl<'i> BlockMarkers<'i> {
+    pub fn prog_start(&self) -> &MarkerInst<'i> { &self.0 }
+    pub fn prog_end(&self)   -> &MarkerInst<'i> { &self.1 }
+    pub fn outp_end(&self)   -> &MarkerInst<'i> { &self.2 }
 }
 
-impl<'i> BlockMarkers<'i> {
-    pub fn new(markers: &[MarkerInst<'i>; 3]) -> BlockMarkers<'i> {
-        let [prog_start, prog_end, outp_end] = *markers;
-        Self {
-            prog_start,
-            prog_end,
-            outp_end,
-        }
+impl<'i> From<[MarkerInst<'i>; 3]> for BlockMarkers<'i> {
+    fn from(value: [MarkerInst<'i>; 3]) -> Self {
+        let [prog_start, prog_end, outp_end] = value;
+        Self(prog_start, prog_end, outp_end)
     }
 }
 
@@ -37,14 +36,10 @@ pub struct Block<'i> {
     pub span: Span,
 }
 
-impl<'strs> Block<'strs> {
+impl<'i> Block<'i> {
     /// Parse a CogShell block from matched markers
-    pub fn new(content: &'strs str, markers: BlockMarkers<'strs>) -> Self {
-        let BlockMarkers {
-            prog_start,
-            prog_end,
-            outp_end,
-        } = markers;
+    pub fn from(content: &'i str, markers: BlockMarkers<'i>) -> Self {
+        let BlockMarkers(prog_start, prog_end, outp_end) = markers;
 
         // find beginning of line containing start marker
         let prog_content_pfx = &content[..*prog_start.span.start];
